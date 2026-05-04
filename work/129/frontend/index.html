@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健身辅助系统 - Pose Detection</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.2/dist/pose-detection.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        header h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+        }
+        
+        .tab-nav {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 15px;
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-weight: 500;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+        }
+        
+        .video-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        #videoElement {
+            width: 100%;
+            height: auto;
+            display: block;
+            transform: scaleX(-1);
+        }
+        
+        #canvasElement {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1);
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        select, button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        select {
+            background: #f0f0f0;
+            min-width: 200px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        button.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        button.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .status-bar {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .status-dot.active {
+            background: #28a745;
+            animation: pulse 1s infinite;
+        }
+        
+        .status-dot.inactive {
+            background: #dc3545;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .info-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .info-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        
+        .score-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: white;
+        }
+        
+        .score-value {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .score-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .angles-panel {
+            margin-bottom: 20px;
+        }
+        
+        .angle-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .angle-name {
+            font-weight: 600;
+        }
+        
+        .angle-value {
+            font-size: 1.2rem;
+            color: #667eea;
+        }
+        
+        .angle-value.warning {
+            color: #ffc107;
+        }
+        
+        .angle-value.error {
+            color: #dc3545;
+        }
+        
+        .errors-panel {
+            margin-bottom: 20px;
+        }
+        
+        .error-item {
+            background: #fff3f3;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .error-name {
+            font-weight: bold;
+            color: #dc3545;
+            margin-bottom: 5px;
+        }
+        
+        .error-correction {
+            color: #666;
+            font-size: 0.9rem;
+            background: #fff;
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 8px;
+        }
+        
+        .stats-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #666;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 10;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .plan-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .plan-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        
+        .calendar-container {
+            margin-bottom: 25px;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .calendar-header h3 {
+            font-size: 1.2rem;
+            color: #333;
+        }
+        
+        .calendar-nav {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .calendar-week {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        
+        .calendar-day-name {
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #666;
+            padding: 8px;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+        }
+        
+        .calendar-day:hover {
+            transform: scale(1.05);
+        }
+        
+        .calendar-day.today {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .calendar-day.workout {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .calendar-day.rest {
+            background: #f8f9fa;
+            color: #999;
+        }
+        
+        .calendar-day.selected {
+            border-color: #f5576c;
+            border-width: 3px;
+        }
+        
+        .calendar-day-number {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .calendar-day-type {
+            font-size: 0.7rem;
+            margin-top: 2px;
+        }
+        
+        .today-plan {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .today-plan h3 {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .plan-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .exercise-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .exercise-card {
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .exercise-card.weak-point {
+            background: rgba(245, 87, 108, 0.3);
+            border: 2px dashed rgba(245, 87, 108, 0.6);
+        }
+        
+        .exercise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .exercise-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .exercise-focus {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            background: rgba(255,255,255,0.2);
+            padding: 3px 8px;
+            border-radius: 5px;
+        }
+        
+        .exercise-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .weak-point-badge {
+            display: inline-block;
+            background: #f5576c;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        
+        .tips-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+        
+        .tips-section h4 {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .tips-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .tips-section li {
+            padding: 4px 0;
+            padding-left: 15px;
+            position: relative;
+        }
+        
+        .tips-section li::before {
+            content: "💡";
+            position: absolute;
+            left: 0;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+        
+        .stat-card:nth-child(2) {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .stat-card-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .level-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .weak-points-section {
+            background: #fff3f3;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .weak-points-section h3 {
+            color: #dc3545;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+        
+        .weak-point-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .weak-point-name {
+            font-weight: 600;
+        }
+        
+        .weak-point-score {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .action-buttons button {
+            flex: 1;
+            padding: 15px;
+            font-size: 1rem;
+        }
+        
+        .save-session-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            opacity: 0;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .toast.error {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .rest-day-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            color: #555;
+        }
+        
+        .rest-day-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        
+        .rest-day-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-section, .plan-section {
+                max-height: none;
+            }
+            
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏋️ 健身辅助系统</h1>
+            <p>实时姿态检测与动作分析 - Powered by TensorFlow.js & MoveNet</p>
+        </header>
+        
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="detection">📹 实时检测</button>
+            <button class="tab-btn" data-tab="plan">📅 训练计划</button>
+            <button class="tab-btn" data-tab="stats">📊 训练统计</button>
+        </nav>
+        
+        <div id="tab-detection" class="tab-content active">
+            <div class="main-content">
+                <div class="video-section">
+                    <div class="video-container">
+                        <video id="videoElement" autoplay muted playsinline></video>
+                        <canvas id="canvasElement"></canvas>
+                        <div id="loadingOverlay" class="loading-overlay">
+                            <div class="spinner"></div>
+                            <p id="loadingText">正在初始化...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="controls">
+                        <div class="control-group">
+                            <label>选择动作：</label>
+                            <select id="poseSelect">
+                                <option value="squat">深蹲</option>
+                                <option value="pushup">俯卧撑</option>
+                                <option value="plank">平板支撑</option>
+                            </select>
+                        </div>
+                        
+                        <button id="startBtn">开始检测</button>
+                        <button id="stopBtn" disabled>停止检测</button>
+                        <button id="saveSessionBtn" class="success" disabled>💾 保存训练</button>
+                    </div>
+                    
+                    <div class="status-bar">
+                        <div class="status-item">
+                            <div id="cameraStatus" class="status-dot inactive"></div>
+                            <span>摄像头</span>
+                        </div>
+                        <div class="status-item">
+                            <div id="modelStatus" class="status-dot inactive"></div>
+                            <span>模型</span>
+                        </div>
+                        <div class="status-item">
+                            <span>FPS: <span id="fpsDisplay">0</span></span>
+                        </div>
+                        <div class="status-item">
+                            <span>延迟: <span id="latencyDisplay">0</span>ms</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h2>📊 动作分析</h2>
+                    
+                    <div class="score-card">
+                        <div class="score-label">动作评分</div>
+                        <div class="score-value" id="scoreValue">--</div>
+                        <div class="score-label" id="scoreStatus">等待检测</div>
+                    </div>
+                    
+                    <div class="angles-panel">
+                        <h3 style="margin-bottom: 15px; color: #555;">📐 关键角度</h3>
+                        <div id="anglesList">
+                            <p style="color: #999; text-align: center; padding: 20px;">等待检测开始...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="errors-panel">
+                        <h3 style="margin-bottom: 15px; color: #555;">⚠️ 检测到的问题</h3>
+                        <div id="errorsList">
+                            <p style="color: #999; text-align: center; padding: 20px;">暂无问题</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-panel">
+                        <h3 style="margin-bottom: 15px; color: #555;">📈 本次训练</h3>
+                        <div class="stat-item">
+                            <span class="stat-label">已检测帧数</span>
+                            <span class="stat-value" id="frameCount">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">错误检测次数</span>
+                            <span class="stat-value" id="errorCount">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">平均评分</span>
+                            <span class="stat-value" id="avgScore">--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">训练时长</span>
+                            <span class="stat-value" id="sessionDuration">00:00</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">后端连接</span>
+                            <span class="stat-value" id="backendStatus">未连接</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="tab-plan" class="tab-content">
+            <div class="plan-section">
+                <h2>📅 训练计划</h2>
+                
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <button class="tab-btn calendar-nav" id="prevWeekBtn">◀ 上一周</button>
+                        <h3 id="calendarTitle">本周计划</h3>
+                        <button class="tab-btn calendar-nav" id="nextWeekBtn">下一周 ▶</button>
+                    </div>
+                    
+                    <div class="calendar-week">
+                        <div class="calendar-day-name">周一</div>
+                        <div class="calendar-day-name">周二</div>
+                        <div class="calendar-day-name">周三</div>
+                        <div class="calendar-day-name">周四</div>
+                        <div class="calendar-day-name">周五</div>
+                        <div class="calendar-day-name">周六</div>
+                        <div class="calendar-day-name">周日</div>
+                    </div>
+                    
+                    <div class="calendar-week" id="calendarDays">
+                    </div>
+                </div>
+                
+                <div id="selectedDayPlan">
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="refreshPlanBtn">🔄 刷新计划</button>
+                    <button id="generateCustomPlanBtn">⚙️ 自定义计划</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="tab-stats" class="tab-content">
+            <div class="plan-section">
+                <h2>📊 训练统计</h2>
+                
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-card-label">总训练次数</div>
+                        <div class="stat-card-value" id="totalSessions">0</div>
+                        <div class="stat-card-label">次</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-label">总训练时长</div>
+                        <div class="stat-card-value" id="totalDuration">0</div>
+                        <div class="stat-card-label">分钟</div>
+                    </div>
+                </div>
+                
+                <div id="userLevelSection">
+                    <div class="level-badge" id="userLevelBadge">初学者</div>
+                </div>
+                
+                <div id="weakPointsSection" class="weak-points-section" style="display: none;">
+                    <h3>⚠️ 需要加强的动作</h3>
+                    <div id="weakPointsList"></div>
+                </div>
+                
+                <div class="stats-panel">
+                    <h3 style="margin-bottom: 15px; color: #555;">📈 详细统计</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">历史平均评分</span>
+                        <span class="stat-value" id="historyAvgScore">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">近7天平均评分</span>
+                        <span class="stat-value" id="recentAvgScore">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">进步趋势</span>
+                        <span class="stat-value" id="improvementTrend">--</span>
+                    </div>
+                </div>
+                
+                <div class="action-buttons" style="margin-top: 20px;">
+                    <button id="refreshStatsBtn">🔄 刷新统计</button>
+                    <button id="viewHistoryBtn">📜 查看历史</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast" class="toast"></div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

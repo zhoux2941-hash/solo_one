@@ -1,0 +1,6 @@
+original_url,custom_short_code,expiry_type,expiry_days,expires_at
+https://example.com/page1,my-page,never,,
+https://example.com/page2,,relative,7,
+https://example.com/page3,custom-30,absolute,,2025-06-01T12:00:00
+https://google.com/search,goog,never,,
+https://github.com,,relative,30,

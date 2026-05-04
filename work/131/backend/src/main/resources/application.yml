@@ -1,0 +1,17 @@
+spring:
+  neo4j:
+    uri: bolt://localhost:7687
+    authentication:
+      username: neo4j
+      password: password
+
+  datasource:
+    driver-class-name: org.neo4j.driver.Driver
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.neo4j: DEBUG
+    com.medical: DEBUG

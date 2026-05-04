@@ -1,0 +1,12 @@
+{"timestamp": "2026-05-04T08:00:00.001Z", "level": "INFO", "message": "Application started successfully", "service": "order-service", "environment": "production", "traceId": "trace-001"}
+{"timestamp": "2026-05-04T08:00:01.123Z", "level": "DEBUG", "message": "Connecting to database", "service": "order-service", "dbHost": "mysql:3306", "traceId": "trace-002"}
+{"timestamp": "2026-05-04T08:00:02.456Z", "level": "INFO", "message": "Database connection established", "service": "order-service", "traceId": "trace-002"}
+{"timestamp": "2026-05-04T08:00:03.789Z", "level": "WARN", "message": "High memory usage detected", "service": "order-service", "memoryUsed": "85%", "traceId": "trace-003"}
+{"timestamp": "2026-05-04T08:00:04.012Z", "level": "ERROR", "message": "Failed to process order #12345: Payment gateway timeout", "service": "order-service", "orderId": 12345, "errorCode": "PAYMENT_TIMEOUT", "traceId": "trace-004"}
+{"timestamp": "2026-05-04T08:00:05.345Z", "level": "INFO", "message": "Retrying payment for order #12345", "service": "order-service", "attempt": 2, "traceId": "trace-004"}
+{"timestamp": "2026-05-04T08:00:06.678Z", "level": "INFO", "message": "Order #12345 processed successfully", "service": "order-service", "orderId": 12345, "traceId": "trace-004"}
+{"timestamp": "2026-05-04T08:00:07.901Z", "level": "DEBUG", "message": "Cache miss for user #789", "service": "order-service", "userId": 789, "traceId": "trace-005"}
+{"timestamp": "2026-05-04T08:00:08.234Z", "level": "ERROR", "message": "Unexpected exception during request processing", "service": "order-service", "exception": "java.lang.NullPointerException", "traceId": "trace-006", "stackTrace": "at com.example.OrderService.process(OrderService.java:45)\n..."}
+{"timestamp": "2026-05-04T08:00:09.567Z", "level": "WARN", "message": "Slow query detected", "service": "order-service", "queryTime": "2.5s", "sql": "SELECT * FROM orders WHERE status = 'PENDING'", "traceId": "trace-007"}
+{"timestamp": "2026-05-04T08:00:10.890Z", "level": "INFO", "message": "Scheduled task executed: Daily report generation", "service": "order-service", "task": "daily-report", "traceId": "trace-008"}
+{"timestamp": "2026-05-04T08:00:11.123Z", "level": "FATAL", "message": "Critical system failure: Disk full", "service": "order-service", "diskUsage": "99%", "traceId": "trace-009"}

@@ -1,0 +1,44 @@
+{
+  "name": "traffic-simulation-frontend",
+  "version": "1.0.0",
+  "description": "Traffic Network Simulation Web Platform Frontend",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0",
+    "mapbox-gl": "^2.15.0",
+    "deck.gl": "^8.9.33",
+    "@deck.gl/react": "^8.9.33",
+    "@deck.gl/layers": "^8.9.33",
+    "@deck.gl/geo-layers": "^8.9.33",
+    "@loaders.gl/core": "^3.4.14",
+    "@loaders.gl/json": "^3.4.14",
+    "axios": "^1.6.2",
+    "socket.io-client": "^4.7.4",
+    "zustand": "^4.4.7",
+    "@ant-design/icons": "^5.2.6",
+    "antd": "^5.12.0",
+    "dayjs": "^1.11.10"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.42",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.0.6"
+  },
+  "keywords": [
+    "traffic",
+    "simulation",
+    "mapbox",
+    "deck.gl",
+    "react"
+  ],
+  "author": "",
+  "license": "MIT"
+}
