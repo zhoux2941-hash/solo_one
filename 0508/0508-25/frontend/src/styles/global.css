@@ -1,0 +1,114 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+}
+
+.el-container {
+  height: 100%;
+}
+
+.el-header {
+  background-color: #409EFF;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.el-aside {
+  background-color: #f5f7fa;
+  border-right: 1px solid #e4e7ed;
+}
+
+.el-menu {
+  border-right: none;
+}
+
+.page-container {
+  padding: 20px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #303133;
+}
+
+.card-shadow {
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}
+
+.mr-10 {
+  margin-right: 10px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.status-tag {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.status-pending {
+  background-color: #fdf6ec;
+  color: #e6a23c;
+}
+
+.status-confirmed {
+  background-color: #f0f9eb;
+  color: #67c23a;
+}
+
+.status-cancelled {
+  background-color: #f4f4f5;
+  color: #909399;
+}
+
+.status-rejected {
+  background-color: #fef0f0;
+  color: #f56c6c;
+}
+
+.status-completed {
+  background-color: #ecf5ff;
+  color: #409EFF;
+}
+
+.chart-container {
+  width: 100%;
+  height: 400px;
+}
+
+.match-score-high {
+  color: #67c23a;
+  font-weight: 600;
+}
+
+.match-score-medium {
+  color: #e6a23c;
+  font-weight: 600;
+}
+
+.match-score-low {
+  color: #f56c6c;
+  font-weight: 600;
+}

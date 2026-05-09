@@ -1,0 +1,15 @@
+com\blindpath\monitor\config\DataInitializer.class
+com\blindpath\monitor\dto\WearPredictionDTO$PredictionPoint$PredictionPointBuilder.class
+com\blindpath\monitor\BlindPathMonitorApplication.class
+com\blindpath\monitor\entity\DetectionPoint.class
+com\blindpath\monitor\service\WearPredictionService.class
+com\blindpath\monitor\dto\WearPredictionDTO.class
+com\blindpath\monitor\dto\DetectionPointDTO.class
+com\blindpath\monitor\service\impl\DetectionPointServiceImpl.class
+com\blindpath\monitor\controller\DetectionPointController.class
+com\blindpath\monitor\controller\WearPredictionController.class
+com\blindpath\monitor\dto\WearPredictionDTO$WearPredictionDTOBuilder.class
+com\blindpath\monitor\repository\DetectionPointRepository.class
+com\blindpath\monitor\service\impl\WearPredictionServiceImpl.class
+com\blindpath\monitor\service\DetectionPointService.class
+com\blindpath\monitor\dto\WearPredictionDTO$PredictionPoint.class
