@@ -1,0 +1,51 @@
+{
+  "name": "material-archive-tool",
+  "version": "1.0.0",
+  "description": "跨平台桌面素材归档检索工具",
+  "main": "src/main/main.js",
+  "author": "MaterialArchive",
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:vite\" \"npm:dev:electron\"",
+    "dev:vite": "vite",
+    "dev:electron": "wait-on http://localhost:5173 && electron .",
+    "build": "vite build",
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "vite build && electron-builder"
+  },
+  "build": {
+    "appId": "com.material.archive",
+    "productName": "MaterialArchive",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "src/**/*",
+      "dist/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.3",
+    "electron-store": "^8.2.0",
+    "sharp": "^0.33.2",
+    "vue": "^3.4.15",
+    "vue-router": "^4.2.5",
+    "pinia": "^2.1.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.3",
+    "concurrently": "^8.2.2",
+    "electron": "^28.2.0",
+    "electron-builder": "^24.9.1",
+    "vite": "^5.0.12",
+    "wait-on": "^7.2.0"
+  }
+}

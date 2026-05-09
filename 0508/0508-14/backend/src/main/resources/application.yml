@@ -1,0 +1,44 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/doc_search?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+
+  task:
+    scheduling:
+      pool:
+        size: 4
+
+app:
+  redis:
+    hot-search-key: hot_searches
+    hot-search-limit: 20
+    log-buffer-key: search_log_buffer
+    pending-click-key: pending_clicks
+    hot-search-buffer-key: hot_search_buffer
+    session-prefix: search_session:
+    word-assoc-key: word_associations
+    word-prefix-key: word_prefix_index
+  batch-size: 1000
+  session:
+    timeout-minutes: 30

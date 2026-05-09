@@ -1,0 +1,14 @@
+{
+  "name": "async-tower-defense",
+  "version": "1.0.0",
+  "description": "异步塔防游戏客户端",
+  "creator": {
+    "version": "3.8.0"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.7.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.6"
+  }
+}
