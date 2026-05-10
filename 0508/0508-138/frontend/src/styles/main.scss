@@ -1,0 +1,153 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Microsoft YaHei', 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.page-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card-container {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #606266;
+}
+
+.slider-value {
+  font-weight: bold;
+  color: #667eea;
+  font-size: 18px;
+}
+
+.result-card {
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.match-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  transition: width 0.5s ease;
+}
+
+.mineral-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.confirm-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #303133;
+  margin-bottom: 16px;
+  padding-left: 12px;
+  border-left: 4px solid #667eea;
+}
+
+.hero-section {
+  text-align: center;
+  color: white;
+  padding: 40px 20px;
+  
+  h1 {
+    font-size: 32px;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  p {
+    font-size: 16px;
+    opacity: 0.9;
+  }
+}
+
+.nav-tabs {
+  margin-bottom: 20px;
+  
+  .el-tabs {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    
+    :deep(.el-tabs__header) {
+      margin: 0;
+    }
+    
+    :deep(.el-tabs__nav-wrap) {
+      justify-content: center;
+    }
+    
+    :deep(.el-tabs__nav) {
+      background: #f5f7fa;
+      border-radius: 8px;
+      padding: 4px;
+    }
+    
+    :deep(.el-tabs__item) {
+      padding: 0 24px;
+      height: 40px;
+      line-height: 40px;
+      border-radius: 6px;
+      font-weight: 500;
+      
+      &.is-active {
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+    }
+    
+    :deep(.el-tabs__active-bar) {
+      display: none;
+    }
+  }
+}
+
+.tab-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  
+  .el-icon {
+    font-size: 16px;
+  }
+}
