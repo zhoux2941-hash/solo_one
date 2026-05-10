@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>模型涂装助手</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1>🎨 模型涂装助手</h1>
+      <div class="header-status" id="header-status">
+        <span class="status-indicator status-clean" id="spray-gun-status">
+          <span class="status-dot"></span>
+          喷笔状态正常
+        </span>
+      </div>
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="calculator">稀释计算器</button>
+        <button class="tab-btn" data-tab="spraygun">喷笔管理</button>
+        <button class="tab-btn" data-tab="history">调配记录</button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section id="calculator-tab" class="tab-content active">
+        <div class="calculator-layout">
+          <div class="left-panel">
+            <div class="paint-adder">
+              <h2>添加油漆到混合</h2>
+              
+              <div class="form-group">
+                <label for="add-brand">品牌</label>
+                <select id="add-brand" class="form-select">
+                  <option value="">-- 请选择品牌 --</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="add-type">类型</label>
+                <select id="add-type" class="form-select">
+                  <option value="">-- 请选择类型 --</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="add-paint">颜色</label>
+                <select id="add-paint" class="form-select">
+                  <option value="">-- 请选择颜色 --</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>该油漆的比例</label>
+                <div class="ratio-input-row">
+                  <div class="ratio-input-item">
+                    <label>油漆</label>
+                    <input type="number" id="add-ratio-paint" class="form-input" min="1" max="10" value="1">
+                  </div>
+                  <span class="ratio-colon">:</span>
+                  <div class="ratio-input-item">
+                    <label>稀释剂</label>
+                    <input type="number" id="add-ratio-thinner" class="form-input" min="1" max="10" value="1">
+                  </div>
+                </div>
+                <div class="ratio-source" id="add-ratio-source">默认比例</div>
+              </div>
+
+              <div class="form-group">
+                <label>混合比例</label>
+                <div class="mix-ratio-input">
+                  <input type="number" id="add-mix-ratio" class="form-input" min="1" max="100" value="1">
+                  <span class="mix-ratio-label">份</span>
+                </div>
+                <div class="ratio-help">该油漆在混合物中的比例份数</div>
+              </div>
+
+              <button id="add-paint-btn" class="btn btn-primary btn-large">+ 添加到混合列表</button>
+            </div>
+
+            <div class="mixed-paints-panel">
+              <div class="panel-header">
+                <h2>混合油漆列表</h2>
+                <button id="clear-all-btn" class="btn btn-secondary btn-small">清空</button>
+              </div>
+              <div id="mixed-paints-list" class="mixed-paints-list">
+                <div class="empty-state-small">
+                  <p>请从左侧添加油漆</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="right-panel">
+            <div class="calculator-panel">
+              <h2>混合稀释计算</h2>
+              
+              <div class="mixed-ratio-display">
+                <div class="ratio-label">综合稀释比例</div>
+                <div class="ratio-value-large">
+                  <span id="mixed-ratio-paint">1</span>
+                  <span class="ratio-colon">:</span>
+                  <span id="mixed-ratio-thinner">1</span>
+                </div>
+                <div class="ratio-sub">加权平均计算</div>
+              </div>
+
+              <div class="form-group">
+                <label for="total-ml">总容量 (ml)</label>
+                <input type="number" id="total-ml" class="form-input" min="1" max="1000" value="20" step="0.5">
+              </div>
+
+              <div class="result-section">
+                <h3>各油漆用量</h3>
+                <div id="paint-breakdown" class="paint-breakdown">
+                  <div class="empty-state-small">
+                    <p>暂无计算结果</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="result-panel">
+                <div class="result-item">
+                  <div class="result-label">油漆总量</div>
+                  <div class="result-value"><span id="total-paint-ml">0</span> ml</div>
+                </div>
+                <div class="result-item">
+                  <div class="result-label">稀释剂总量</div>
+                  <div class="result-value"><span id="total-thinner-ml">0</span> ml</div>
+                </div>
+              </div>
+
+              <div class="pressure-info">
+                <div class="pressure-label">推荐气压</div>
+                <div class="pressure-value"><span id="recommended-pressure">--</span> PSI</div>
+                <div class="pressure-sub">基于各油漆推荐气压加权平均</div>
+              </div>
+
+              <button id="record-mixing" class="btn btn-primary btn-large" disabled>记录这次调配</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="spraygun-tab" class="tab-content">
+        <div class="spraygun-layout">
+          <div class="spraygun-panel timer-panel">
+            <div class="panel-header">
+              <h2>⏱️ 喷笔使用计时</h2>
+            </div>
+            
+            <div class="timer-display" id="timer-display">
+              <div class="timer-time">00:00</div>
+              <div class="timer-status" id="timer-status">未开始</div>
+            </div>
+
+            <div class="form-group">
+              <label for="usage-type">当前使用油漆类型</label>
+              <select id="usage-type" class="form-select">
+                <option value="">-- 请选择类型 --</option>
+              </select>
+            </div>
+
+            <div class="type-clean-info" id="type-clean-info">
+              <div class="clean-info-item">
+                <span class="clean-info-label">建议清洗周期</span>
+                <span class="clean-info-value" id="type-clean-interval">-- 分钟</span>
+              </div>
+            </div>
+
+            <div class="timer-controls">
+              <button id="start-timer" class="btn btn-primary">▶ 开始使用</button>
+              <button id="pause-timer" class="btn btn-secondary" disabled>⏸ 暂停</button>
+              <button id="stop-timer" class="btn btn-danger" disabled>⏹ 结束</button>
+            </div>
+
+            <div class="quick-add">
+              <div class="form-group">
+                <label>快速添加使用时长</label>
+                <div class="quick-buttons">
+                  <button class="btn btn-secondary btn-small" data-minutes="5">+5分钟</button>
+                  <button class="btn btn-secondary btn-small" data-minutes="10">+10分钟</button>
+                  <button class="btn btn-secondary btn-small" data-minutes="15">+15分钟</button>
+                  <button class="btn btn-secondary btn-small" data-minutes="30">+30分钟</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spraygun-panel reminder-panel">
+            <div class="panel-header">
+              <h2>🔔 清洗提醒</h2>
+              <button id="mark-all-cleaned" class="btn btn-success btn-small">全部标记已清洗</button>
+            </div>
+            
+            <div id="reminder-list" class="reminder-list">
+              <div class="empty-state-small">
+                <p>暂无需要清洗的记录</p>
+              </div>
+            </div>
+
+            <div class="reminder-tips">
+              <h3>💡 清洗建议</h3>
+              <ul class="tips-list">
+                <li><strong>水性漆</strong>：每60分钟清洗一次，可用清水冲洗</li>
+                <li><strong>硝基漆</strong>：每30分钟清洗一次，使用专用稀释剂</li>
+                <li><strong>油性/珐琅漆</strong>：每20分钟清洗一次，彻底清洁</li>
+                <li><strong>换色前</strong>：必须清洗喷笔，避免颜色污染</li>
+                <li><strong>收工后</strong>：彻底清洗并吹干保存</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="spraygun-panel settings-panel">
+            <div class="panel-header">
+              <h2>⚙️ 清洗周期设置</h2>
+            </div>
+            
+            <div id="clean-settings-list" class="clean-settings-list">
+            </div>
+
+            <div class="settings-note">
+              <p>📝 提示：不同类型油漆的干燥速度不同，请根据实际使用情况调整清洗周期。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="history-tab" class="tab-content">
+        <div class="history-header">
+          <h2>调配历史记录</h2>
+          <button id="clear-history" class="btn btn-danger">清空记录</button>
+        </div>
+        <div class="history-list" id="history-list">
+          <div class="empty-state">
+            <p>暂无调配记录</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
