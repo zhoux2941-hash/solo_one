@@ -1,0 +1,17 @@
+{
+  "name": "express-label-printer",
+  "version": "1.0.0",
+  "description": "批量打印快递面单应用",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --debug"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^9.4.3",
+    "csv-parser": "^3.0.0",
+    "electron": "^28.0.0"
+  }
+}

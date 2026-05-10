@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>屏幕共享 - 主持人</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="main-app">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>🎙️ 主持人</h2>
+      <div class="status">正在分享屏幕...</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="connection-info">
+        <p>连接信息</p>
+        <p><strong>IP 地址:</strong> <code id="hostIp">--</code></p>
+        <p><strong>端口:</strong> <code id="hostPort">--</code></p>
+        <p class="ip-info" id="ipHint">参与者请使用此 IP 和端口连接</p>
+      </div>
+
+      <h3>参与者列表</h3>
+      <div class="file-drop-hint" id="fileDropHint">
+        📁 拖拽文件到用户发送
+      </div>
+      <ul class="client-list" id="clientList">
+        <li class="client-item">
+          <div class="client-info">
+            <div class="client-avatar">主</div>
+            <div>
+              <div class="client-name">主持人（您）</div>
+              <div class="client-role">HOST</div>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="sidebar-actions">
+      <button class="btn btn-primary" id="btnClearDrawings">🗑️ 清空涂鸦</button>
+      <button class="btn btn-secondary" id="btnScreenshot">📸 保存截图</button>
+      <button class="btn btn-secondary" id="btnStop">⏹️ 停止分享</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="tool-group">
+          <button class="tool-btn active" id="toolPen" title="画笔">✏️</button>
+          <button class="tool-btn" id="toolEraser" title="橡皮擦">🧹</button>
+        </div>
+        <div class="tool-group">
+          <input type="color" class="color-picker" id="colorPicker" value="#ff0000" title="选择颜色">
+        </div>
+        <div class="tool-group">
+          <label style="font-size: 0.85rem; color: #666;">粗细:</label>
+          <input type="range" class="brush-size" id="brushSize" min="1" max="20" value="5" title="画笔粗细">
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <div class="status-badge online">
+          <span class="status-dot"></span>
+          <span id="statusText">已连接</span>
+        </div>
+        <span id="fpsInfo" style="font-size: 0.85rem; color: #666;">FPS: --</span>
+      </div>
+    </div>
+
+    <div class="canvas-container" id="canvasContainer">
+      <div class="placeholder" id="placeholder">
+        <div style="font-size: 3rem; margin-bottom: 20px;">📺</div>
+        <p>正在准备屏幕共享...</p>
+      </div>
+      <img class="screen-image" id="screenImage" style="display: none;">
+      <canvas class="drawing-canvas" id="drawingCanvas"></canvas>
+    </div>
+
+    <div class="chat-panel" id="chatPanel">
+      <div class="chat-header">
+        <div class="chat-target" id="chatTarget">
+          <span class="chat-target-icon">👥</span>
+          <span class="chat-target-name">群聊</span>
+          <span class="chat-target-badge" id="chatTargetBadge" style="display: none;">私聊</span>
+        </div>
+        <button class="chat-toggle" id="chatToggle">▼</button>
+      </div>
+      
+      <div class="chat-body" id="chatBody">
+        <div class="chat-messages" id="chatMessages">
+        </div>
+        
+        <div class="chat-input-area">
+          <div class="chat-tools">
+            <button class="emoji-btn" id="emojiBtn" title="表情">😊</button>
+            <input type="file" id="fileInput" style="display: none;">
+            <button class="file-btn" id="fileBtn" title="发送文件">📎</button>
+          </div>
+          
+          <div class="emoji-picker hidden" id="emojiPicker">
+            <div class="emoji-grid">
+              <span class="emoji-item">😊</span>
+              <span class="emoji-item">😂</span>
+              <span class="emoji-item">🥰</span>
+              <span class="emoji-item">😍</span>
+              <span class="emoji-item">🤔</span>
+              <span class="emoji-item">😢</span>
+              <span class="emoji-item">😡</span>
+              <span class="emoji-item">👍</span>
+              <span class="emoji-item">👎</span>
+              <span class="emoji-item">❤️</span>
+              <span class="emoji-item">🔥</span>
+              <span class="emoji-item">🎉</span>
+              <span class="emoji-item">💯</span>
+              <span class="emoji-item">🙏</span>
+              <span class="emoji-item">👏</span>
+              <span class="emoji-item">😴</span>
+              <span class="emoji-item">🤣</span>
+              <span class="emoji-item">😱</span>
+              <span class="emoji-item">😭</span>
+              <span class="emoji-item">😤</span>
+              <span class="emoji-item">🤗</span>
+              <span class="emoji-item">😎</span>
+              <span class="emoji-item">🤯</span>
+              <span class="emoji-item">🥳</span>
+              <span class="emoji-item">💪</span>
+              <span class="emoji-item">🚀</span>
+              <span class="emoji-item">✨</span>
+              <span class="emoji-item">💡</span>
+              <span class="emoji-item">📌</span>
+              <span class="emoji-item">❓</span>
+              <span class="emoji-item">❗</span>
+              <span class="emoji-item">💬</span>
+            </div>
+          </div>
+          
+          <div class="chat-input-wrapper">
+            <textarea class="chat-input" id="chatInput" placeholder="输入消息... (Enter发送，Shift+Enter换行)" rows="1"></textarea>
+            <button class="send-btn" id="sendBtn">发送</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="file-transfer-panel hidden" id="fileTransferPanel">
+        <div class="file-transfer-info" id="fileTransferInfo">
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="host.js"></script>
+</body>
+</html>

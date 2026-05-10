@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>屏幕共享 - 开始</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="start-page">
+  <div class="start-container">
+    <h1>局域网屏幕共享 + 多人涂鸦</h1>
+    <p class="subtitle">选择您的角色开始</p>
+    
+    <div class="role-selection">
+      <div class="role-card" id="hostCard">
+        <div class="role-icon">🎙️</div>
+        <h2>主持人</h2>
+        <p>分享您的屏幕，管理参与者</p>
+        <button class="btn btn-primary" id="btnHost">开始主持</button>
+      </div>
+      
+      <div class="role-card" id="clientCard">
+        <div class="role-icon">👥</div>
+        <h2>参与者</h2>
+        <p>加入房间，观看和涂鸦</p>
+        <button class="btn btn-secondary" id="btnClient">加入房间</button>
+      </div>
+    </div>
+
+    <div class="client-form hidden" id="clientForm">
+      <h3>输入主持人信息</h3>
+      <div class="form-group">
+        <label for="hostIp">主持人 IP 地址</label>
+        <input type="text" id="hostIp" placeholder="例如: 192.168.1.100" value="localhost">
+      </div>
+      <div class="form-group">
+        <label for="hostPort">端口号</label>
+        <input type="number" id="hostPort" placeholder="例如: 3000" value="3000">
+      </div>
+      <div class="form-group">
+        <label for="clientName">您的昵称</label>
+        <input type="text" id="clientName" placeholder="输入您的昵称">
+      </div>
+      <div class="button-group">
+        <button class="btn btn-secondary" id="btnBack">返回</button>
+        <button class="btn btn-primary" id="btnJoin">加入</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    const path = require('path');
+
+    document.getElementById('btnHost').addEventListener('click', () => {
+      window.location.href = path.join(__dirname, 'host.html');
+    });
+
+    document.getElementById('btnClient').addEventListener('click', () => {
+      document.getElementById('hostCard').classList.add('hidden');
+      document.getElementById('clientCard').classList.add('hidden');
+      document.getElementById('clientForm').classList.remove('hidden');
+    });
+
+    document.getElementById('btnBack').addEventListener('click', () => {
+      document.getElementById('clientForm').classList.add('hidden');
+      document.getElementById('hostCard').classList.remove('hidden');
+      document.getElementById('clientCard').classList.remove('hidden');
+    });
+
+    document.getElementById('btnJoin').addEventListener('click', () => {
+      const hostIp = document.getElementById('hostIp').value.trim();
+      const hostPort = document.getElementById('hostPort').value.trim();
+      const clientName = document.getElementById('clientName').value.trim();
+
+      if (!hostIp || !hostPort) {
+        alert('请输入完整的主持人信息');
+        return;
+      }
+
+      const url = `client.html?ip=${encodeURIComponent(hostIp)}&port=${encodeURIComponent(hostPort)}&name=${encodeURIComponent(clientName)}`;
+      window.location.href = url;
+    });
+
+    document.getElementById('clientName').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('btnJoin').click();
+      }
+    });
+  </script>
+</body>
+</html>

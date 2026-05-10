@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.lawyer.letter.controller.MainController"
+      prefHeight="700" prefWidth="1000" spacing="10" style="-fx-background-color: #f5f5f5;">
+      
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+    
+    <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 10; -fx-background-color: #2c3e50; -fx-background-radius: 5;">
+        <Label text="律师函生成工具" style="-fx-text-fill: white; -fx-font-size: 20; -fx-font-weight: bold;"/>
+        <Pane HBox.hgrow="ALWAYS"/>
+        <Label text="版本 1.0" style="-fx-text-fill: #bdc3c7;"/>
+    </HBox>
+
+    <TabPane fx:id="mainTabPane" tabClosingPolicy="UNAVAILABLE">
+        <tabs>
+            <Tab text="  单文件生成  ">
+                <VBox spacing="10" style="-fx-padding: 10;">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="选择模板：" style="-fx-font-weight: bold; -fx-font-size: 14;"/>
+                        <ComboBox fx:id="templateComboBox" prefWidth="300" promptText="请选择模板"/>
+                    </HBox>
+                    
+                    <TitledPane text="模板预览">
+                        <TextArea fx:id="templatePreviewArea" editable="false" wrapText="true"
+                                  prefRowCount="12" style="-fx-font-family: 'SimSun'; -fx-font-size: 13;"/>
+                    </TitledPane>
+                    
+                    <TitledPane text="填写表单">
+                        <ScrollPane fitToWidth="true" prefHeight="230">
+                            <VBox fx:id="formFieldsContainer" spacing="5" style="-fx-padding: 10;"/>
+                        </ScrollPane>
+                    </TitledPane>
+                    
+                    <HBox spacing="15" alignment="CENTER">
+                        <Label text="输出格式：" style="-fx-font-weight: bold;"/>
+                        <RadioButton fx:id="formatDocx" text="Word文档 (.docx)" selected="true" toggleGroup="formatGroup"/>
+                        <RadioButton fx:id="formatRtf" text="RTF文档 (.rtf)" toggleGroup="formatGroup"/>
+                        <ToggleGroup fx:id="formatGroup"/>
+                    </HBox>
+                    
+                    <HBox spacing="10" alignment="CENTER">
+                        <Button text="📄 生成律师函" onAction="#generateLetter" 
+                                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 14; -fx-padding: 10 30; -fx-background-radius: 5;"
+                                prefHeight="40" prefWidth="150"/>
+                    </HBox>
+                </VBox>
+            </Tab>
+
+            <Tab text="  批量生成  ">
+                <VBox spacing="10" style="-fx-padding: 10;">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="选择模板：" style="-fx-font-weight: bold; -fx-font-size: 14;"/>
+                        <ComboBox fx:id="batchTemplateCombo" prefWidth="300" promptText="请选择模板"/>
+                    </HBox>
+                    
+                    <GridPane hgap="10" vgap="10">
+                        <Label text="委托人：" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="batchClientField" prefWidth="300" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                        <Label text="律师事务所：" GridPane.columnIndex="2" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="batchLawyerOfficeField" prefWidth="300" GridPane.columnIndex="3" GridPane.rowIndex="0"/>
+                        <Label text="经办律师：" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="batchLawyerNameField" prefWidth="300" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    </GridPane>
+                    
+                    <TitledPane text="公共字段（所有文件共用）">
+                        <TextArea fx:id="batchCommonFields" prefRowCount="5" wrapText="true"
+                                  style="-fx-font-family: 'Consolas'; -fx-font-size: 12;"/>
+                    </TitledPane>
+                    
+                    <TitledPane text="批量数据（每行一个对方，格式：对方名称,地址,金额）">
+                        <VBox>
+                            <TextArea fx:id="batchInputArea" prefRowCount="7" wrapText="true"
+                                      promptText="张三科技有限公司,北京市海淀区中关村大街1号,100000&#10;李四贸易公司,上海市浦东新区世纪大道100号,50000&#10;王五工作室,深圳市南山区科技园,20000"/>
+                            <Label text="提示：每行一个记录，用逗号分隔。最少只需填写对方名称" style="-fx-text-fill: #666; -fx-padding: 5;"/>
+                        </VBox>
+                    </TitledPane>
+                    
+                    <HBox spacing="15" alignment="CENTER">
+                        <Label text="输出格式：" style="-fx-font-weight: bold;"/>
+                        <RadioButton fx:id="batchFormatDocx" text="Word文档 (.docx)" selected="true" toggleGroup="batchFormatGroup"/>
+                        <RadioButton fx:id="batchFormatRtf" text="RTF文档 (.rtf)" toggleGroup="batchFormatGroup"/>
+                        <ToggleGroup fx:id="batchFormatGroup"/>
+                    </HBox>
+                    
+                    <HBox spacing="10" alignment="CENTER">
+                        <Button text="📂 批量生成" onAction="#generateBatch" 
+                                style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-size: 14; -fx-padding: 10 30; -fx-background-radius: 5;"
+                                prefHeight="40" prefWidth="150"/>
+                        <Label fx:id="batchStatusLabel" style="-fx-text-fill: #27ae60; -fx-font-weight: bold;"/>
+                    </HBox>
+                </VBox>
+            </Tab>
+
+            <Tab text="  历史记录  ">
+                <VBox spacing="10" style="-fx-padding: 10;">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="搜索：" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="searchField" prefWidth="300" promptText="输入委托人或对方名称搜索"/>
+                        <Pane HBox.hgrow="ALWAYS"/>
+                        <Button text="📖 打开文件" onAction="#openRecordFile" 
+                                style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 8 15;"/>
+                        <Button text="🗑️ 删除记录" onAction="#deleteRecord" 
+                                style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-padding: 8 15;"/>
+                    </HBox>
+                    
+                    <TableView fx:id="recordsTable" prefHeight="500">
+                        <columns>
+                            <TableColumn fx:id="colTemplate" text="模板类型" prefWidth="120"/>
+                            <TableColumn fx:id="colClient" text="委托人" prefWidth="150"/>
+                            <TableColumn fx:id="colCounterparty" text="对方名称" prefWidth="200"/>
+                            <TableColumn fx:id="colTime" text="生成时间" prefWidth="180"/>
+                            <TableColumn fx:id="colPath" text="文件路径" prefWidth="300"/>
+                        </columns>
+                    </TableView>
+                    
+                    <Label text="提示：双击记录可加载到表单重新编辑生成" style="-fx-text-fill: #666;"/>
+                </VBox>
+            </Tab>
+        </tabs>
+    </TabPane>
+</VBox>

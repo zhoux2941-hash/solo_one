@@ -1,0 +1,29 @@
+{
+  "name": "story-outline-manager",
+  "version": "1.0.0",
+  "description": "本地小说大纲管理器",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "build": {
+    "appId": "com.storyoutline.app",
+    "productName": "Story Outline Manager",
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "sql.js": "^1.10.3"
+  }
+}

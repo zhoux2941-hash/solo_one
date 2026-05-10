@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工时管理系统</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h1>⏱️ 工时管理</h1>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-view="timer">
+                    <span class="nav-icon">⏲️</span>
+                    <span>计时器</span>
+                </li>
+                <li class="nav-item" data-view="projects">
+                    <span class="nav-icon">📁</span>
+                    <span>项目管理</span>
+                </li>
+                <li class="nav-item" data-view="calendar">
+                    <span class="nav-icon">📅</span>
+                    <span>日历视图</span>
+                </li>
+                <li class="nav-item" data-view="reports">
+                    <span class="nav-icon">📊</span>
+                    <span>报表统计</span>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            <!-- 计时器视图 -->
+            <section class="view active" id="timer-view">
+                <h2 class="section-title">计时器</h2>
+                <div class="timer-container">
+                    <div class="timer-mode-switch">
+                        <button class="mode-btn active" data-mode="normal">⏱️ 普通计时</button>
+                        <button class="mode-btn" data-mode="pomodoro">🍅 番茄钟</button>
+                    </div>
+                    <div class="timer-display">
+                        <div class="time-display" id="time-display">00:00:00</div>
+                        <div class="timer-status" id="timer-status">准备开始</div>
+                    </div>
+                    <div class="timer-controls" id="normal-controls">
+                        <select id="project-select" class="form-select">
+                            <option value="">-- 选择项目 --</option>
+                        </select>
+                        <input type="text" id="notes-input" class="form-input" placeholder="添加备注...">
+                        <div class="timer-buttons">
+                            <button class="btn btn-primary" id="start-btn">开始计时</button>
+                            <button class="btn btn-danger" id="stop-btn" disabled>停止</button>
+                            <button class="btn btn-secondary" id="reset-btn">重置</button>
+                        </div>
+                    </div>
+                    <div class="timer-controls" id="pomodoro-controls" style="display: none;">
+                        <select id="pomodoro-project-select" class="form-select">
+                            <option value="">-- 选择项目 --</option>
+                        </select>
+                        <div class="pomodoro-settings">
+                            <div class="control-group">
+                                <label>工作时长（分钟）</label>
+                                <select id="pomodoro-work-time" class="form-select small-select">
+                                    <option value="25" selected>25</option>
+                                    <option value="30">30</option>
+                                    <option value="45">45</option>
+                                    <option value="50">50</option>
+                                </select>
+                            </div>
+                            <div class="control-group">
+                                <label>休息时长（分钟）</label>
+                                <select id="pomodoro-break-time" class="form-select small-select">
+                                    <option value="5" selected>5</option>
+                                    <option value="10">10</option>
+                                    <option value="15">15</option>
+                                </select>
+                            </div>
+                        </div>
+                        <input type="text" id="pomodoro-notes-input" class="form-input" placeholder="番茄钟备注...">
+                        <div class="pomodoro-stats">
+                            <span class="pomodoro-count">今日番茄钟: <strong id="pomodoro-today-count">0</strong> 个</span>
+                        </div>
+                        <div class="timer-buttons">
+                            <button class="btn btn-primary" id="pomodoro-start-btn">🍅 开始专注</button>
+                            <button class="btn btn-warning" id="pomodoro-pause-btn" disabled>⏸️ 暂停</button>
+                            <button class="btn btn-secondary" id="pomodoro-reset-btn">🔄 重置</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="recent-records">
+                    <h3>今日工作记录</h3>
+                    <div class="records-list" id="today-records">
+                        <p class="empty-state">暂无记录</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 项目管理视图 -->
+            <section class="view" id="projects-view">
+                <div class="view-header">
+                    <h2 class="section-title">项目管理</h2>
+                    <button class="btn btn-primary" id="add-project-btn">+ 新建项目</button>
+                </div>
+                <div class="projects-grid" id="projects-grid">
+                    <p class="empty-state">暂无项目，点击上方按钮创建</p>
+                </div>
+            </section>
+
+            <!-- 日历视图 -->
+            <section class="view" id="calendar-view">
+                <h2 class="section-title">日历视图</h2>
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <button class="btn btn-icon" id="prev-month">◀</button>
+                        <h3 id="calendar-title">2024年1月</h3>
+                        <button class="btn btn-icon" id="next-month">▶</button>
+                        <button class="btn btn-secondary" id="today-btn">今天</button>
+                    </div>
+                    <div class="calendar-weekdays">
+                        <div>周日</div>
+                        <div>周一</div>
+                        <div>周二</div>
+                        <div>周三</div>
+                        <div>周四</div>
+                        <div>周五</div>
+                        <div>周六</div>
+                    </div>
+                    <div class="calendar-grid" id="calendar-grid"></div>
+                </div>
+                <div class="day-detail" id="day-detail">
+                    <div class="day-detail-header">
+                        <h3 id="day-detail-title">选择日期查看详情</h3>
+                        <span class="day-total" id="day-total">总工时: 0小时</span>
+                    </div>
+                    <div class="day-records" id="day-records">
+                        <p class="empty-state">选择一个日期查看当日工作记录</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 报表视图 -->
+            <section class="view" id="reports-view">
+                <h2 class="section-title">报表统计</h2>
+                <div class="report-controls">
+                    <div class="control-group">
+                        <label>报表类型</label>
+                        <select id="report-type" class="form-select">
+                            <option value="weekly">本周</option>
+                            <option value="monthly">本月</option>
+                        </select>
+                    </div>
+                    <div class="control-group" id="date-range-group">
+                        <label>日期范围</label>
+                        <div class="date-range">
+                            <input type="date" id="report-start" class="form-input">
+                            <span>至</span>
+                            <input type="date" id="report-end" class="form-input">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-primary" id="generate-report">生成报表</button>
+                        <button class="btn btn-secondary" id="export-csv-btn">导出 CSV</button>
+                    </div>
+                </div>
+                <div class="report-summary" id="report-summary"></div>
+                <div class="report-table-container">
+                    <table class="report-table" id="report-table">
+                        <thead>
+                            <tr>
+                                <th>项目名称</th>
+                                <th>总工时</th>
+                                <th>小时费率</th>
+                                <th>收入</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 项目编辑弹窗 -->
+    <div class="modal" id="project-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">新建项目</h3>
+                <button class="btn btn-close" id="close-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="project-form">
+                    <input type="hidden" id="project-id">
+                    <div class="form-group">
+                        <label>项目名称 *</label>
+                        <input type="text" id="project-name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>预算（元）</label>
+                        <input type="number" id="project-budget" class="form-input" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>每小时费率（元） *</label>
+                        <input type="number" id="project-rate" class="form-input" step="0.01" min="0" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-project">取消</button>
+                <button class="btn btn-primary" id="save-project">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 工作记录编辑弹窗 -->
+    <div class="modal" id="record-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="record-modal-title">编辑工作记录</h3>
+                <button class="btn btn-close" id="close-record-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="record-form">
+                    <input type="hidden" id="record-id">
+                    <div class="form-group">
+                        <label>项目</label>
+                        <select id="record-project" class="form-select"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>日期</label>
+                        <input type="date" id="record-date" class="form-input" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>开始时间</label>
+                            <input type="time" id="record-start" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>结束时间</label>
+                            <input type="time" id="record-end" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>时长（分钟）</label>
+                        <input type="number" id="record-duration" class="form-input" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea id="record-notes" class="form-input" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-record">取消</button>
+                <button class="btn btn-primary" id="save-record">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

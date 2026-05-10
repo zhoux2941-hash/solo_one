@@ -1,0 +1,23 @@
+{
+  "name": "work-time-tracker",
+  "version": "1.0.0",
+  "description": "自由职业者工时管理系统",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "keywords": [
+    "electron",
+    "sqlite",
+    "time-tracker"
+  ],
+  "author": "Freelance Developer",
+  "license": "MIT",
+  "dependencies": {
+    "sql.js": "^1.10.2"
+  },
+  "devDependencies": {
+    "electron": "^12.0.0"
+  }
+}

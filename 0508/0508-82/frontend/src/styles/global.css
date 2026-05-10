@@ -1,0 +1,199 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+}
+
+.page-container {
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.el-card {
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.center-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.buzzer-button {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  font-size: 24px;
+  font-weight: bold;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
+}
+
+.buzzer-button:active {
+  transform: scale(0.95);
+}
+
+.buzzer-button.available {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border-color: #f5576c;
+}
+
+.buzzer-button.disabled {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  border-color: #a8edea;
+  opacity: 0.7;
+}
+
+.score-board {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.score-card {
+  min-width: 150px;
+  padding: 20px;
+  text-align: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #5ee7df 0%, #b490ca 100%);
+  color: white;
+}
+
+.question-display {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  margin: 20px 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.question-content {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.option-item {
+  padding: 15px 20px;
+  background: #f5f7fa;
+  border-radius: 8px;
+  font-size: 18px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.option-item:hover {
+  background: #e4e7ed;
+}
+
+.option-item.selected {
+  background: #409eff;
+  color: white;
+}
+
+.option-item.correct {
+  background: #67c23a;
+  color: white;
+}
+
+.option-item.wrong {
+  background: #f56c6c;
+  color: white;
+}
+
+.timer {
+  font-size: 48px;
+  font-weight: bold;
+  color: #f56c6c;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.timer.warning {
+  color: #e6a23c;
+  animation: pulse 1s infinite;
+}
+
+.timer.danger {
+  color: #f56c6c;
+  animation: pulse 0.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.winner-banner {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin: 20px 0;
+  animation: bounce 0.5s ease infinite alternate;
+}
+
+@keyframes bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-10px); }
+}
+
+.login-card {
+  max-width: 400px;
+  width: 100%;
+  padding: 40px;
+}
+
+.form-title {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 28px;
+  color: #303133;
+}
+
+.status-badge {
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.status-created {
+  background: #909399;
+  color: white;
+}
+
+.status-in-progress {
+  background: #409eff;
+  color: white;
+}
+
+.status-finished {
+  background: #67c23a;
+  color: white;
+}

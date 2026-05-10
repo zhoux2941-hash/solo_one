@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.trashbin.mapper.GarbageRecordMapper">
+
+    <resultMap id="RankResultMap" type="com.example.trashbin.dto.RankDTO">
+        <id column="resident_id" property="residentId"/>
+        <result column="room_number" property="roomNumber"/>
+        <result column="name" property="name"/>
+        <result column="total_points" property="totalPoints"/>
+        <result column="rank" property="rank"/>
+    </resultMap>
+
+    <select id="getMonthlyRank" resultMap="RankResultMap">
+        SELECT 
+            gr.resident_id,
+            r.room_number,
+            r.name,
+            SUM(gr.points_earned) as total_points,
+            @rownum := @rownum + 1 as rank
+        FROM 
+            garbage_record gr
+        INNER JOIN 
+            resident r ON gr.resident_id = r.id
+        WHERE 
+            gr.deleted = 0
+            AND r.deleted = 0
+            AND YEAR(gr.create_time) = #{year}
+            AND MONTH(gr.create_time) = #{month}
+        GROUP BY 
+            gr.resident_id, r.room_number, r.name
+        HAVING 
+            total_points > 0
+        ORDER BY 
+            total_points DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="getTotalRank" resultMap="RankResultMap">
+        SELECT 
+            gr.resident_id,
+            r.room_number,
+            r.name,
+            SUM(gr.points_earned) as total_points,
+            @rownum := @rownum + 1 as rank
+        FROM 
+            garbage_record gr
+        INNER JOIN 
+            resident r ON gr.resident_id = r.id
+        WHERE 
+            gr.deleted = 0
+            AND r.deleted = 0
+        GROUP BY 
+            gr.resident_id, r.room_number, r.name
+        HAVING 
+            total_points > 0
+        ORDER BY 
+            total_points DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

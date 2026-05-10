@@ -1,0 +1,24 @@
+{
+  "name": "code-snippet-manager",
+  "version": "1.0.0",
+  "description": "本地代码片段管理工具 - Electron + SQLite + CodeMirror",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "keywords": [
+    "electron",
+    "snippet",
+    "code-manager"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.3.3"
+  },
+  "dependencies": {
+    "sql.js": "^1.10.2",
+    "codemirror": "^5.65.16"
+  }
+}

@@ -1,0 +1,66 @@
+# 依赖目录
+node_modules/
+jspm_packages/
+
+# 构建输出
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# 日志文件
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# IDE 及编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 操作系统生成文件
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# 临时文件
+*.tmp
+*.temp
+*.cache
+
+# 测试覆盖率
+coverage/
+.nyc_output/
+
+# 打包文件
+*.log
+*.tgz
+*.gz
+*.rar
+
+# 大文件或二进制文件（可选，按需添加）
+*.exe
+*.dmg
+*.iso
+*.zip
+*.7z
+*.tar
+*.pkg
+*.class
+
+# 特定于 Electron 的忽略（如果你已经用 filter-repo 清除了历史，这可以防止再次提交）
+node_modules/electron/dist/electron.exe
+
+# 其他常见忽略
+.vercel
+.netlify

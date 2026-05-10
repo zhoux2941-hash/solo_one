@@ -1,0 +1,20 @@
+5/10 14:30:00.123 SPELL_DAMAGE,Player-1-1234,"Warrior",Player-2-5678,"TargetBoss",12345,"Mortal Strike",0x1,0x0,5000,0,0,0,0,0,0,0
+5/10 14:30:00.456 SPELL_DAMAGE,Player-1-3456,"Mage",Player-2-5678,"TargetBoss",12360,"Fireball""Explosion",0x1,0x0,6000,0,0,0,0,0,0,0
+5/10 14:30:01.234 SPELL_DAMAGE,Player-1-7890,"Rogue",Player-2-5678,"TargetBoss",12370,"Backstab,Critical",0x1,0x0,7000,0,0,0,0,0,0,0
+5/10 14:30:01.789 SPELL_HEAL,Player-1-9012,"Healer",Player-1-1234,"Warrior",12350,"圣光术",0x1,0x0,3000,0,0,0
+5/10 14:30:02.345 SPELL_DAMAGE,Player-1-1111,"Hunter",Player-2-5678,"TargetBoss",12380,"猎人印记:追踪",0x1,0x0,1500,0,0,0,0,0,0,0
+5/10 14:30:02.890 SPELL_DAMAGE,Player-1-2222,"Warlock",Player-2-5678,"TargetBoss",12390,"Shadow Bolt""Dark",0x1,0x0,4500,0,0,0,0,0,0,0
+5/10 14:30:03.456 SPELL_PERIODIC_HEAL,Player-1-9012,"Healer",Player-1-3456,"Mage",12351,"恢复-持续",0x1,0x0,500,0,0,0
+5/10 14:30:04.000 SPELL_DAMAGE,Player-1-1234,"Warrior",Player-2-5678,"TargetBoss",12346,"Slam""Heavy",0x1,0x0,4800,0,0,0,0,0,0,0
+5/10 14:30:04.567 SPELL_HEAL,Player-1-9012,"Healer",Player-1-7890,"Rogue",12352,"治疗术:快速",0x1,0x0,2800,0,0,0
+5/10 14:30:05.123 SWING_DAMAGE,Player-1-1234,"Warrior",Player-2-5678,"TargetBoss",0x1,0x0,0,0,0,0,0,0,2200,0,0,0
+5/10 14:30:05.678 SPELL_DAMAGE,Player-1-3333,"Shaman",Player-2-5678,"TargetBoss",12400,"闪电链(连锁)",0x1,0x0,3500,0,0,0,0,0,0,0
+5/10 14:30:06.234 SPELL_DAMAGE,Player-1-3456,"Mage",Player-2-5678,"TargetBoss",12361,"Frostbolt",0x1,0x0,3700,0,0,0,0,0,0,0
+5/10 14:30:06.789 SPELL_PERIODIC_DAMAGE,Player-1-3456,"Mage",Player-2-5678,"TargetBoss",12362,"Ignite""Burn",0x1,0x0,1600,0,0,0,0,0,0,0
+5/10 14:30:07.345 SPELL_DAMAGE,Player-1-7890,"Rogue",Player-2-5678,"TargetBoss",12371,"Sinister Strike",0x1,0x0,4300,0,0,0,0,0,0,0
+5/10 14:30:07.890 SPELL_DAMAGE,Player-1-4444,"Druid",Player-2-5678,"TargetBoss",12410,"月火术[月光]",0x1,0x0,2000,0,0,0,0,0,0,0
+5/10 14:30:08.456 SPELL_HEAL,Player-1-9012,"Healer",Player-1-3333,"Shaman",12350,"Holy Light",0x1,0x0,2500,0,0,0
+5/10 14:30:09.000 SPELL_DAMAGE,Player-1-1234,"Warrior",Player-2-5678,"TargetBoss",12345,"Mortal Strike",0x1,0x0,5400,0,0,0,0,0,0,0
+5/10 14:30:09.567 SPELL_DAMAGE,Player-1-7890,"Rogue",Player-2-5678,"TargetBoss",12370,"Backstab",0x1,0x0,7500,0,0,0,0,0,0,0
+5/10 14:30:10.123 SPELL_DAMAGE,Player-1-3456,"Mage",Player-2-5678,"TargetBoss",12360,"Fireball",0x1,0x0,5900,0,0,0,0,0,0,0
+5/10 14:30:10.678 SPELL_PERIODIC_HEAL,Player-1-9012,"Healer",Player-1-1234,"Warrior",12351,"Renew""Renewal",0x1,0x0,600,0,0,0

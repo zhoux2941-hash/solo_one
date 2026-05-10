@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>快递面单批量打印</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Microsoft YaHei', sans-serif; background: #f5f7fa; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .header h1 { font-size: 24px; color: #333; }
+    .toolbar { display: flex; gap: 10px; }
+    .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+    .btn-primary { background: #409eff; color: white; }
+    .btn-primary:hover { background: #66b1ff; }
+    .btn-success { background: #67c23a; color: white; }
+    .btn-success:hover { background: #85ce61; }
+    .btn-warning { background: #e6a23c; color: white; }
+    .btn-warning:hover { background: #ebb563; }
+    .btn-danger { background: #f56c6c; color: white; }
+    .btn-danger:hover { background: #f78989; }
+    .btn:disabled { background: #c0c4cc; cursor: not-allowed; }
+
+    .content { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
+    
+    .sidebar { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .sidebar h2 { font-size: 16px; margin-bottom: 15px; color: #333; }
+    .template-list { margin-bottom: 20px; }
+    .template-item { padding: 10px; margin-bottom: 8px; border: 1px solid #e4e7ed; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+    .template-item:hover { border-color: #409eff; }
+    .template-item.active { border-color: #409eff; background: #ecf5ff; }
+    .template-item .name { font-weight: bold; color: #333; }
+    .template-item .size { font-size: 12px; color: #909399; margin-top: 4px; }
+    .template-item .preset-badge { display: inline-block; font-size: 10px; padding: 2px 6px; background: #409eff; color: white; border-radius: 3px; margin-left: 5px; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; color: #606266; margin-bottom: 4px; }
+    .form-group input { width: 100%; padding: 6px 8px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .main-content { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .table-header h2 { font-size: 16px; color: #333; }
+    .table-actions { display: flex; gap: 10px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e4e7ed; }
+    th { background: #f5f7fa; font-weight: bold; color: #606266; font-size: 13px; }
+    td { font-size: 13px; color: #333; }
+    tr:hover { background: #f5f7fa; }
+    .checkbox { width: 40px; text-align: center; }
+    .print-status { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 12px; }
+    .status-printed { background: #67c23a; color: white; }
+    .status-not-printed { background: #909399; color: white; }
+
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; }
+    .pagination span { font-size: 13px; color: #606266; }
+
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; border-radius: 8px; padding: 30px; max-width: 800px; max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-header h2 { font-size: 18px; color: #333; }
+    .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #909399; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+    .records-list { max-height: 300px; overflow-y: auto; }
+    .record-item { padding: 12px; border-bottom: 1px solid #e4e7ed; }
+    .record-item:last-child { border-bottom: none; }
+    .record-time { font-size: 12px; color: #909399; margin-top: 4px; }
+
+    .message { position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 4px; z-index: 2000; animation: slideIn 0.3s; }
+    @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    .message.success { background: #67c23a; color: white; }
+    .message.error { background: #f56c6c; color: white; }
+    .message.info { background: #409eff; color: white; }
+
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+    .stat-card { background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .stat-card .value { font-size: 28px; font-weight: bold; color: #409eff; }
+    .stat-card .label { font-size: 13px; color: #909399; margin-top: 5px; }
+
+    .template-item-header { display: flex; justify-content: space-between; align-items: center; }
+    .template-item-actions { display: flex; gap: 4px; }
+    .template-item-actions button { background: transparent; border: none; cursor: pointer; padding: 3px 6px; border-radius: 3px; font-size: 11px; transition: all 0.2s; }
+    .template-item-actions button:hover { background: rgba(64, 158, 255, 0.1); color: #409eff; }
+    .template-item-actions button.delete:hover { background: rgba(245, 108, 108, 0.1); color: #f56c6c; }
+
+    .field-group-title { background: #f5f7fa; padding: 8px 12px; border-radius: 4px; margin: 10px 0 5px; font-weight: bold; font-size: 13px; color: #606266; }
+
+    .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+    .tab { padding: 8px 16px; background: #e4e7ed; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+    .tab:hover { background: #dcdfe6; }
+    .tab.active { background: #409eff; color: white; }
+
+    .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .section-card { background: #f5f7fa; padding: 15px; border-radius: 6px; }
+    .section-title { font-weight: bold; margin-bottom: 10px; color: #409eff; }
+
+    .form-group select { width: 100%; padding: 6px 8px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; background: white; }
+    .form-group textarea { width: 100%; padding: 6px 8px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; font-family: inherit; resize: vertical; min-height: 60px; }
+
+    .tracking-no { font-weight: bold; color: #409eff; font-family: monospace; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; }
+    .badge-api { background: #67c23a; color: white; }
+    .badge-csv { background: #e6a23c; color: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📦 快递面单批量打印</h1>
+      <div class="toolbar">
+        <button class="btn btn-warning" onclick="showApiConfigModal()">⚙️ API配置</button>
+        <button class="btn btn-primary" onclick="showELabelModal()">📝 获取电子面单</button>
+        <button class="btn btn-primary" onclick="importCSV()">📥 导入CSV</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="value" id="stat-total">0</div>
+        <div class="label">总订单</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="stat-printed">0</div>
+        <div class="label">已打印</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="stat-selected">0</div>
+        <div class="label">已选择</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="stat-templates">0</div>
+        <div class="label">可用模板</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="sidebar">
+        <h2>📋 快递模板</h2>
+        <div class="template-list" id="template-list"></div>
+        <button class="btn btn-primary" style="width: 100%;" onclick="showAddTemplateModal()">➕ 新建模板</button>
+        <div style="margin-top: 20px;">
+          <h2>⚡ 操作</h2>
+          <button class="btn btn-warning" style="width: 100%; margin-bottom: 10px;" onclick="editSelectedTemplate()">✏️ 编辑模板</button>
+          <button class="btn btn-danger" style="width: 100%; margin-bottom: 10px;" onclick="deleteSelectedTemplate()">🗑️ 删除模板</button>
+          <button class="btn btn-warning" style="width: 100%; margin-bottom: 10px;" onclick="previewSelected()">👁️ 预览</button>
+          <button class="btn btn-success" style="width: 100%;" onclick="printSelected()">🖨️ 批量打印</button>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div class="table-header">
+          <h2>📝 订单列表</h2>
+          <div class="table-actions">
+            <label style="display: flex; align-items: center; gap: 5px; font-size: 13px;">
+              <input type="checkbox" id="select-all" onchange="toggleSelectAll()"> 全选
+            </label>
+            <button class="btn btn-primary" onclick="loadOrders()">🔄 刷新</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th class="checkbox">选择</th>
+              <th>ID</th>
+              <th>运单号</th>
+              <th>快递</th>
+              <th>收件人</th>
+              <th>电话</th>
+              <th>地址</th>
+              <th>商品</th>
+              <th>来源</th>
+              <th>打印状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table"></tbody>
+        </table>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="template-modal">
+    <div class="modal-content" style="width: 700px;">
+      <div class="modal-header">
+        <h2 id="template-modal-title">新建打印模板</h2>
+        <button class="close-btn" onclick="hideModal('template-modal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label>模板名称</label>
+        <input type="text" id="new-template-name" placeholder="如：自定义模板">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>纸张宽度 (mm)</label>
+          <input type="number" id="new-paper-width" value="100">
+        </div>
+        <div class="form-group">
+          <label>纸张高度 (mm)</label>
+          <input type="number" id="new-paper-height" value="150">
+        </div>
+      </div>
+      <h3 style="font-size: 14px; margin: 15px 0 10px; color: #606266;">字段位置 (X, Y, 字号)</h3>
+      <div style="background: #f5f7fa; padding: 15px; border-radius: 4px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>姓名 X</label>
+            <input type="number" id="new-name-x" value="20">
+          </div>
+          <div class="form-group">
+            <label>姓名 Y</label>
+            <input type="number" id="new-name-y" value="30">
+          </div>
+          <div class="form-group">
+            <label>姓名字号</label>
+            <input type="number" id="new-name-font" value="14">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>地址 X</label>
+            <input type="number" id="new-address-x" value="20">
+          </div>
+          <div class="form-group">
+            <label>地址 Y</label>
+            <input type="number" id="new-address-y" value="60">
+          </div>
+          <div class="form-group">
+            <label>地址字号</label>
+            <input type="number" id="new-address-font" value="12">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>电话 X</label>
+            <input type="number" id="new-phone-x" value="20">
+          </div>
+          <div class="form-group">
+            <label>电话 Y</label>
+            <input type="number" id="new-phone-y" value="100">
+          </div>
+          <div class="form-group">
+            <label>电话字号</label>
+            <input type="number" id="new-phone-font" value="13">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>商品 X</label>
+            <input type="number" id="new-product-x" value="20">
+          </div>
+          <div class="form-group">
+            <label>商品 Y</label>
+            <input type="number" id="new-product-y" value="120">
+          </div>
+          <div class="form-group">
+            <label>商品字号</label>
+            <input type="number" id="new-product-font" value="11">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="hideModal('template-modal')">取消</button>
+        <button class="btn btn-primary" onclick="saveTemplate()">保存模板</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="records-modal">
+    <div class="modal-content" style="width: 500px;">
+      <div class="modal-header">
+        <h2>打印记录</h2>
+        <button class="close-btn" onclick="hideModal('records-modal')">&times;</button>
+      </div>
+      <div class="records-list" id="records-list"></div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="hideModal('records-modal')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="api-config-modal">
+    <div class="modal-content" style="width: 550px;">
+      <div class="modal-header">
+        <h2>⚙️ API配置</h2>
+        <button class="close-btn" onclick="hideModal('api-config-modal')">&times;</button>
+      </div>
+      <div style="background: #f5f7fa; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 12px; color: #606266;">
+        <strong>📌 说明：</strong>
+        <br>1. 访问 <a href="https://www.kdniao.com/" target="_blank" style="color: #409eff;">快递鸟官网</a> 注册账号
+        <br>2. 申请电子面单API服务（RequestType: 1007）
+        <br>3. 获取 EBusinessID（商户ID）和 AppKey（API密钥）
+        <br>4. 部分快递公司需要月结账号，请在下方填写
+      </div>
+      <div class="form-group">
+        <label>服务商</label>
+        <select id="api-provider" disabled>
+          <option value="kdniao" selected>快递鸟 (Kdniao)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>EBusinessID（商户ID）</label>
+        <input type="text" id="api-ebusiness-id" placeholder="请输入商户ID">
+      </div>
+      <div class="form-group">
+        <label>AppKey（API密钥）</label>
+        <input type="text" id="api-app-key" placeholder="请输入API密钥">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="api-sandbox" checked>
+            <span>使用沙箱环境（测试用）</span>
+          </label>
+        </div>
+      </div>
+      <div class="field-group-title">📦 月结账号配置（可选，部分快递需要）</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>CustomerName（月结用户名）</label>
+          <input type="text" id="api-customer-name" placeholder="如顺丰：顺丰月结卡号">
+        </div>
+        <div class="form-group">
+          <label>CustomerPwd（月结密码）</label>
+          <input type="text" id="api-customer-pwd" placeholder="部分快递需要">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>MonthCode（月结编码）</label>
+        <input type="text" id="api-month-code" placeholder="部分快递需要">
+      </div>
+      <div class="field-group-title">🏠 发件人信息（默认）</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>发件人姓名</label>
+          <input type="text" id="default-shipper-name" placeholder="如：张总">
+        </div>
+        <div class="form-group">
+          <label>发件人电话</label>
+          <input type="text" id="default-shipper-phone" placeholder="如：13800000000">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>省份</label>
+          <input type="text" id="default-shipper-province" placeholder="如：广东省">
+        </div>
+        <div class="form-group">
+          <label>城市</label>
+          <input type="text" id="default-shipper-city" placeholder="如：深圳市">
+        </div>
+        <div class="form-group">
+          <label>区/县</label>
+          <input type="text" id="default-shipper-district" placeholder="如：南山区">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>详细地址</label>
+        <input type="text" id="default-shipper-address" placeholder="如：科技园南区高新南一道">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="hideModal('api-config-modal')">取消</button>
+        <button class="btn btn-primary" onclick="saveApiConfig()">保存配置</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="elabel-modal">
+    <div class="modal-content" style="width: 850px;">
+      <div class="modal-header">
+        <h2>📝 获取电子面单</h2>
+        <button class="close-btn" onclick="hideModal('elabel-modal')">&times;</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>快递公司 <span style="color: #f56c6c;">*</span></label>
+          <select id="elabel-shipper-code">
+            <option value="">请选择</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>订单编号（可选）</label>
+          <input type="text" id="elabel-order-no" placeholder="不填则自动生成">
+        </div>
+        <div class="form-group">
+          <label>付款方式</label>
+          <select id="elabel-pay-type">
+            <option value="1">寄付（月结）</option>
+            <option value="2">到付</option>
+            <option value="3">第三方付</option>
+          </select>
+        </div>
+      </div>
+      <div class="two-column">
+        <div class="section-card">
+          <div class="section-title">📤 发件人信息</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>姓名 <span style="color: #f56c6c;">*</span></label>
+              <input type="text" id="elabel-shipper-name" placeholder="发件人姓名">
+            </div>
+            <div class="form-group">
+              <label>电话 <span style="color: #f56c6c;">*</span></label>
+              <input type="text" id="elabel-shipper-phone" placeholder="发件人电话">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>省份 <span style="color: #f56c6c;">*</span></label>
+              <input type="text" id="elabel-shipper-province" placeholder="如：广东省">
+            </div>
+            <div class="form-group">
+              <label>城市 <span style="color: #f56c6c;">*</span></label>
+              <input type="text" id="elabel-shipper-city" placeholder="如：深圳市">
+            </div>
+            <div class="form-group">
+              <label>区/县 <span style="color: #f56c6c;">*</span></label>
+              <input type="text" id="elabel-shipper-district" placeholder="如：南山区">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>详细地址 <span style="color: #f56c6c;">*</span></label>
+            <input type="text" id="elabel-shipper-address" placeholder="详细地址">
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="section-title">📥 收件人信息</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>姓名 <span style="color: #f56c6c;">*</span></label>
+              <input type="text" id="elabel-name" placeholder="收件人姓名">
+            </div>
+            <div class="form-group">
+              <label>电话 <span style="color: #f56c6c;">*</span></label>
+              <input type="text" id="elabel-phone" placeholder="收件人电话">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>省份 <span style="color: #f56c6c;">*</span></label>
+              <input type="text" id="elabel-province" placeholder="如：北京市">
+            </div>
+            <div class="form-group">
+              <label>城市 <span style="color: #f56c6c;">*</span></label>
+              <input type="text" id="elabel-city" placeholder="如：朝阳区">
+            </div>
+            <div class="form-group">
+              <label>区/县 <span style="color: #f56c6c;">*</span></label>
+              <input type="text" id="elabel-district" placeholder="如：朝阳区">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>详细地址 <span style="color: #f56c6c;">*</span></label>
+            <input type="text" id="elabel-address" placeholder="详细地址">
+          </div>
+        </div>
+      </div>
+      <div class="field-group-title">📦 商品信息</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>商品名称 <span style="color: #f56c6c;">*</span></label>
+          <input type="text" id="elabel-product" placeholder="如：iPhone 15 Pro">
+        </div>
+        <div class="form-group">
+          <label>数量</label>
+          <input type="number" id="elabel-quantity" value="1" min="1">
+        </div>
+        <div class="form-group">
+          <label>重量 (kg)</label>
+          <input type="number" id="elabel-weight" value="1" min="0.1" step="0.1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>备注</label>
+        <textarea id="elabel-remark" placeholder="选填"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="hideModal('elabel-modal')">取消</button>
+        <button class="btn btn-primary" onclick="createELabel()" id="btn-create-elabel">获取电子面单</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    
+    let currentPage = 1;
+    const pageSize = 20;
+    let templates = [];
+    let selectedTemplateId = null;
+    let selectedOrderIds = new Set();
+    let orders = [];
+
+    function showMessage(text, type = 'info') {
+      const msg = document.createElement('div');
+      msg.className = `message ${type}`;
+      msg.textContent = text;
+      document.body.appendChild(msg);
+      setTimeout(() => msg.remove(), 3000);
+    }
+
+    function showModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+
+    function hideModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    async function loadTemplates(keepSelected = false) {
+      const previousSelectedId = selectedTemplateId;
+      templates = await ipcRenderer.invoke('get-templates');
+      const list = document.getElementById('template-list');
+      list.innerHTML = '';
+      
+      templates.forEach((t, index) => {
+        const isSelected = keepSelected ? t.id === previousSelectedId : index === 0;
+        const div = document.createElement('div');
+        div.className = `template-item${isSelected ? ' active' : ''}`;
+        if (isSelected) selectedTemplateId = t.id;
+        
+        const canEdit = !t.is_preset;
+        
+        div.innerHTML = `
+          <div class="template-item-header" onclick="selectTemplate(${t.id}, this.closest('.template-item'))">
+            <div>
+              <span class="name">${t.name}</span>
+              ${t.is_preset ? '<span class="preset-badge">预设</span>' : ''}
+            </div>
+            ${canEdit ? `
+              <div class="template-item-actions" onclick="event.stopPropagation()">
+                <button onclick="editTemplateById(${t.id})" title="编辑">✏️</button>
+                <button class="delete" onclick="deleteTemplateById(${t.id}, '${t.name}')" title="删除">🗑️</button>
+              </div>
+            ` : ''}
+          </div>
+          <div class="size">${t.paper_width} × ${t.paper_height} mm</div>
+        `;
+        list.appendChild(div);
+      });
+
+      document.getElementById('stat-templates').textContent = templates.length;
+    }
+
+    function selectTemplate(id, element) {
+      selectedTemplateId = id;
+      document.querySelectorAll('.template-item').forEach(el => el.classList.remove('active'));
+      element.classList.add('active');
+    }
+
+    async function loadOrders() {
+      const result = await ipcRenderer.invoke('get-orders', currentPage, pageSize);
+      orders = result.orders;
+      
+      const table = document.getElementById('orders-table');
+      table.innerHTML = '';
+
+      let printedCount = 0;
+      orders.forEach(order => {
+        if (order.print_count > 0) printedCount++;
+        const hasApiTemplate = order.tracking_no && order.print_template;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="checkbox">
+            <input type="checkbox" data-id="${order.id}" ${selectedOrderIds.has(order.id) ? 'checked' : ''} onchange="toggleOrder(${order.id})">
+          </td>
+          <td>${order.id}</td>
+          <td>
+            ${order.tracking_no ? `<span class="tracking-no">${order.tracking_no}</span>` : '<span style="color: #909399;">-</span>'}
+          </td>
+          <td>${order.shipper_code || '-'}</td>
+          <td>${order.name}</td>
+          <td>${order.phone}</td>
+          <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${order.address}</td>
+          <td>${order.product}</td>
+          <td>
+            ${hasApiTemplate 
+              ? '<span class="badge badge-api">API</span>' 
+              : '<span class="badge badge-csv">CSV</span>'}
+          </td>
+          <td><span class="print-status ${order.print_count > 0 ? 'status-printed' : 'status-not-printed'}">${order.print_count > 0 ? `已打印 ${order.print_count} 次` : '未打印'}</span></td>
+          <td>
+            <div style="display: flex; gap: 4px;">
+              ${hasApiTemplate ? `<button class="btn btn-primary" style="padding: 4px 8px; font-size: 12px;" onclick="printApiTemplate(${order.id})">📄 面单</button>` : ''}
+              <button class="btn btn-primary" style="padding: 4px 8px; font-size: 12px;" onclick="viewRecords(${order.id})">📋</button>
+              <button class="btn btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="deleteOrder(${order.id})">🗑️</button>
+            </div>
+          </td>
+        `;
+        table.appendChild(tr);
+      });
+
+      document.getElementById('stat-total').textContent = result.total;
+      document.getElementById('stat-printed').textContent = printedCount;
+      document.getElementById('stat-selected').textContent = selectedOrderIds.size;
+
+      renderPagination(result.total, result.page, result.pageSize);
+    }
+
+    async function deleteOrder(orderId) {
+      if (!confirm('确定要删除这个订单吗？')) {
+        return;
+      }
+      const result = await ipcRenderer.invoke('delete-order', orderId);
+      if (result.success) {
+        showMessage('订单删除成功！', 'success');
+        selectedOrderIds.delete(orderId);
+        loadOrders();
+      }
+    }
+
+    async function printApiTemplate(orderId) {
+      const result = await ipcRenderer.invoke('print-template-from-api', orderId);
+      if (!result.success && result.message) {
+        showMessage(result.message, 'error');
+      }
+    }
+
+    function renderPagination(total, page, pageSize) {
+      const totalPages = Math.ceil(total / pageSize);
+      const pagination = document.getElementById('pagination');
+      pagination.innerHTML = `
+        <button class="btn" onclick="changePage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>上一页</button>
+        <span>第 ${page} / ${totalPages} 页，共 ${total} 条</span>
+        <button class="btn" onclick="changePage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>下一页</button>
+      `;
+    }
+
+    function changePage(page) {
+      if (page < 1) return;
+      currentPage = page;
+      loadOrders();
+    }
+
+    function toggleOrder(id) {
+      if (selectedOrderIds.has(id)) {
+        selectedOrderIds.delete(id);
+      } else {
+        selectedOrderIds.add(id);
+      }
+      document.getElementById('stat-selected').textContent = selectedOrderIds.size;
+    }
+
+    function toggleSelectAll() {
+      const checked = document.getElementById('select-all').checked;
+      orders.forEach(order => {
+        if (checked) {
+          selectedOrderIds.add(order.id);
+        } else {
+          selectedOrderIds.delete(order.id);
+        }
+      });
+      loadOrders();
+    }
+
+    async function importCSV() {
+      const result = await ipcRenderer.invoke('import-csv');
+      if (result.success) {
+        showMessage(`成功导入 ${result.count} 条订单！`, 'success');
+        currentPage = 1;
+        loadOrders();
+      } else if (result.message !== '已取消') {
+        showMessage(result.message, 'error');
+      }
+    }
+
+    let editingTemplateId = null;
+
+    function clearTemplateForm() {
+      document.getElementById('template-modal-title').textContent = '新建打印模板';
+      document.getElementById('new-template-name').value = '';
+      document.getElementById('new-paper-width').value = '100';
+      document.getElementById('new-paper-height').value = '150';
+      document.getElementById('new-name-x').value = '20';
+      document.getElementById('new-name-y').value = '30';
+      document.getElementById('new-name-font').value = '14';
+      document.getElementById('new-address-x').value = '20';
+      document.getElementById('new-address-y').value = '60';
+      document.getElementById('new-address-font').value = '12';
+      document.getElementById('new-phone-x').value = '20';
+      document.getElementById('new-phone-y').value = '100';
+      document.getElementById('new-phone-font').value = '13';
+      document.getElementById('new-product-x').value = '20';
+      document.getElementById('new-product-y').value = '120';
+      document.getElementById('new-product-font').value = '11';
+      editingTemplateId = null;
+    }
+
+    function showAddTemplateModal() {
+      clearTemplateForm();
+      showModal('template-modal');
+    }
+
+    function getSelectedTemplate() {
+      return templates.find(t => t.id === selectedTemplateId);
+    }
+
+    function getTemplateById(id) {
+      return templates.find(t => t.id === id);
+    }
+
+    function editTemplateById(id) {
+      const template = getTemplateById(id);
+      if (!template) {
+        showMessage('模板不存在', 'error');
+        return;
+      }
+
+      if (template.is_preset) {
+        showMessage('预设模板不可编辑', 'warning');
+        return;
+      }
+
+      selectedTemplateId = id;
+      editingTemplateId = template.id;
+      document.getElementById('template-modal-title').textContent = '编辑模板 - ' + template.name;
+      document.getElementById('new-template-name').value = template.name;
+      document.getElementById('new-paper-width').value = template.paper_width;
+      document.getElementById('new-paper-height').value = template.paper_height;
+      document.getElementById('new-name-x').value = template.name_x;
+      document.getElementById('new-name-y').value = template.name_y;
+      document.getElementById('new-name-font').value = template.name_font_size;
+      document.getElementById('new-address-x').value = template.address_x;
+      document.getElementById('new-address-y').value = template.address_y;
+      document.getElementById('new-address-font').value = template.address_font_size;
+      document.getElementById('new-phone-x').value = template.phone_x;
+      document.getElementById('new-phone-y').value = template.phone_y;
+      document.getElementById('new-phone-font').value = template.phone_font_size;
+      document.getElementById('new-product-x').value = template.product_x;
+      document.getElementById('new-product-y').value = template.product_y;
+      document.getElementById('new-product-font').value = template.product_font_size;
+
+      showModal('template-modal');
+    }
+
+    async function editSelectedTemplate() {
+      if (!selectedTemplateId) {
+        showMessage('请先选择模板', 'error');
+        return;
+      }
+
+      const template = getSelectedTemplate();
+      if (!template) {
+        showMessage('模板不存在', 'error');
+        return;
+      }
+
+      if (template.is_preset) {
+        showMessage('预设模板不可编辑', 'warning');
+        return;
+      }
+
+      editTemplateById(selectedTemplateId);
+    }
+
+    async function deleteTemplateById(id, name) {
+      if (!confirm(`确定要删除模板 "${name}" 吗？`)) {
+        return;
+      }
+
+      const result = await ipcRenderer.invoke('delete-template', id);
+      if (result.success) {
+        if (selectedTemplateId === id) {
+          selectedTemplateId = null;
+        }
+        showMessage('模板删除成功！', 'success');
+        loadTemplates();
+      } else {
+        showMessage('删除失败', 'error');
+      }
+    }
+
+    async function deleteSelectedTemplate() {
+      if (!selectedTemplateId) {
+        showMessage('请先选择模板', 'error');
+        return;
+      }
+
+      const template = getSelectedTemplate();
+      if (!template) {
+        showMessage('模板不存在', 'error');
+        return;
+      }
+
+      if (template.is_preset) {
+        showMessage('预设模板不可删除', 'warning');
+        return;
+      }
+
+      deleteTemplateById(selectedTemplateId, template.name);
+    }
+
+    async function saveTemplate() {
+      const template = {
+        id: editingTemplateId,
+        name: document.getElementById('new-template-name').value,
+        paper_width: parseFloat(document.getElementById('new-paper-width').value),
+        paper_height: parseFloat(document.getElementById('new-paper-height').value),
+        name_x: parseFloat(document.getElementById('new-name-x').value),
+        name_y: parseFloat(document.getElementById('new-name-y').value),
+        name_font_size: parseFloat(document.getElementById('new-name-font').value),
+        address_x: parseFloat(document.getElementById('new-address-x').value),
+        address_y: parseFloat(document.getElementById('new-address-y').value),
+        address_font_size: parseFloat(document.getElementById('new-address-font').value),
+        phone_x: parseFloat(document.getElementById('new-phone-x').value),
+        phone_y: parseFloat(document.getElementById('new-phone-y').value),
+        phone_font_size: parseFloat(document.getElementById('new-phone-font').value),
+        product_x: parseFloat(document.getElementById('new-product-x').value),
+        product_y: parseFloat(document.getElementById('new-product-y').value),
+        product_font_size: parseFloat(document.getElementById('new-product-font').value)
+      };
+
+      if (!template.name) {
+        showMessage('请输入模板名称', 'error');
+        return;
+      }
+
+      const result = await ipcRenderer.invoke('save-template', template);
+      if (result.success) {
+        showMessage(editingTemplateId ? '模板更新成功！' : '模板保存成功！', 'success');
+        hideModal('template-modal');
+        if (editingTemplateId) {
+          selectedTemplateId = editingTemplateId;
+          loadTemplates(true);
+        } else {
+          loadTemplates();
+        }
+      } else {
+        showMessage('保存失败', 'error');
+      }
+    }
+
+    async function previewSelected() {
+      if (selectedOrderIds.size === 0) {
+        showMessage('请先选择订单', 'error');
+        return;
+      }
+      if (!selectedTemplateId) {
+        showMessage('请选择模板', 'error');
+        return;
+      }
+
+      await ipcRenderer.invoke('print-preview', Array.from(selectedOrderIds), selectedTemplateId);
+    }
+
+    async function printSelected() {
+      if (selectedOrderIds.size === 0) {
+        showMessage('请先选择订单', 'error');
+        return;
+      }
+      if (!selectedTemplateId) {
+        showMessage('请选择模板', 'error');
+        return;
+      }
+
+      showMessage('正在打印...', 'info');
+      const result = await ipcRenderer.invoke('print-preview', Array.from(selectedOrderIds), selectedTemplateId);
+      if (result.success) {
+        showMessage('打印成功！记录已保存', 'success');
+        loadOrders();
+      } else {
+        showMessage('打印失败', 'error');
+      }
+    }
+
+    async function viewRecords(orderId) {
+      const records = await ipcRenderer.invoke('get-print-records', orderId);
+      const list = document.getElementById('records-list');
+      
+      if (records.length === 0) {
+        list.innerHTML = '<p style="text-align: center; color: #909399; padding: 30px;">暂无打印记录</p>';
+      } else {
+        list.innerHTML = records.map(r => `
+          <div class="record-item">
+            <div>使用模板：<strong>${r.template_name}</strong></div>
+            <div class="record-time">打印时间：${r.printed_at}</div>
+          </div>
+        `).join('');
+      }
+
+      showModal('records-modal');
+    }
+
+    let currentApiConfig = null;
+    let shipperCodes = [];
+
+    async function loadApiConfig() {
+      currentApiConfig = await ipcRenderer.invoke('get-api-config');
+      if (currentApiConfig) {
+        document.getElementById('api-ebusiness-id').value = currentApiConfig.e_business_id || '';
+        document.getElementById('api-app-key').value = currentApiConfig.app_key || '';
+        document.getElementById('api-sandbox').checked = currentApiConfig.is_sandbox === 1;
+        document.getElementById('api-customer-name').value = currentApiConfig.customer_name || '';
+        document.getElementById('api-customer-pwd').value = currentApiConfig.customer_pwd || '';
+        document.getElementById('api-month-code').value = currentApiConfig.month_code || '';
+        document.getElementById('default-shipper-name').value = currentApiConfig.shipper_name || '';
+        document.getElementById('default-shipper-phone').value = currentApiConfig.shipper_phone || '';
+        document.getElementById('default-shipper-province').value = currentApiConfig.shipper_province || '';
+        document.getElementById('default-shipper-city').value = currentApiConfig.shipper_city || '';
+        document.getElementById('default-shipper-district').value = currentApiConfig.shipper_district || '';
+        document.getElementById('default-shipper-address').value = currentApiConfig.shipper_address || '';
+      }
+    }
+
+    async function saveApiConfig() {
+      const config = {
+        e_business_id: document.getElementById('api-ebusiness-id').value.trim(),
+        app_key: document.getElementById('api-app-key').value.trim(),
+        is_sandbox: document.getElementById('api-sandbox').checked,
+        customer_name: document.getElementById('api-customer-name').value.trim(),
+        customer_pwd: document.getElementById('api-customer-pwd').value.trim(),
+        month_code: document.getElementById('api-month-code').value.trim(),
+        shipper_name: document.getElementById('default-shipper-name').value.trim(),
+        shipper_phone: document.getElementById('default-shipper-phone').value.trim(),
+        shipper_province: document.getElementById('default-shipper-province').value.trim(),
+        shipper_city: document.getElementById('default-shipper-city').value.trim(),
+        shipper_district: document.getElementById('default-shipper-district').value.trim(),
+        shipper_address: document.getElementById('default-shipper-address').value.trim()
+      };
+
+      if (!config.e_business_id || !config.app_key) {
+        showMessage('请填写 EBusinessID 和 AppKey', 'error');
+        return;
+      }
+
+      const result = await ipcRenderer.invoke('save-api-config', config);
+      if (result.success) {
+        showMessage('API配置保存成功！', 'success');
+        currentApiConfig = config;
+        hideModal('api-config-modal');
+      } else {
+        showMessage('保存失败', 'error');
+      }
+    }
+
+    function showApiConfigModal() {
+      loadApiConfig();
+      showModal('api-config-modal');
+    }
+
+    async function loadShipperCodes() {
+      shipperCodes = await ipcRenderer.invoke('get-shipper-codes');
+      const select = document.getElementById('elabel-shipper-code');
+      select.innerHTML = '<option value="">请选择</option>';
+      shipperCodes.forEach(s => {
+        const option = document.createElement('option');
+        option.value = s.code;
+        option.textContent = `${s.name} (${s.code})`;
+        select.appendChild(option);
+      });
+    }
+
+    function showELabelModal() {
+      if (!currentApiConfig || !currentApiConfig.e_business_id) {
+        showMessage('请先配置API密钥', 'error');
+        showApiConfigModal();
+        return;
+      }
+      
+      document.getElementById('elabel-shipper-name').value = currentApiConfig.shipper_name || '';
+      document.getElementById('elabel-shipper-phone').value = currentApiConfig.shipper_phone || '';
+      document.getElementById('elabel-shipper-province').value = currentApiConfig.shipper_province || '';
+      document.getElementById('elabel-shipper-city').value = currentApiConfig.shipper_city || '';
+      document.getElementById('elabel-shipper-district').value = currentApiConfig.shipper_district || '';
+      document.getElementById('elabel-shipper-address').value = currentApiConfig.shipper_address || '';
+      
+      document.getElementById('elabel-order-no').value = '';
+      document.getElementById('elabel-name').value = '';
+      document.getElementById('elabel-phone').value = '';
+      document.getElementById('elabel-province').value = '';
+      document.getElementById('elabel-city').value = '';
+      document.getElementById('elabel-district').value = '';
+      document.getElementById('elabel-address').value = '';
+      document.getElementById('elabel-product').value = '';
+      document.getElementById('elabel-quantity').value = '1';
+      document.getElementById('elabel-weight').value = '1';
+      document.getElementById('elabel-remark').value = '';
+      
+      showModal('elabel-modal');
+    }
+
+    async function createELabel() {
+      const btn = document.getElementById('btn-create-elabel');
+      btn.disabled = true;
+      btn.textContent = '正在获取...';
+
+      try {
+        const orderInfo = {
+          order_no: document.getElementById('elabel-order-no').value.trim() || null,
+          shipper_code: document.getElementById('elabel-shipper-code').value,
+          pay_type: document.getElementById('elabel-pay-type').value,
+          customer_name: currentApiConfig.customer_name || '',
+          customer_pwd: currentApiConfig.customer_pwd || '',
+          month_code: currentApiConfig.month_code || '',
+          shipper_name: document.getElementById('elabel-shipper-name').value.trim(),
+          shipper_phone: document.getElementById('elabel-shipper-phone').value.trim(),
+          shipper_province: document.getElementById('elabel-shipper-province').value.trim(),
+          shipper_city: document.getElementById('elabel-shipper-city').value.trim(),
+          shipper_district: document.getElementById('elabel-shipper-district').value.trim(),
+          shipper_address: document.getElementById('elabel-shipper-address').value.trim(),
+          name: document.getElementById('elabel-name').value.trim(),
+          phone: document.getElementById('elabel-phone').value.trim(),
+          province: document.getElementById('elabel-province').value.trim(),
+          city: document.getElementById('elabel-city').value.trim(),
+          district: document.getElementById('elabel-district').value.trim(),
+          address: document.getElementById('elabel-address').value.trim(),
+          product: document.getElementById('elabel-product').value.trim(),
+          quantity: parseInt(document.getElementById('elabel-quantity').value) || 1,
+          weight: parseFloat(document.getElementById('elabel-weight').value) || 1,
+          remark: document.getElementById('elabel-remark').value.trim()
+        };
+
+        if (!orderInfo.shipper_code) {
+          showMessage('请选择快递公司', 'error');
+          return;
+        }
+
+        const requiredFields = [
+          ['shipper_name', '发件人姓名'],
+          ['shipper_phone', '发件人电话'],
+          ['shipper_province', '发件人省份'],
+          ['shipper_city', '发件人城市'],
+          ['shipper_district', '发件人区/县'],
+          ['shipper_address', '发件人地址'],
+          ['name', '收件人姓名'],
+          ['phone', '收件人电话'],
+          ['province', '收件人省份'],
+          ['city', '收件人城市'],
+          ['district', '收件人区/县'],
+          ['address', '收件人地址'],
+          ['product', '商品名称']
+        ];
+
+        for (const [field, label] of requiredFields) {
+          if (!orderInfo[field]) {
+            showMessage(`请填写${label}`, 'error');
+            return;
+          }
+        }
+
+        const result = await ipcRenderer.invoke('create-e-label', orderInfo);
+        if (result.success) {
+          showMessage(`电子面单获取成功！运单号：${result.tracking_no}`, 'success');
+          hideModal('elabel-modal');
+          currentPage = 1;
+          loadOrders();
+        } else {
+          showMessage(result.message || '获取电子面单失败', 'error');
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '获取电子面单';
+      }
+    }
+
+    window.onload = async () => {
+      await loadTemplates();
+      await loadApiConfig();
+      await loadShipperCodes();
+      await loadOrders();
+    };
+  </script>
+</body>
+</html>
