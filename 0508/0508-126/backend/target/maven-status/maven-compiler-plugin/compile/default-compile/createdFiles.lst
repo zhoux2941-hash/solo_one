@@ -1,0 +1,11 @@
+com\astronomy\spectral\model\MatchResult.class
+com\astronomy\spectral\service\SpectrumService.class
+com\astronomy\spectral\controller\SpectrumController.class
+com\astronomy\spectral\model\ClassificationRecord.class
+com\astronomy\spectral\model\Spectrum.class
+com\astronomy\spectral\SpectralClassificationApplication.class
+com\astronomy\spectral\model\StarTypeInfo.class
+com\astronomy\spectral\model\SpectralLine.class
+com\astronomy\spectral\repository\ClassificationRecordRepository.class
+com\astronomy\spectral\config\RedisConfig.class
+com\astronomy\spectral\service\ClassificationService.class

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>字幕自动匹配工具</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <h1>🎬 字幕自动匹配工具</h1>
+            <p class="subtitle">本地视频字幕模糊匹配 · 无需联网</p>
+        </header>
+
+        <main class="main">
+            <section class="tabs">
+                <button class="tab-btn active" data-tab="matcher">
+                    🎯 字幕匹配
+                </button>
+                <button class="tab-btn" data-tab="shifter">
+                    ⏱️ 时间轴平移
+                </button>
+            </section>
+
+            <section id="tab-matcher" class="tab-content active">
+                <section class="control-panel">
+                    <div class="folder-selector">
+                        <button id="selectFolderBtn" class="btn btn-primary">
+                            📁 选择视频文件夹
+                        </button>
+                        <span id="folderPath" class="folder-path">未选择文件夹</span>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="scanBtn" class="btn btn-secondary" disabled>
+                            🔍 扫描并匹配
+                        </button>
+                        <button id="batchApplyBtn" class="btn btn-success" disabled>
+                            ✅ 批量应用选中
+                        </button>
+                        <button id="clearHistoryBtn" class="btn btn-danger">
+                            🗑️ 清除匹配历史
+                        </button>
+                    </div>
+                </section>
+
+                <section class="stats-panel">
+                    <div class="stat-card">
+                        <div class="stat-number" id="videoCount">0</div>
+                        <div class="stat-label">视频文件</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="subtitleCount">0</div>
+                        <div class="stat-label">字幕文件</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="matchedCount">0</div>
+                        <div class="stat-label">待匹配</div>
+                    </div>
+                </section>
+
+                <section class="results-panel">
+                    <div id="loading" class="loading" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>正在扫描和匹配中...</p>
+                    </div>
+
+                    <div id="emptyState" class="empty-state">
+                        <div class="empty-icon">📂</div>
+                        <h3>选择一个文件夹开始</h3>
+                        <p>工具将自动扫描视频文件并尝试匹配字幕</p>
+                    </div>
+
+                    <div id="resultsContainer" class="results-container" style="display: none;">
+                    </div>
+                </section>
+            </section>
+
+            <section id="tab-shifter" class="tab-content">
+                <section class="shifter-panel">
+                    <h3>⏱️ 字幕时间轴平移</h3>
+                    <p class="description">整体偏移字幕时间，调整同步问题</p>
+
+                    <div class="shifter-controls">
+                        <div class="shifter-row">
+                            <label>选择字幕文件:</label>
+                            <div class="file-selector">
+                                <input type="text" id="shiftSubtitlePath" readonly placeholder="点击选择字幕文件">
+                                <button id="selectSubtitleBtn" class="btn btn-secondary">
+                                    📁 选择
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="shifter-row">
+                            <label>时间偏移量 (秒):</label>
+                            <div class="offset-controls">
+                                <button class="btn btn-secondary offset-btn" data-offset="-5">-5秒</button>
+                                <button class="btn btn-secondary offset-btn" data-offset="-1">-1秒</button>
+                                <button class="btn btn-secondary offset-btn" data-offset="-0.5">-0.5秒</button>
+                                <input type="number" id="offsetSeconds" value="0" step="0.1" min="-3600" max="3600">
+                                <button class="btn btn-secondary offset-btn" data-offset="0.5">+0.5秒</button>
+                                <button class="btn btn-secondary offset-btn" data-offset="1">+1秒</button>
+                                <button class="btn btn-secondary offset-btn" data-offset="5">+5秒</button>
+                            </div>
+                        </div>
+
+                        <div class="shifter-row">
+                            <label>输出选项:</label>
+                            <div class="output-options">
+                                <label class="radio-option">
+                                    <input type="radio" name="outputMode" value="auto" checked>
+                                    <span>自动命名 (添加偏移量后缀)</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="outputMode" value="custom">
+                                    <span>自定义保存路径</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="shifter-row" id="customOutputRow" style="display: none;">
+                            <label>保存路径:</label>
+                            <div class="file-selector">
+                                <input type="text" id="customOutputPath" readonly placeholder="点击选择保存位置">
+                                <button id="selectOutputBtn" class="btn btn-secondary">
+                                    💾 选择
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="shifter-actions">
+                            <button id="applyShiftBtn" class="btn btn-primary" disabled>
+                                ✨ 应用偏移并保存
+                            </button>
+                            <button id="resetOffsetBtn" class="btn btn-secondary">
+                                ↺ 重置
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="shifter-info" id="shiftResult" style="display: none;">
+                        <div class="info-card success">
+                            <div class="info-icon">✅</div>
+                            <div class="info-content">
+                                <div class="info-title">操作成功</div>
+                                <div class="info-detail" id="shiftResultDetail"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="shifter-preview" id="shiftPreview" style="display: none;">
+                        <h4>预览:</h4>
+                        <div class="preview-item">
+                            <span class="preview-label">原文件:</span>
+                            <span class="preview-value" id="previewOriginal"></span>
+                        </div>
+                        <div class="preview-item">
+                            <span class="preview-label">偏移量:</span>
+                            <span class="preview-value" id="previewOffset"></span>
+                        </div>
+                        <div class="preview-item">
+                            <span class="preview-label">输出文件:</span>
+                            <span class="preview-value" id="previewOutput"></span>
+                        </div>
+                    </div>
+                </section>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>支持格式: mp4, mkv, avi, mov · 字幕: srt, ass, ssa, vtt</p>
+        </footer>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

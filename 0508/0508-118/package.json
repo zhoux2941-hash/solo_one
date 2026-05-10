@@ -1,0 +1,22 @@
+{
+  "name": "srt-translator",
+  "version": "1.0.0",
+  "description": "批量翻译SRT字幕文件",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "keywords": [
+    "electron",
+    "srt",
+    "translate"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^28.0.0",
+    "axios": "^1.6.2",
+    "md5": "^2.3.0"
+  }
+}

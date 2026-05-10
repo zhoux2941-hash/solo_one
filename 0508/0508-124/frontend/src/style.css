@@ -1,0 +1,33 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+}
+
+.magnitude-1 { color: #ff0000; }
+.magnitude-2 { color: #ff4400; }
+.magnitude-3 { color: #ff8800; }
+.magnitude-4 { color: #88cc00; }
+.magnitude-5 { color: #0088cc; }
+.magnitude-6 { color: #0000ff; }
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+
+.page-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  position: relative;
+}
