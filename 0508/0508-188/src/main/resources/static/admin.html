@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建投票 - 管理员</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        input[type="text"],
+        input[type="datetime-local"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+        .option-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .option-item input {
+            flex: 1;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn-remove {
+            background: #ff4757;
+            color: white;
+        }
+        .btn-add {
+            background: #2ed573;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            font-size: 18px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        .poll-link {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            word-break: break-all;
+        }
+        .poll-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗳️ 创建新投票</h1>
+        
+        <form id="createPollForm">
+            <div class="form-group">
+                <label for="title">投票标题</label>
+                <input type="text" id="title" placeholder="请输入投票标题" required>
+            </div>
+            
+            <div class="form-group">
+                <label>投票选项 <span style="color: #667eea; font-size: 14px;">(最多5个)</span></label>
+                <div id="optionsContainer">
+                    <div class="option-item">
+                        <input type="text" class="option-input" placeholder="选项 1" required>
+                    </div>
+                    <div class="option-item">
+                        <input type="text" class="option-input" placeholder="选项 2" required>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-add" onclick="addOption()">+ 添加选项</button>
+            </div>
+            
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="allowMultiple">
+                    <label for="allowMultiple">允许多选</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="deadline">截止时间</label>
+                <input type="datetime-local" id="deadline" required>
+            </div>
+            
+            <button type="submit" class="btn btn-submit">创建投票</button>
+        </form>
+        
+        <div class="success-message" id="successMessage">
+            投票创建成功！
+            <div class="poll-link" id="pollLink"></div>
+        </div>
+        
+        <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <script>
+        let optionCount = 2;
+
+        function addOption() {
+            const currentOptions = document.querySelectorAll('.option-item').length;
+            if (currentOptions >= 5) {
+                showError('最多只能添加5个选项');
+                return;
+            }
+            optionCount++;
+            const container = document.getElementById('optionsContainer');
+            const div = document.createElement('div');
+            div.className = 'option-item';
+            div.innerHTML = `
+                <input type="text" class="option-input" placeholder="选项 ${optionCount}" required>
+                <button type="button" class="btn btn-remove" onclick="removeOption(this)">×</button>
+            `;
+            container.appendChild(div);
+            hideError();
+        }
+
+        function removeOption(btn) {
+            btn.parentElement.remove();
+            hideError();
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        document.getElementById('createPollForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('title').value;
+            const allowMultiple = document.getElementById('allowMultiple').checked;
+            const deadline = document.getElementById('deadline').value;
+            
+            const options = Array.from(document.querySelectorAll('.option-input'))
+                .map(input => input.value.trim())
+                .filter(val => val);
+            
+            if (options.length < 2) {
+                showError('至少需要两个选项');
+                return;
+            }
+            
+            if (options.length > 5) {
+                showError('最多只能添加5个选项');
+                return;
+            }
+            
+            try {
+                const checkResponse = await fetch('/api/polls/check-title?title=' + encodeURIComponent(title));
+                const checkResult = await checkResponse.json();
+                if (!checkResponse.ok || checkResult.exists) {
+                    showError('该投票标题已存在，请使用其他标题');
+                    return;
+                }
+                const response = await fetch('/api/polls', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        options,
+                        allowMultiple,
+                        deadline
+                    })
+                });
+                
+                if (response.ok) {
+                    const poll = await response.json();
+                    showSuccess(poll.id);
+                } else {
+                    const error = await response.json();
+                    showError(error.error || '创建投票失败');
+                }
+            } catch (error) {
+                showError('网络错误，请重试');
+            }
+        });
+
+        function showSuccess(pollId) {
+            const successDiv = document.getElementById('successMessage');
+            const linkDiv = document.getElementById('pollLink');
+            const link = `${window.location.origin}/poll.html?id=${pollId}`;
+            linkDiv.innerHTML = `投票链接：<a href="${link}" target="_blank">${link}</a>`;
+            successDiv.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('deadline').min = now.toISOString().slice(0, 16);
+
+        document.getElementById('title').addEventListener('blur', async function() {
+            const title = this.value.trim();
+            if (title) {
+                try {
+                    const response = await fetch('/api/polls/check-title?title=' + encodeURIComponent(title));
+                    const result = await response.json();
+                    if (result.exists) {
+                        showError('该投票标题已存在，请使用其他标题');
+                    } else {
+                        hideError();
+                    }
+                } catch (error) {
+                    console.error('检查标题失败:', error);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

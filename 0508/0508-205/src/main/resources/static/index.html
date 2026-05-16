@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>滑雪场实时监控系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>🏔️ 滑雪场实时监控系统</h1>
+        <div class="header-info">
+            <span id="currentTime"></span>
+            <span class="status-indicator online">● 系统在线</span>
+        </div>
+    </header>
+
+    <nav>
+        <button class="nav-btn active" data-page="map">雪道地图</button>
+        <button class="nav-btn" data-page="slopes">雪道管理</button>
+        <button class="nav-btn" data-page="lifts">排队管理</button>
+        <button class="nav-btn" data-page="reports">报表统计</button>
+    </nav>
+
+    <main>
+        <section id="map-page" class="page active">
+            <div class="map-container">
+                <div class="map-header">
+                    <h2>滑雪场地图</h2>
+                    <span style="color: #666; font-size: 13px; margin-left: 10px;">（按今日客流量从左到右递减排列）</span>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <span class="legend-color beginner"></span>
+                            <span>初级</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color intermediate"></span>
+                            <span>中级</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color advanced"></span>
+                            <span>高级</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color open"></span>
+                            <span>开放</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color closed"></span>
+                            <span>关闭</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color grooming"></span>
+                            <span>压雪中</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="ski-map" id="skiMap">
+                    <svg id="mapSvg" width="100%" height="500" viewBox="0 0 1000 550">
+                        <rect x="0" y="0" width="1000" height="550" fill="#e8f4fc"/>
+                        <g id="slopesGroup"></g>
+                        <g id="liftsGroup"></g>
+                    </svg>
+                </div>
+                <div class="lift-queue-panel">
+                    <h3>🚠 缆车/魔毯排队状态</h3>
+                    <div id="liftQueueList" class="lift-queue-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="slopes-page" class="page">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>雪道状态管理</h2>
+                    <button class="btn btn-primary" onclick="refreshSlopes()">🔄 刷新</button>
+                </div>
+                <div id="slopesList" class="slopes-list"></div>
+            </div>
+        </section>
+
+        <section id="lifts-page" class="page">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>魔毯/缆车排队管理</h2>
+                    <button class="btn btn-primary" onclick="refreshLifts()">🔄 刷新</button>
+                </div>
+                <div id="liftsList" class="lifts-list"></div>
+            </div>
+        </section>
+
+        <section id="reports-page" class="page">
+            <div class="reports-container">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>📊 客流量统计</h2>
+                        <input type="date" id="reportDate" onchange="loadVisitorReport()">
+                    </div>
+                    <div id="visitorReport" class="report-content">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalVisitors">0</div>
+                                <div class="stat-label">今日总客流量</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="peakHour">-</div>
+                                <div class="stat-label">高峰时段</div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h3>每小时客流量分布</h3>
+                            <div id="hourlyChart" class="bar-chart"></div>
+                        </div>
+                        <div class="slope-stats-container">
+                            <h3>各雪道客流量</h3>
+                            <div id="slopeStats" class="slope-stats"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>⏱️ 排队高峰分析</h2>
+                        <div>
+                            <input type="datetime-local" id="queueStartTime">
+                            <span>至</span>
+                            <input type="datetime-local" id="queueEndTime">
+                            <button class="btn btn-primary" onclick="loadQueueReport()">查询</button>
+                        </div>
+                    </div>
+                    <div id="queueReport" class="report-content">
+                        <div id="queueStats" class="queue-stats"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="queueModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>更新排队人数</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p id="modalLiftName"></p>
+                <div class="form-group">
+                    <label>当前排队人数：</label>
+                    <input type="number" id="queueSizeInput" min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label>录入人员：</label>
+                    <input type="text" id="recordedByInput" placeholder="请输入姓名">
+                </div>
+                <div class="form-group">
+                    <label>预计等待时间：</label>
+                    <span id="estimatedWaitTime">0 分钟</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitQueueUpdate()">确认更新</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/reports.js"></script>
+</body>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体检预约系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .nav button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .nav button.active {
+            background: #fff;
+            color: #667eea;
+        }
+        .nav button:not(.active) {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .packages {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .package-card {
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .package-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+        }
+        .package-card.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .package-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .package-card .price {
+            font-size: 28px;
+            color: #e74c3c;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .package-card .desc {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .time-slot {
+            padding: 12px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .time-slot:hover:not(.disabled) {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .time-slot.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        .time-slot.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .slots-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #1976d2;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .submit-btn:hover {
+            transform: scale(1.02);
+        }
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .success-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .success-modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+        }
+        .modal-content .icon {
+            width: 80px;
+            height: 80px;
+            background: #4caf50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .modal-content .icon::after {
+            content: '✓';
+            color: white;
+            font-size: 40px;
+        }
+        .modal-content h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .modal-content p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .modal-content .sms {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 14px;
+            color: #e65100;
+        }
+        .modal-content button {
+            margin-top: 20px;
+            padding: 12px 40px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+        .hidden {
+            display: none;
+        }
+        .query-form {
+            display: flex;
+            gap: 10px;
+        }
+        .query-form input {
+            flex: 1;
+        }
+        .query-form button {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .reservation-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        .reservation-item h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .reservation-item p {
+            color: #666;
+            margin: 5px 0;
+        }
+        .reservation-item .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .status.confirmed {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .status.reported {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .view-report-btn {
+            margin-top: 10px;
+            padding: 8px 20px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 体检预约与报告查询系统</h1>
+            <p>专业体检，健康守护</p>
+        </div>
+
+        <div class="nav">
+            <button class="active" onclick="showTab('reservation', this)">在线预约</button>
+            <button onclick="showTab('query', this)">我的预约</button>
+            <button onclick="window.location.href='doctor.html'">医生后台</button>
+        </div>
+
+        <div id="reservation-tab" class="card">
+            <h2>📋 选择体检套餐</h2>
+            <div class="packages" id="packages"></div>
+
+            <h2>📝 填写预约信息</h2>
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="userName" placeholder="请输入您的姓名">
+            </div>
+            <div class="form-group">
+                <label>手机号</label>
+                <input type="tel" id="phone" placeholder="请输入手机号">
+            </div>
+            <div class="form-group">
+                <label>身份证号</label>
+                <input type="text" id="idCard" placeholder="请输入身份证号">
+            </div>
+
+            <h2>📅 选择预约时间</h2>
+            <div class="form-group">
+                <label>选择日期</label>
+                <input type="date" id="reservationDate" onchange="checkSlots()">
+            </div>
+            <div class="slots-info" id="slotsInfo">请选择日期查看剩余名额</div>
+            
+            <div class="form-group">
+                <label>选择时段</label>
+                <div class="time-slots" id="timeSlots">
+                    <div class="time-slot" data-time="08:00-09:00" onclick="selectTime(this)">08:00-09:00</div>
+                    <div class="time-slot" data-time="09:00-10:00" onclick="selectTime(this)">09:00-10:00</div>
+                    <div class="time-slot" data-time="10:00-11:00" onclick="selectTime(this)">10:00-11:00</div>
+                    <div class="time-slot" data-time="14:00-15:00" onclick="selectTime(this)">14:00-15:00</div>
+                    <div class="time-slot" data-time="15:00-16:00" onclick="selectTime(this)">15:00-16:00</div>
+                    <div class="time-slot" data-time="16:00-17:00" onclick="selectTime(this)">16:00-17:00</div>
+                </div>
+            </div>
+
+            <button class="submit-btn" onclick="submitReservation()" id="submitBtn">提交预约</button>
+        </div>
+
+        <div id="query-tab" class="card hidden">
+            <h2>🔍 查询我的预约</h2>
+            <div class="query-form">
+                <input type="tel" id="queryPhone" placeholder="请输入预约手机号">
+                <button onclick="queryReservations()">查询</button>
+            </div>
+            <div id="reservationList" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <div class="success-modal" id="successModal">
+        <div class="modal-content">
+            <div class="icon"></div>
+            <h3>预约成功！</h3>
+            <p>您的体检预约已成功提交</p>
+            <div class="sms" id="smsMessage"></div>
+            <button onclick="closeModal()">确定</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

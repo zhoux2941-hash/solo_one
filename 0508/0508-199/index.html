@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电影院选座系统</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 星光电影院</h1>
+            <div class="header-actions">
+                <button id="memberBtn" class="btn btn-secondary">👤 会员中心</button>
+                <button id="reportBtn" class="btn btn-secondary">📊 数据报表</button>
+            </div>
+        </header>
+
+        <main>
+            <section id="movieSection" class="section">
+                <h2>选择电影</h2>
+                <div id="movieList" class="movie-grid"></div>
+            </section>
+
+            <section id="scheduleSection" class="section hidden">
+                <h2>选择场次</h2>
+                <div id="selectedMovieInfo"></div>
+                <div id="scheduleList" class="schedule-list"></div>
+                <button id="backToMovies" class="btn btn-secondary">返回电影列表</button>
+            </section>
+
+            <section id="seatSection" class="section hidden">
+                <h2>选择座位</h2>
+                <div id="selectedScheduleInfo"></div>
+                <div class="seat-container">
+                    <div class="screen">银 幕</div>
+                    <div id="seatMap" class="seat-map"></div>
+                </div>
+                <div class="seat-legend">
+                    <span><span class="seat available"></span> 可选</span>
+                    <span><span class="seat selected"></span> 已选</span>
+                    <span><span class="seat occupied"></span> 已售</span>
+                    <span><span class="seat locked"></span> 锁定</span>
+                </div>
+                <div class="order-summary">
+                    <p>已选座位：<span id="selectedSeats">无</span></p>
+                    <p>票价：<span id="ticketPrice">0</span> 元/张</p>
+                    <p>数量：<span id="ticketCount">0</span> 张</p>
+                    <p>总价：<span id="totalPrice">0</span> 元</p>
+                    <p>获得积分：<span id="earnPoints">0</span> 积分</p>
+                </div>
+                <div class="timer hidden">
+                    <p>⏱️ 座位锁定剩余时间：<span id="lockTimer">10:00</span></p>
+                </div>
+                <div class="action-buttons">
+                    <button id="backToSchedule" class="btn btn-secondary">返回场次</button>
+                    <button id="submitOrder" class="btn btn-primary" disabled>提交订单</button>
+                </div>
+            </section>
+
+            <section id="paymentSection" class="section hidden">
+                <h2>订单支付</h2>
+                <div class="order-details">
+                    <h3>订单详情</h3>
+                    <p>电影：<span id="orderMovie"></span></p>
+                    <p>场次：<span id="orderSchedule"></span></p>
+                    <p>座位：<span id="orderSeats"></span></p>
+                    <p>总价：<span id="orderTotal"></span> 元</p>
+                </div>
+                <div class="member-input">
+                    <label for="memberPhone">会员手机号（选填，累计积分）：</label>
+                    <input type="text" id="memberPhone" placeholder="请输入手机号">
+                </div>
+                <div class="action-buttons">
+                    <button id="cancelPayment" class="btn btn-secondary">取消支付</button>
+                    <button id="confirmPayment" class="btn btn-primary">确认支付（模拟）</button>
+                </div>
+            </section>
+
+            <section id="memberSection" class="section hidden">
+                <h2>会员中心</h2>
+                <div class="member-login">
+                    <input type="text" id="loginPhone" placeholder="请输入手机号">
+                    <button id="loginBtn" class="btn btn-primary">登录/注册</button>
+                </div>
+                <div id="memberInfo" class="hidden">
+                    <h3>会员信息</h3>
+                    <p>手机号：<span id="memberPhoneDisplay"></span></p>
+                    <p>当前积分：<span id="memberPoints" class="points-highlight">0</span> 积分</p>
+                    
+                    <h3>积分兑换小食</h3>
+                    <div class="snack-grid" id="snackGrid"></div>
+                    
+                    <h3>兑换记录</h3>
+                    <div id="exchangeHistory" class="history-list"></div>
+                    
+                    <h3>购票记录</h3>
+                    <div id="ticketHistory" class="history-list"></div>
+                </div>
+                <button id="backFromMember" class="btn btn-secondary">返回首页</button>
+            </section>
+
+            <section id="reportSection" class="section hidden">
+                <h2>数据报表</h2>
+                
+                <h3>各影片上座率</h3>
+                <div id="occupancyReport" class="report-table"></div>
+                
+                <h3>小食兑换排行</h3>
+                <div id="snackReport" class="report-table"></div>
+                
+                <button id="backFromReport" class="btn btn-secondary">返回首页</button>
+            </section>
+
+            <div id="toast" class="toast hidden"></div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

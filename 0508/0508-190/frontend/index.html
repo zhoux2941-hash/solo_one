@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT资产管理系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>IT资产管理系统</h1>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="assets">资产列表</button>
+            <button class="tab-btn" data-tab="add-asset">资产入库</button>
+            <button class="tab-btn" data-tab="applications">领用申请</button>
+            <button class="tab-btn" data-tab="approval">审批管理</button>
+            <button class="tab-btn" data-tab="return">资产归还</button>
+            <button class="tab-btn" data-tab="reports">报表统计</button>
+        </nav>
+
+        <main>
+            <section id="assets" class="tab-content active">
+                <div class="section-header">
+                    <h2>资产列表</h2>
+                    <div class="filter-group">
+                        <select id="statusFilter">
+                            <option value="">全部状态</option>
+                            <option value="IN_STOCK">在库</option>
+                            <option value="ALLOCATED">已领用</option>
+                            <option value="UNDER_REPAIR">维修中</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="assetsTable">
+                        <thead>
+                            <tr>
+                                <th>资产编号</th>
+                                <th>类型</th>
+                                <th>品牌</th>
+                                <th>购买日期</th>
+                                <th>状态</th>
+                                <th>当前持有人</th>
+                                <th>所属部门</th>
+                                <th>领用日期</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="assetsPagination"></div>
+            </section>
+
+            <section id="add-asset" class="tab-content">
+                <h2>资产入库</h2>
+                <form id="addAssetForm" class="form-container">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="assetNumber">资产编号 *</label>
+                            <input type="text" id="assetNumber" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="assetType">资产类型 *</label>
+                            <select id="assetType" required>
+                                <option value="">请选择</option>
+                                <option value="LAPTOP">笔记本电脑</option>
+                                <option value="MONITOR">显示器</option>
+                                <option value="KEYBOARD">键盘</option>
+                                <option value="MOUSE">鼠标</option>
+                                <option value="HEADSET">耳机</option>
+                                <option value="DOCKING_STATION">扩展坞</option>
+                                <option value="OTHER">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="brand">品牌 *</label>
+                            <input type="text" id="brand" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="purchaseDate">购买日期 *</label>
+                            <input type="date" id="purchaseDate" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="remarks">备注</label>
+                        <textarea id="remarks" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">入库</button>
+                </form>
+            </section>
+
+            <section id="applications" class="tab-content">
+                <h2>领用申请</h2>
+                <form id="applicationForm" class="form-container">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="applicantName">申请人姓名 *</label>
+                            <input type="text" id="applicantName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="applicantDepartment">所属部门 *</label>
+                            <select id="applicantDepartment" required>
+                                <option value="">请选择</option>
+                                <option value="研发部">研发部</option>
+                                <option value="市场部">市场部</option>
+                                <option value="销售部">销售部</option>
+                                <option value="人事部">人事部</option>
+                                <option value="财务部">财务部</option>
+                                <option value="IT部">IT部</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="applyAsset">选择资产 *</label>
+                        <select id="applyAsset" required>
+                            <option value="">请选择可领用资产</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="applyReason">申请原因</label>
+                            <textarea id="applyReason" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="expectedReturnDate">预计归还日期</label>
+                            <input type="date" id="expectedReturnDate">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">提交申请</button>
+                </form>
+
+                <h3 style="margin-top: 30px;">我的申请记录</h3>
+                <div class="table-container">
+                    <table id="applicationsTable">
+                        <thead>
+                            <tr>
+                                <th>申请时间</th>
+                                <th>资产编号</th>
+                                <th>资产类型</th>
+                                <th>预计归还</th>
+                                <th>状态</th>
+                                <th>审批人</th>
+                                <th>审批时间</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="applicationsPagination"></div>
+            </section>
+
+            <section id="approval" class="tab-content">
+                <h2>审批管理</h2>
+                <div class="table-container">
+                    <table id="approvalTable">
+                        <thead>
+                            <tr>
+                                <th>申请时间</th>
+                                <th>申请人</th>
+                                <th>部门</th>
+                                <th>资产编号</th>
+                                <th>资产类型</th>
+                                <th>申请原因</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="approvalPagination"></div>
+            </section>
+
+            <section id="return" class="tab-content">
+                <h2>资产归还</h2>
+                <div class="table-container">
+                    <table id="returnTable">
+                        <thead>
+                            <tr>
+                                <th>资产编号</th>
+                                <th>类型</th>
+                                <th>品牌</th>
+                                <th>持有人</th>
+                                <th>部门</th>
+                                <th>领用日期</th>
+                                <th>是否超期</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="returnPagination"></div>
+            </section>
+
+            <section id="reports" class="tab-content">
+                <h2>报表统计</h2>
+                
+                <div class="report-section">
+                    <h3>各部门资产领用率</h3>
+                    <div class="table-container">
+                        <table id="departmentStatsTable">
+                            <thead>
+                                <tr>
+                                    <th>部门</th>
+                                    <th>资产总数</th>
+                                    <th>已领用数量</th>
+                                    <th>领用率</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>待归还资产列表（超过30天未归还高亮显示）</h3>
+                    <div class="table-container">
+                        <table id="overdueTable">
+                            <thead>
+                                <tr>
+                                    <th>资产编号</th>
+                                    <th>类型</th>
+                                    <th>品牌</th>
+                                    <th>持有人</th>
+                                    <th>部门</th>
+                                    <th>领用日期</th>
+                                    <th>领用天数</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div id="overduePagination"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">标题</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

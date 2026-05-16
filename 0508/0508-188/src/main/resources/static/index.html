@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班级投票系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        .btn {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 500;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .polls-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .polls-section h2 {
+            color: #333;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .poll-list {
+            display: grid;
+            gap: 20px;
+        }
+        .poll-card {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        .poll-card:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        .poll-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .poll-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .poll-deadline {
+            color: #666;
+            font-size: 14px;
+        }
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-expired {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .poll-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .option-tag {
+            background: #e9ecef;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 13px;
+            color: #495057;
+        }
+        .poll-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .vote-count {
+            color: #666;
+            font-size: 14px;
+        }
+        .vote-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .vote-link:hover {
+            text-decoration: underline;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗳️ 班级投票系统</h1>
+            <p>简单、透明、实时的投票体验</p>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="admin.html" class="btn btn-primary">创建投票</a>
+            <button class="btn btn-secondary" onclick="loadPolls()">刷新列表</button>
+        </div>
+        
+        <div class="polls-section">
+            <h2>投票列表</h2>
+            <div class="poll-list" id="pollList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <p>加载中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadPolls() {
+            try {
+                const response = await fetch('/api/polls');
+                const polls = await response.json();
+                renderPolls(polls);
+            } catch (error) {
+                document.getElementById('pollList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <p>加载失败，请刷新重试</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderPolls(polls) {
+            const container = document.getElementById('pollList');
+            
+            if (polls.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>暂无投票，点击上方按钮创建一个</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = polls.map(poll => {
+                const deadline = new Date(poll.deadline);
+                const now = new Date();
+                const isExpired = now > deadline;
+                const totalVotes = poll.options.reduce((sum, opt) => sum + opt.voteCount, 0);
+                
+                return `
+                    <div class="poll-card">
+                        <div class="poll-title">${poll.title}</div>
+                        <div class="poll-meta">
+                            <span class="poll-deadline">截止：${deadline.toLocaleString('zh-CN')}</span>
+                            <span class="status-badge ${isExpired ? 'status-expired' : 'status-active'}">
+                                ${isExpired ? '已结束' : '进行中'}
+                            </span>
+                        </div>
+                        <div class="poll-options">
+                            ${poll.options.slice(0, 4).map(opt => `
+                                <span class="option-tag">${opt.optionText}</span>
+                            `).join('')}
+                            ${poll.options.length > 4 ? `<span class="option-tag">+${poll.options.length - 4} 更多</span>` : ''}
+                        </div>
+                        <div class="poll-footer">
+                            <span class="vote-count">${totalVotes} 人已投票</span>
+                            <a href="poll.html?id=${poll.id}" class="vote-link">
+                                ${isExpired ? '查看结果 →' : '参与投票 →'}
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        loadPolls();
+    </script>
+</body>
+</html>

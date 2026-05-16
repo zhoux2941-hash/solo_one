@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社区互助平台</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏘️ 社区互助平台</h1>
+            <div class="user-info" id="userInfo" style="display: none;">
+                <span id="userNickname"></span>
+                <span class="balance">余额: ¥<span id="userBalance">0.00</span></span>
+                <button onclick="showRechargeModal()">充值</button>
+                <button onclick="logout()">退出</button>
+            </div>
+            <div class="auth-buttons" id="authButtons">
+                <button onclick="showLoginModal()">登录</button>
+                <button onclick="showRegisterModal()">注册</button>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" onclick="switchTab('tasks')">任务大厅</button>
+            <button class="tab-btn" onclick="switchTab('myPublished')">我发布的</button>
+            <button class="tab-btn" onclick="switchTab('myAccepted')">我承接的</button>
+            <button class="tab-btn" onclick="switchTab('transactions')">交易记录</button>
+        </nav>
+
+        <main>
+            <div class="tab-content" id="tasksTab">
+                <div class="actions">
+                    <button class="btn-primary" onclick="showPublishModal()" id="publishBtn" style="display: none;">+ 发布任务</button>
+                </div>
+                <div class="task-list" id="taskList"></div>
+                <div class="pagination" id="tasksPagination"></div>
+            </div>
+
+            <div class="tab-content" id="myPublishedTab" style="display: none;">
+                <div class="task-list" id="publishedTaskList"></div>
+                <div class="pagination" id="publishedPagination"></div>
+            </div>
+
+            <div class="tab-content" id="myAcceptedTab" style="display: none;">
+                <div class="task-list" id="acceptedTaskList"></div>
+                <div class="pagination" id="acceptedPagination"></div>
+            </div>
+
+            <div class="tab-content" id="transactionsTab" style="display: none;">
+                <div class="transaction-list" id="transactionList"></div>
+                <div class="pagination" id="transactionsPagination"></div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>登录</h2>
+            <form onsubmit="handleLogin(event)">
+                <input type="text" id="loginUsername" placeholder="用户名" required>
+                <input type="password" id="loginPassword" placeholder="密码" required>
+                <button type="submit" class="btn-primary">登录</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2>注册</h2>
+            <form onsubmit="handleRegister(event)">
+                <input type="text" id="regUsername" placeholder="用户名" required>
+                <input type="password" id="regPassword" placeholder="密码" required>
+                <input type="text" id="regNickname" placeholder="昵称">
+                <input type="text" id="regSkills" placeholder="技能标签（逗号分隔）">
+                <button type="submit" class="btn-primary">注册</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="publishModal">
+        <div class="modal-content large">
+            <span class="close" onclick="closeModal('publishModal')">&times;</span>
+            <h2>发布任务</h2>
+            <form onsubmit="handlePublish(event)">
+                <input type="text" id="taskTitle" placeholder="任务标题" required>
+                <textarea id="taskDesc" placeholder="任务描述" rows="4" required></textarea>
+                <input type="number" id="taskReward" placeholder="赏金（元）" step="0.01" min="0" required>
+                <input type="datetime-local" id="taskDeadline" required>
+                <input type="text" id="taskSkills" placeholder="所需技能（逗号分隔）">
+                <button type="submit" class="btn-primary">发布</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="applyModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('applyModal')">&times;</span>
+            <h2>申请任务</h2>
+            <form onsubmit="handleApply(event)">
+                <input type="hidden" id="applyTaskId">
+                <textarea id="applyMessage" placeholder="申请留言" rows="3"></textarea>
+                <button type="submit" class="btn-primary">提交申请</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="submissionModal">
+        <div class="modal-content large">
+            <span class="close" onclick="closeModal('submissionModal')">&times;</span>
+            <h2>提交任务</h2>
+            <form onsubmit="handleSubmission(event)">
+                <input type="hidden" id="submitTaskId">
+                <textarea id="submitDesc" placeholder="完成情况描述" rows="4" required></textarea>
+                <div class="image-upload">
+                    <label>上传完成凭证图片：</label>
+                    <input type="file" id="submitImage" accept="image/*" onchange="handleImageUpload(event)">
+                    <div id="imagePreview"></div>
+                </div>
+                <button type="submit" class="btn-primary">提交</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="rechargeModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('rechargeModal')">&times;</span>
+            <h2>账户充值</h2>
+            <form onsubmit="handleRecharge(event)">
+                <input type="number" id="rechargeAmount" placeholder="充值金额（元）" step="0.01" min="0" required>
+                <button type="submit" class="btn-primary">充值</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

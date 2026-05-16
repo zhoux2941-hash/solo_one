@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>销售管理系统 - 跟进记录</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <h1>📊 销售管理系统</h1>
+        <div class="nav-links">
+            <a href="index.html">客户管理</a>
+            <a href="follow-up.html" class="active">跟进记录</a>
+            <a href="dashboard.html">经理仪表盘</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h2>📝 跟进记录</h2>
+            <button class="btn btn-primary" id="addRecordBtn" onclick="openRecordModal()">+ 新增跟进</button>
+        </div>
+
+        <div class="filter-bar">
+            <select class="form-control" id="customerFilter" onchange="loadFollowUpRecords()">
+                <option value="">所有客户</option>
+            </select>
+            <select class="form-control" id="salespersonFilter" onchange="loadFollowUpRecords()">
+                <option value="">所有销售</option>
+            </select>
+        </div>
+
+        <div id="customerDetailCard" class="card" style="display: none;">
+            <h3 style="margin-bottom: 1rem;">客户信息</h3>
+            <div id="customerDetail" class="customer-detail"></div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 1rem;">跟进记录列表</h3>
+            <div id="followUpList" class="follow-up-list">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="recordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">新增跟进记录</h3>
+                <button class="close-modal" onclick="closeRecordModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="recordForm">
+                    <input type="hidden" id="recordId">
+                    <input type="hidden" id="currentCustomerId">
+                    <div class="form-group">
+                        <label>选择客户 *</label>
+                        <select class="form-control" id="customerSelect" required>
+                            <option value="">请选择客户</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>沟通内容 * (最多2000字符)</label>
+                        <textarea class="form-control" id="content" rows="4" required maxlength="2000" placeholder="请输入本次沟通的详细内容..."></textarea>
+                        <small>已输入: <span id="contentCount">0</span>/2000 字符</small>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>下次联系时间</label>
+                            <input type="datetime-local" class="form-control" id="nextContactTime">
+                        </div>
+                        <div class="form-group">
+                            <label>商机金额预估 (元)</label>
+                            <input type="number" class="form-control" id="estimatedAmount" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>跟进销售人员 (最多50字符)</label>
+                        <input type="text" class="form-control" id="salesperson" maxlength="50" placeholder="销售人员姓名">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeRecordModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveRecord()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        let customers = [];
+        let records = [];
+        let urlParams = new URLSearchParams(window.location.search);
+        let selectedCustomerId = urlParams.get('customerId');
+
+        async function init() {
+            await loadCustomers();
+            await loadSalespersons();
+
+            if (selectedCustomerId) {
+                document.getElementById('customerFilter').value = selectedCustomerId;
+                document.getElementById('currentCustomerId').value = selectedCustomerId;
+                await showCustomerDetail(selectedCustomerId);
+                document.getElementById('customerDetailCard').style.display = 'block';
+            }
+
+            await loadFollowUpRecords();
+        }
+
+        async function loadCustomers() {
+            try {
+                customers = await api.customers.getAll();
+                const select = document.getElementById('customerFilter');
+                const select2 = document.getElementById('customerSelect');
+                select.innerHTML = '<option value="">所有客户</option>';
+                select2.innerHTML = '<option value="">请选择客户</option>';
+
+                customers.forEach(customer => {
+                    const option1 = document.createElement('option');
+                    option1.value = customer.id;
+                    option1.textContent = customer.companyName;
+                    select.appendChild(option1);
+
+                    const option2 = document.createElement('option');
+                    option2.value = customer.id;
+                    option2.textContent = customer.companyName;
+                    select2.appendChild(option2);
+                });
+            } catch (error) {
+                console.error('加载客户列表失败:', error);
+            }
+        }
+
+        async function loadSalespersons() {
+            try {
+                const salespersons = await api.customers.getSalespersons();
+                const select = document.getElementById('salespersonFilter');
+                select.innerHTML = '<option value="">所有销售</option>';
+                salespersons.forEach(sp => {
+                    const option = document.createElement('option');
+                    option.value = sp;
+                    option.textContent = sp;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('加载销售人员列表失败:', error);
+            }
+        }
+
+        async function showCustomerDetail(customerId) {
+            try {
+                const customer = await api.customers.getById(customerId);
+                const detailDiv = document.getElementById('customerDetail');
+                detailDiv.innerHTML = `
+                    <div class="detail-item">
+                        <label>公司名称</label>
+                        <div class="value">${customer.companyName}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>联系人</label>
+                        <div class="value">${customer.contactPerson}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>电话</label>
+                        <div class="value">${customer.phone}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>客户等级</label>
+                        <div class="value"><span class="badge badge-${customer.level || 'C'}">${customer.level || 'C'}级</span></div>
+                    </div>
+                    <div class="detail-item">
+                        <label>负责人</label>
+                        <div class="value">${customer.salesperson || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>成交概率</label>
+                        <div class="value">
+                            <div class="probability-bar">
+                                <div class="probability-fill" style="width: ${customer.dealProbability}%"></div>
+                            </div>
+                            ${customer.dealProbability}%
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('加载客户详情失败:', error);
+            }
+        }
+
+        async function loadFollowUpRecords() {
+            try {
+                const customerFilter = document.getElementById('customerFilter').value;
+                const salespersonFilter = document.getElementById('salespersonFilter').value;
+
+                if (customerFilter) {
+                    records = await api.followUpRecords.getByCustomerId(customerFilter);
+                } else if (salespersonFilter) {
+                    records = await api.followUpRecords.getBySalesperson(salespersonFilter);
+                } else {
+                    records = await api.followUpRecords.getAll();
+                }
+
+                renderRecords(records);
+            } catch (error) {
+                showToast('加载跟进记录失败', 'error');
+            }
+        }
+
+        function renderRecords(recordList) {
+            const listDiv = document.getElementById('followUpList');
+
+            if (recordList.length === 0) {
+                listDiv.innerHTML = `
+                    <div class="empty-state">
+                        <span style="font-size: 3rem;">📭</span>
+                        <p>暂无跟进记录</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const customerMap = {};
+            customers.forEach(c => customerMap[c.id] = c);
+
+            listDiv.innerHTML = recordList.map(record => {
+                const customer = customerMap[record.customer?.id] || {};
+                return `
+                    <div class="follow-up-item">
+                        <div class="date">
+                            📅 ${formatDate(record.createdAt)}
+                            ${customer.companyName ? `| 客户: ${customer.companyName}` : ''}
+                        </div>
+                        <div class="content">${record.content}</div>
+                        <div class="meta">
+                            ${record.salesperson ? `👤 ${record.salesperson}` : ''}
+                            ${record.estimatedAmount ? ` | 💰 预估: ${formatCurrency(record.estimatedAmount)}` : ''}
+                            ${record.nextContactTime ? ` | 🕐 下次联系: ${formatDate(record.nextContactTime)}` : ''}
+                        </div>
+                        <div style="margin-top: 0.8rem;">
+                            <button class="btn btn-sm btn-primary" onclick="editRecord(${record.id})">编辑</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteRecord(${record.id})">删除</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openRecordModal() {
+            document.getElementById('modalTitle').textContent = '新增跟进记录';
+            document.getElementById('recordForm').reset();
+            document.getElementById('recordId').value = '';
+
+            if (selectedCustomerId) {
+                document.getElementById('customerSelect').value = selectedCustomerId;
+            }
+
+            document.getElementById('recordModal').classList.add('active');
+        }
+
+        function closeRecordModal() {
+            document.getElementById('recordModal').classList.remove('active');
+        }
+
+        async function editRecord(id) {
+            try {
+                const record = await api.followUpRecords.getById(id);
+                document.getElementById('modalTitle').textContent = '编辑跟进记录';
+                document.getElementById('recordId').value = record.id;
+                document.getElementById('customerSelect').value = record.customer.id;
+                document.getElementById('content').value = record.content;
+                document.getElementById('nextContactTime').value = record.nextContactTime ?
+                    record.nextContactTime.slice(0, 16) : '';
+                document.getElementById('estimatedAmount').value = record.estimatedAmount || '';
+                document.getElementById('salesperson').value = record.salesperson || '';
+                document.getElementById('recordModal').classList.add('active');
+            } catch (error) {
+                showToast('加载跟进记录失败', 'error');
+            }
+        }
+
+        async function saveRecord() {
+            const recordId = document.getElementById('recordId').value;
+            const customerId = document.getElementById('customerSelect').value;
+            const content = document.getElementById('content').value;
+            const salesperson = document.getElementById('salesperson').value;
+
+            if (!customerId) {
+                showToast('请选择客户', 'error');
+                return;
+            }
+
+            const contentValidation = ValidationUtils.validateContent(content);
+            if (!contentValidation.valid) {
+                showToast(contentValidation.message, 'error');
+                return;
+            }
+
+            const salespersonValidation = ValidationUtils.validateSalesperson(salesperson);
+            if (!salespersonValidation.valid) {
+                showToast(salespersonValidation.message, 'error');
+                return;
+            }
+
+            const estimatedAmountValue = document.getElementById('estimatedAmount').value;
+            const data = {
+                content: content,
+                nextContactTime: document.getElementById('nextContactTime').value || null,
+                estimatedAmount: estimatedAmountValue ? parseFloat(estimatedAmountValue) : null,
+                salesperson: salesperson || null,
+            };
+
+            try {
+                if (recordId) {
+                    await api.followUpRecords.update(recordId, data);
+                    showToast('跟进记录更新成功', 'success');
+                } else {
+                    await api.followUpRecords.create(customerId, data);
+                    showToast('跟进记录创建成功', 'success');
+                }
+                closeRecordModal();
+                await loadFollowUpRecords();
+                if (selectedCustomerId) {
+                    await showCustomerDetail(selectedCustomerId);
+                }
+            } catch (error) {
+                showToast('保存失败', 'error');
+            }
+        }
+
+        async function deleteRecord(id) {
+            if (!confirm('确定要删除该跟进记录吗？')) {
+                return;
+            }
+            try {
+                await api.followUpRecords.delete(id);
+                showToast('跟进记录删除成功', 'success');
+                await loadFollowUpRecords();
+                if (selectedCustomerId) {
+                    await showCustomerDetail(selectedCustomerId);
+                }
+            } catch (error) {
+                showToast('删除失败', 'error');
+            }
+        }
+
+        document.getElementById('recordModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRecordModal();
+            }
+        });
+
+        document.getElementById('content').addEventListener('input', function(e) {
+            ValidationUtils.limitInputLength(e, 2000);
+            document.getElementById('contentCount').textContent = e.target.value.length;
+        });
+
+        document.getElementById('salesperson').addEventListener('input', (e) => ValidationUtils.limitInputLength(e, 50));
+
+        function updateContentCount() {
+            const content = document.getElementById('content').value;
+            document.getElementById('contentCount').textContent = content.length;
+        }
+
+        const originalOpenRecordModal = openRecordModal;
+        openRecordModal = function() {
+            originalOpenRecordModal();
+            updateContentCount();
+        };
+
+        const originalEditRecord = editRecord;
+        editRecord = async function(id) {
+            await originalEditRecord(id);
+            updateContentCount();
+        };
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书漂流系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <div class="container">
+                <h1 class="logo">📚 图书漂流系统</h1>
+                <nav class="nav">
+                    <button onclick="showPage('home')" class="nav-btn active">首页</button>
+                    <button onclick="showPage('books')" class="nav-btn">图书广场</button>
+                    <button onclick="showPage('popular')" class="nav-btn">热门排行</button>
+                    <button onclick="showPage('my')" class="nav-btn">我的</button>
+                </nav>
+                <div id="authArea" class="auth-area">
+                    <button onclick="showLoginModal()" class="btn btn-primary">登录</button>
+                    <button onclick="showRegisterModal()" class="btn btn-secondary">注册</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main">
+            <div id="homePage" class="page active">
+                <div class="hero">
+                    <h2>让知识流动起来</h2>
+                    <p>分享闲置图书，与志同道合的人一起阅读成长</p>
+                    <button onclick="showPage('books')" class="btn btn-lg btn-primary">开始探索</button>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">🔥 热门漂流图书</h3>
+                    <div id="popularBooksPreview" class="books-grid"></div>
+                </div>
+            </div>
+
+            <div id="booksPage" class="page">
+                <div class="page-header">
+                    <h2>图书广场</h2>
+                    <button onclick="showPublishModal()" class="btn btn-primary" id="publishBtn">+ 发布图书</button>
+                </div>
+                <div id="booksList" class="books-grid"></div>
+            </div>
+
+            <div id="popularPage" class="page">
+                <div class="page-header">
+                    <h2>热门漂流排行榜</h2>
+                </div>
+                <div id="popularBooksList" class="popular-list"></div>
+            </div>
+
+            <div id="myPage" class="page">
+                <div class="page-header">
+                    <h2>我的中心</h2>
+                </div>
+                <div class="tabs">
+                    <button onclick="showMyTab('myBooks')" class="tab-btn active">我的图书</button>
+                    <button onclick="showMyTab('myRequests')" class="tab-btn">我的申请</button>
+                    <button onclick="showMyTab('receivedRequests')" class="tab-btn">收到的申请</button>
+                    <button onclick="showMyTab('checkin')" class="tab-btn">阅读打卡</button>
+                </div>
+                
+                <div id="myBooksTab" class="tab-content active">
+                    <div id="myBooksList" class="books-grid"></div>
+                </div>
+                
+                <div id="myRequestsTab" class="tab-content">
+                    <div id="myRequestsList" class="requests-list"></div>
+                </div>
+                
+                <div id="receivedRequestsTab" class="tab-content">
+                    <div id="receivedRequestsList" class="requests-list"></div>
+                </div>
+                
+                <div id="checkinTab" class="tab-content">
+                    <div id="activeDriftsList" class="checkin-section"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>登录</h2>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">登录</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2>注册</h2>
+            <form onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="regUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>昵称</label>
+                    <input type="text" id="regNickname" required>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="regPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">注册</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="publishModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('publishModal')">&times;</span>
+            <h2>发布图书</h2>
+            <form onsubmit="handlePublish(event)">
+                <div class="form-group">
+                    <label>书名</label>
+                    <input type="text" id="bookTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>作者</label>
+                    <input type="text" id="bookAuthor">
+                </div>
+                <div class="form-group">
+                    <label>出版社</label>
+                    <input type="text" id="bookPublisher">
+                </div>
+                <div class="form-group">
+                    <label>总页数</label>
+                    <input type="number" id="bookTotalPages" min="1">
+                </div>
+                <div class="form-group">
+                    <label>封面图片URL</label>
+                    <input type="url" id="bookCoverImage">
+                </div>
+                <div class="form-group">
+                    <label>图书描述</label>
+                    <textarea id="bookDescription" rows="4"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">发布</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="driftModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('driftModal')">&times;</span>
+            <h2>申请漂流</h2>
+            <form onsubmit="handleDriftRequest(event)">
+                <input type="hidden" id="driftBookId">
+                <div class="form-group">
+                    <label>图书名称</label>
+                    <input type="text" id="driftBookTitle" readonly>
+                </div>
+                <div class="form-group">
+                    <label>预约归还日期</label>
+                    <input type="date" id="driftReturnDate" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">提交申请</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="checkinModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('checkinModal')">&times;</span>
+            <h2>阅读打卡</h2>
+            <form onsubmit="handleCheckin(event)">
+                <input type="hidden" id="checkinDriftId">
+                <div class="form-group">
+                    <label>图书名称</label>
+                    <input type="text" id="checkinBookTitle" readonly>
+                </div>
+                <div class="form-group">
+                    <label>今日阅读页数</label>
+                    <input type="number" id="checkinPagesRead" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>阅读心得</label>
+                    <textarea id="checkinNote" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">打卡</button>
+            </form>
+            <div id="checkinHistory" class="checkin-history"></div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

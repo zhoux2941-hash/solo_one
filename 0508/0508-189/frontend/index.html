@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>食堂刷卡消费系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .warning-bar {
+            background: #ff4444;
+            color: white;
+            text-align: center;
+            padding: 12px;
+            font-weight: bold;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+            display: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #555;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .balance-display {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .balance-display h3 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .balance-display .amount {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .balance-display .unit {
+            font-size: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #888;
+        }
+
+        .info-value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .modal-content h3 {
+            color: #ff6b6b;
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-buttons .btn {
+            flex: 1;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #fafafa;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .history-amount {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination span {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .history-time {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .history-window {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        .employee-selector {
+            margin-bottom: 20px;
+        }
+
+        .daily-total {
+            background: #fff3cd;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="warning-bar" id="warningBar">
+        ⚠️ 警告：您的餐补余额已低于50元！邮件提醒已发送。
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h1>🍽️ 食堂刷卡消费系统</h1>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('consume')">刷卡消费</button>
+                <button class="tab" onclick="switchTab('employee')">员工管理</button>
+            </div>
+
+            <div id="message" class="message"></div>
+
+            <div id="consumeTab" class="tab-content active">
+                <div class="employee-selector">
+                    <label>选择员工</label>
+                    <select id="employeeSelect" onchange="loadEmployeeInfo()">
+                        <option value="">-- 请选择员工 --</option>
+                    </select>
+                </div>
+
+                <div id="employeeInfo" style="display: none;">
+                    <div class="balance-display">
+                        <h3>当前余额</h3>
+                        <span class="amount" id="balanceAmount">0.00</span>
+                        <span class="unit">元</span>
+                    </div>
+
+                    <div class="daily-total">
+                        今日累计消费：<strong id="dailyTotal">0.00</strong> 元
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">员工姓名</span>
+                        <span class="info-value" id="employeeName">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">员工编号</span>
+                        <span class="info-value" id="employeeId">-</span>
+                    </div>
+
+                    <h2 style="margin-top: 25px;">消费登记</h2>
+                    
+                    <div class="form-group">
+                        <label>消费金额（元）</label>
+                        <input type="number" id="amount" step="0.01" min="0.01" placeholder="请输入消费金额">
+                    </div>
+
+                    <div class="form-group">
+                        <label>食堂窗口</label>
+                        <select id="windowNumber">
+                            <option value="窗口1">窗口1</option>
+                            <option value="窗口2">窗口2</option>
+                            <option value="窗口3">窗口3</option>
+                            <option value="窗口4">窗口4</option>
+                        </select>
+                    </div>
+
+                    <button class="btn" onclick="confirmConsume()">确认消费</button>
+
+                    <h2 style="margin-top: 30px;">消费记录</h2>
+                    <div class="history-list" id="historyList">
+                        <p style="text-align: center; color: #999;">暂无消费记录</p>
+                    </div>
+                    <div class="pagination" id="pagination" style="display: none;">
+                        <button onclick="changePage(-1)" id="prevBtn">上一页</button>
+                        <span id="pageInfo">第 1 页 / 共 1 页</span>
+                        <button onclick="changePage(1)" id="nextBtn">下一页</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="employeeTab" class="tab-content">
+                <h2>添加新员工</h2>
+                <div class="form-group">
+                    <label>员工编号</label>
+                    <input type="text" id="newEmployeeId" placeholder="例如：E001">
+                </div>
+                <div class="form-group">
+                    <label>员工姓名</label>
+                    <input type="text" id="newEmployeeName" placeholder="请输入姓名">
+                </div>
+                <div class="form-group">
+                    <label>邮箱地址</label>
+                    <input type="email" id="newEmployeeEmail" placeholder="用于接收余额提醒">
+                </div>
+                <button class="btn" onclick="createEmployee()">添加员工</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <h3>⚠️ 消费确认</h3>
+            <p>您今日累计消费将超过50元，确认继续吗？</p>
+            <p id="confirmAmount" style="font-size: 24px; color: #ff6b6b; font-weight: bold;"></p>
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="closeModal()">取消</button>
+                <button class="btn" onclick="executeConsume()">确认消费</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api/employee';
+        let pendingConsumption = null;
+        let currentPage = 0;
+        const pageSize = 20;
+        let totalPages = 0;
+
+        window.onload = function() {
+            loadEmployees();
+        };
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = 'message ' + type;
+            setTimeout(() => {
+                msg.className = 'message';
+            }, 3000);
+        }
+
+        async function loadEmployees() {
+            try {
+                const response = await fetch(API_BASE + '/all');
+                const employees = await response.json();
+                
+                const select = document.getElementById('employeeSelect');
+                select.innerHTML = '<option value="">-- 请选择员工 --</option>';
+                
+                employees.forEach(emp => {
+                    const option = document.createElement('option');
+                    option.value = emp.employeeId;
+                    option.textContent = emp.name + ' (' + emp.employeeId + ')';
+                    select.appendChild(option);
+                });
+            } catch (e) {
+                console.error('加载员工列表失败', e);
+            }
+        }
+
+        async function loadEmployeeInfo() {
+            const employeeId = document.getElementById('employeeSelect').value;
+            
+            if (!employeeId) {
+                document.getElementById('employeeInfo').style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch(API_BASE + '/' + employeeId);
+                const data = await response.json();
+                
+                if (data.error) {
+                    showMessage(data.error, 'error');
+                    return;
+                }
+
+                document.getElementById('employeeInfo').style.display = 'block';
+                document.getElementById('employeeName').textContent = data.name;
+                document.getElementById('employeeId').textContent = data.employeeId;
+                document.getElementById('balanceAmount').textContent = data.balance.toFixed(2);
+                document.getElementById('dailyTotal').textContent = data.dailyTotal.toFixed(2);
+
+                const warningBar = document.getElementById('warningBar');
+                if (data.lowBalanceWarning) {
+                    warningBar.style.display = 'block';
+                } else {
+                    warningBar.style.display = 'none';
+                }
+
+                currentPage = 0;
+                loadConsumptionHistory(employeeId);
+            } catch (e) {
+                showMessage('加载员工信息失败', 'error');
+            }
+        }
+
+        async function loadConsumptionHistory(employeeId, page = 0) {
+            try {
+                const response = await fetch(`${API_BASE}/${employeeId}/history?page=${page}&size=${pageSize}`);
+                const data = await response.json();
+                
+                const historyList = document.getElementById('historyList');
+                const pagination = document.getElementById('pagination');
+                
+                if (data.totalElements === 0) {
+                    historyList.innerHTML = '<p style="text-align: center; color: #999;">暂无消费记录</p>';
+                    pagination.style.display = 'none';
+                    return;
+                }
+
+                totalPages = data.totalPages;
+                currentPage = data.currentPage;
+                
+                historyList.innerHTML = data.content.map(record => `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <span class="history-amount">-${record.amount.toFixed(2)} 元</span>
+                            <span class="history-time">${formatTime(record.consumptionTime)}</span>
+                        </div>
+                        <div class="history-window">${record.windowNumber}</div>
+                    </div>
+                `).join('');
+                
+                pagination.style.display = 'flex';
+                updatePaginationUI();
+            } catch (e) {
+                console.error('加载消费记录失败', e);
+            }
+        }
+
+        function updatePaginationUI() {
+            document.getElementById('pageInfo').textContent = `第 ${currentPage + 1} 页 / 共 ${totalPages} 页`;
+            document.getElementById('prevBtn').disabled = currentPage === 0;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
+        }
+
+        function changePage(delta) {
+            const employeeId = document.getElementById('employeeSelect').value;
+            if (!employeeId) return;
+            
+            const newPage = currentPage + delta;
+            if (newPage >= 0 && newPage < totalPages) {
+                loadConsumptionHistory(employeeId, newPage);
+            }
+        }
+
+        function formatTime(timeStr) {
+            const date = new Date(timeStr);
+            return date.toLocaleString('zh-CN');
+        }
+
+        async function confirmConsume() {
+            const employeeId = document.getElementById('employeeSelect').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const windowNumber = document.getElementById('windowNumber').value;
+
+            if (!employeeId) {
+                showMessage('请选择员工', 'error');
+                return;
+            }
+
+            if (!amount || amount <= 0) {
+                showMessage('请输入有效的消费金额', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_BASE + '/' + employeeId);
+                const data = await response.json();
+                const dailyTotal = data.dailyTotal || 0;
+
+                if (dailyTotal + amount > 50) {
+                    pendingConsumption = { employeeId, amount, windowNumber };
+                    document.getElementById('confirmAmount').textContent = '消费金额: ' + amount.toFixed(2) + ' 元';
+                    document.getElementById('confirmModal').classList.add('show');
+                } else {
+                    executeConsumeDirect(employeeId, amount, windowNumber);
+                }
+            } catch (e) {
+                showMessage('验证失败', 'error');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('show');
+            pendingConsumption = null;
+        }
+
+        async function executeConsume() {
+            if (!pendingConsumption) return;
+            
+            const { employeeId, amount, windowNumber } = pendingConsumption;
+            await executeConsumeDirect(employeeId, amount, windowNumber);
+            closeModal();
+        }
+
+        async function executeConsumeDirect(employeeId, amount, windowNumber) {
+            try {
+                const response = await fetch(API_BASE + '/consume', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ employeeId, amount, windowNumber })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showMessage(data.error, 'error');
+                    return;
+                }
+
+                showMessage('消费成功！', 'success');
+                document.getElementById('amount').value = '';
+                
+                loadEmployeeInfo();
+            } catch (e) {
+                showMessage('消费失败', 'error');
+            }
+        }
+
+        async function createEmployee() {
+            const employeeId = document.getElementById('newEmployeeId').value.trim();
+            const name = document.getElementById('newEmployeeName').value.trim();
+            const email = document.getElementById('newEmployeeEmail').value.trim();
+
+            if (!employeeId || !name || !email) {
+                showMessage('请填写完整信息', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_BASE + '/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ employeeId, name, email })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showMessage(data.error, 'error');
+                    return;
+                }
+
+                showMessage('员工添加成功！初始餐补500元', 'success');
+                document.getElementById('newEmployeeId').value = '';
+                document.getElementById('newEmployeeName').value = '';
+                document.getElementById('newEmployeeEmail').value = '';
+                
+                loadEmployees();
+                switchTab('consume');
+            } catch (e) {
+                showMessage('添加员工失败', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

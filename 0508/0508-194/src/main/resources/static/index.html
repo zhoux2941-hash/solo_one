@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>便利店自助收银系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        .left-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .right-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .scan-section {
+            margin-bottom: 20px;
+        }
+
+        .scan-section h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .cart-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .cart-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .cart-table th,
+        .cart-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-table th {
+            background: #f8f9fa;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .quantity-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .quantity-btn:hover {
+            background: #764ba2;
+        }
+
+        .quantity-control span {
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .member-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .member-section h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .member-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .member-info.show {
+            display: block;
+        }
+
+        .member-info p {
+            margin: 5px 0;
+            color: #2e7d32;
+        }
+
+        .total-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .total-row.final {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e74c3c;
+            border-top: 2px solid #ddd;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        .total-row.discount {
+            color: #27ae60;
+        }
+
+        .receipt-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .receipt-modal.show {
+            display: flex;
+        }
+
+        .receipt-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .receipt-header {
+            text-align: center;
+            border-bottom: 1px dashed #ddd;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .receipt-header h2 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .receipt-body {
+            font-size: 14px;
+        }
+
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+        }
+
+        .receipt-total {
+            border-top: 1px dashed #ddd;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        .receipt-footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #ddd;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .receipt-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .receipt-buttons .btn {
+            flex: 1;
+        }
+
+        .product-list {
+            margin-top: 20px;
+        }
+
+        .product-list h4 {
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .product-card {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .product-card:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+        }
+
+        .product-card .barcode {
+            font-size: 10px;
+            color: #999;
+        }
+
+        .product-card .name {
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .product-card .price {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 便利店自助收银系统</h1>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="scan-section">
+                    <h3>📱 扫码添加商品</h3>
+                    <div class="input-group">
+                        <input type="text" id="barcodeInput" placeholder="请输入商品条码，按回车添加">
+                        <button class="btn btn-primary" onclick="addProduct()">添加商品</button>
+                    </div>
+                </div>
+
+                <div class="product-list">
+                    <h4>快捷商品（点击添加）</h4>
+                    <div class="product-grid" id="productGrid"></div>
+                </div>
+
+                <div class="cart-section">
+                    <h3>🛍️ 购物车</h3>
+                    <table class="cart-table">
+                        <thead>
+                            <tr>
+                                <th>商品名称</th>
+                                <th>单价</th>
+                                <th>数量</th>
+                                <th>小计</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cartBody">
+                            <tr>
+                                <td colspan="5" class="empty-cart">购物车为空</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="member-section">
+                    <h3>👤 会员积分</h3>
+                    <div class="input-group">
+                        <input type="text" id="memberPhone" placeholder="请输入会员手机号">
+                        <button class="btn btn-primary" onclick="checkMember()">验证会员</button>
+                    </div>
+                    <div class="member-info" id="memberInfo">
+                        <p><strong>会员：</strong><span id="memberName"></span></p>
+                        <p><strong>当前积分：</strong><span id="memberPoints"></span></p>
+                        <p><strong>会员优惠：</strong>95折</p>
+                    </div>
+                </div>
+
+                <div class="total-section">
+                    <div class="total-row">
+                        <span>商品总数：</span>
+                        <span id="totalItems">0 件</span>
+                    </div>
+                    <div class="total-row">
+                        <span>商品总价：</span>
+                        <span id="totalPrice">¥0.00</span>
+                    </div>
+                    <div class="total-row discount" id="discountRow" style="display: none;">
+                        <span>会员优惠：</span>
+                        <span id="discountPrice">-¥0.00</span>
+                    </div>
+                    <div class="total-row final">
+                        <span>实付金额：</span>
+                        <span id="finalPrice">¥0.00</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-success" style="margin-top: 20px;" onclick="checkout()">
+                    💳 确认支付
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="receipt-modal" id="receiptModal">
+        <div class="receipt-content">
+            <div class="receipt-header">
+                <h2>📋 电子小票</h2>
+                <p id="orderId">订单号：</p>
+                <p id="orderTime">时间：</p>
+            </div>
+            <div class="receipt-body" id="receiptBody"></div>
+            <div class="receipt-total">
+                <div class="total-row">
+                    <span>商品总价：</span>
+                    <span id="receiptTotal"></span>
+                </div>
+                <div class="total-row" id="receiptDiscountRow" style="display: none;">
+                    <span>会员优惠：</span>
+                    <span id="receiptDiscount"></span>
+                </div>
+                <div class="total-row final">
+                    <span>实付金额：</span>
+                    <span id="receiptFinal"></span>
+                </div>
+                <div class="total-row" id="receiptPointsRow" style="display: none;">
+                    <span>获得积分：</span>
+                    <span id="receiptPoints"></span>
+                </div>
+            </div>
+            <div class="receipt-footer">
+                <p>感谢您的惠顾！</p>
+                <p>欢迎下次光临</p>
+            </div>
+            <div class="receipt-buttons">
+                <button class="btn btn-primary" onclick="printReceipt()">🖨️ 打印小票</button>
+                <button class="btn btn-success" onclick="newOrder()">🔄 新订单</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let cart = [];
+        let currentMember = null;
+        const productBarcodes = [
+            '6901234567890', '6901234567891', '6901234567892', '6901234567893',
+            '6901234567894', '6901234567895', '6901234567896', '6901234567897'
+        ];
+        let products = {};
+
+        window.onload = function() {
+            loadProducts();
+            document.getElementById('barcodeInput').focus();
+            
+            document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addProduct();
+                }
+            });
+
+            document.getElementById('memberPhone').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkMember();
+                }
+            });
+        };
+
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_BASE}/products`);
+                products = await response.json();
+                renderProductGrid();
+            } catch (error) {
+                console.error('加载商品失败:', error);
+            }
+        }
+
+        function renderProductGrid() {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = '';
+            productBarcodes.forEach(barcode => {
+                const product = products[barcode];
+                if (product) {
+                    const card = document.createElement('div');
+                    card.className = 'product-card';
+                    card.innerHTML = `
+                        <div class="barcode">${product.barcode.slice(-4)}</div>
+                        <div class="name">${product.name}</div>
+                        <div class="price">¥${product.price.toFixed(2)}</div>
+                    `;
+                    card.onclick = () => addProductByBarcode(barcode);
+                    grid.appendChild(card);
+                }
+            });
+        }
+
+        async function addProduct() {
+            const barcode = document.getElementById('barcodeInput').value.trim();
+            if (!barcode) {
+                alert('请输入商品条码');
+                return;
+            }
+            await addProductByBarcode(barcode);
+        }
+
+        async function addProductByBarcode(barcode) {
+            try {
+                const response = await fetch(`${API_BASE}/product/${barcode}`);
+                if (!response.ok) {
+                    alert('未找到该商品');
+                    return;
+                }
+                const product = await response.json();
+
+                const existingItem = cart.find(item => item.product.barcode === barcode);
+                if (existingItem) {
+                    if (existingItem.quantity >= 99) {
+                        alert('商品数量不能超过99件');
+                        return;
+                    }
+                    existingItem.quantity++;
+                    existingItem.subtotal = existingItem.product.price * existingItem.quantity;
+                } else {
+                    cart.push({
+                        product: product,
+                        quantity: 1,
+                        subtotal: product.price
+                    });
+                }
+
+                document.getElementById('barcodeInput').value = '';
+                document.getElementById('barcodeInput').focus();
+                renderCart();
+            } catch (error) {
+                console.error('添加商品失败:', error);
+                alert('添加商品失败');
+            }
+        }
+
+        function updateQuantity(barcode, delta) {
+            const item = cart.find(item => item.product.barcode === barcode);
+            if (item) {
+                const newQuantity = item.quantity + delta;
+                if (newQuantity <= 0) {
+                    removeProduct(barcode);
+                    return;
+                }
+                if (newQuantity > 99) {
+                    alert('商品数量不能超过99件');
+                    return;
+                }
+                item.quantity = newQuantity;
+                item.subtotal = item.product.price * item.quantity;
+                renderCart();
+            }
+        }
+
+        function removeProduct(barcode) {
+            cart = cart.filter(item => item.product.barcode !== barcode);
+            renderCart();
+        }
+
+        function renderCart() {
+            const tbody = document.getElementById('cartBody');
+            
+            if (cart.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-cart">购物车为空</td></tr>';
+            } else {
+                tbody.innerHTML = cart.map(item => `
+                    <tr>
+                        <td>${item.product.name}</td>
+                        <td>¥${item.product.price.toFixed(2)}</td>
+                        <td>
+                            <div class="quantity-control">
+                                <button class="quantity-btn" onclick="updateQuantity('${item.product.barcode}', -1)">-</button>
+                                <span>${item.quantity}</span>
+                                <button class="quantity-btn" onclick="updateQuantity('${item.product.barcode}', 1)">+</button>
+                            </div>
+                        </td>
+                        <td>¥${item.subtotal.toFixed(2)}</td>
+                        <td>
+                            <button class="btn btn-danger" onclick="removeProduct('${item.product.barcode}')">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            updateTotal();
+        }
+
+        function updateTotal() {
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const totalPrice = cart.reduce((sum, item) => sum + item.subtotal, 0);
+            
+            document.getElementById('totalItems').textContent = `${totalItems} 件`;
+            document.getElementById('totalPrice').textContent = `¥${totalPrice.toFixed(2)}`;
+
+            if (currentMember) {
+                const discount = totalPrice * 0.05;
+                const finalPrice = totalPrice - discount;
+                document.getElementById('discountRow').style.display = 'flex';
+                document.getElementById('discountPrice').textContent = `-¥${discount.toFixed(2)}`;
+                document.getElementById('finalPrice').textContent = `¥${finalPrice.toFixed(2)}`;
+            } else {
+                document.getElementById('discountRow').style.display = 'none';
+                document.getElementById('finalPrice').textContent = `¥${totalPrice.toFixed(2)}`;
+            }
+        }
+
+        async function checkMember() {
+            const phone = document.getElementById('memberPhone').value.trim();
+            if (!phone) {
+                alert('请输入会员手机号');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/member/${phone}`);
+                if (!response.ok) {
+                    alert('未找到该会员，请检查手机号');
+                    currentMember = null;
+                    document.getElementById('memberInfo').classList.remove('show');
+                    updateTotal();
+                    return;
+                }
+                const member = await response.json();
+                currentMember = member;
+                document.getElementById('memberInfo').classList.add('show');
+                document.getElementById('memberName').textContent = member.name;
+                document.getElementById('memberPoints').textContent = member.points;
+                updateTotal();
+            } catch (error) {
+                console.error('验证会员失败:', error);
+                alert('验证会员失败');
+            }
+        }
+
+        async function checkout() {
+            if (cart.length === 0) {
+                alert('购物车为空，请先添加商品');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/checkout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        items: cart,
+                        memberPhone: currentMember ? currentMember.phone : null
+                    })
+                });
+
+                const order = await response.json();
+                showReceipt(order);
+            } catch (error) {
+                console.error('结账失败:', error);
+                alert('结账失败');
+            }
+        }
+
+        function showReceipt(order) {
+            document.getElementById('orderId').textContent = `订单号：${order.orderId}`;
+            document.getElementById('orderTime').textContent = `时间：${order.createTime}`;
+
+            const receiptBody = document.getElementById('receiptBody');
+            receiptBody.innerHTML = order.items.map(item => `
+                <div class="receipt-item">
+                    <span>${item.product.name} x ${item.quantity}</span>
+                    <span>¥${item.subtotal.toFixed(2)}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('receiptTotal').textContent = `¥${order.totalAmount.toFixed(2)}`;
+
+            if (order.memberPhone) {
+                document.getElementById('receiptDiscountRow').style.display = 'flex';
+                document.getElementById('receiptDiscount').textContent = `-¥${order.discountAmount.toFixed(2)}`;
+                document.getElementById('receiptPointsRow').style.display = 'flex';
+                document.getElementById('receiptPoints').textContent = `+${order.earnedPoints} 积分`;
+            } else {
+                document.getElementById('receiptDiscountRow').style.display = 'none';
+                document.getElementById('receiptPointsRow').style.display = 'none';
+            }
+
+            document.getElementById('receiptFinal').textContent = `¥${order.finalAmount.toFixed(2)}`;
+            document.getElementById('receiptModal').classList.add('show');
+        }
+
+        function printReceipt() {
+            alert('🖨️ 正在打印小票...');
+        }
+
+        function newOrder() {
+            cart = [];
+            currentMember = null;
+            document.getElementById('memberInfo').classList.remove('show');
+            document.getElementById('memberPhone').value = '';
+            document.getElementById('receiptModal').classList.remove('show');
+            renderCart();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTA 固件升级管理平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+
+        .version-bar {
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .version-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+
+        .version-label {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-downloading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        .file-upload {
+            border: 2px dashed #ccc;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-upload:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .checkbox-group {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .checkbox-label span {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 OTA 固件升级管理平台</h1>
+            <p>物联网设备固件升级管理系统</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="upload">固件上传</button>
+            <button class="tab-btn" data-tab="firmware">固件列表</button>
+            <button class="tab-btn" data-tab="upgrades">升级记录</button>
+            <button class="tab-btn" data-tab="statistics">统计分析</button>
+            <button class="tab-btn" data-tab="simulator">设备模拟</button>
+        </div>
+
+        <div id="upload" class="tab-content active">
+            <h2>📤 上传新固件</h2>
+            <div id="uploadMessage" class="message"></div>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label>版本号</label>
+                    <input type="text" id="version" placeholder="例如: 1.0.0" required>
+                </div>
+                <div class="form-group">
+                    <label>设备型号</label>
+                    <select id="deviceModel" required>
+                        <option value="">请选择设备型号</option>
+                        <option value="ESP32">ESP32</option>
+                        <option value="ESP8266">ESP8266</option>
+                        <option value="STM32">STM32</option>
+                        <option value="Arduino">Arduino</option>
+                        <option value="RaspberryPi">Raspberry Pi</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>固件描述</label>
+                    <textarea id="description" rows="3" placeholder="描述此次固件更新的内容..."></textarea>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="mockUpload" onchange="toggleFileInput()"> 
+                        <span>模拟上传（不选择真实文件）</span>
+                    </label>
+                </div>
+                <div class="form-group" id="fileInputGroup">
+                    <label>固件文件 <span style="color: #e74c3c;">*</span></label>
+                    <div class="file-upload" onclick="document.getElementById('file').click()">
+                        <p>点击选择 .bin 文件</p>
+                        <p style="font-size: 12px; color: #666; margin-top: 5px;">支持最大 10MB</p>
+                    </div>
+                    <input type="file" id="file" accept=".bin">
+                    <p id="fileName" style="margin-top: 10px; color: #666;"></p>
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary">上传固件</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="firmware" class="tab-content">
+            <h2>📦 固件列表</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>版本号</th>
+                        <th>设备型号</th>
+                        <th>文件名</th>
+                        <th>文件大小</th>
+                        <th>发布时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="firmwareTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div id="upgrades" class="tab-content">
+            <h2>📋 升级记录</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>设备ID</th>
+                        <th>设备型号</th>
+                        <th>当前版本</th>
+                        <th>目标版本</th>
+                        <th>状态</th>
+                        <th>开始时间</th>
+                        <th>完成时间</th>
+                    </tr>
+                </thead>
+                <tbody id="upgradeTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div id="statistics" class="tab-content">
+            <h2>📊 统计分析</h2>
+            <div id="statsContent">
+            </div>
+        </div>
+
+        <div id="simulator" class="tab-content">
+            <h2>🤖 设备模拟器</h2>
+            <div id="simMessage" class="message"></div>
+            <div class="form-group">
+                <label>设备ID <span style="color: #e74c3c;">*</span></label>
+                <input type="text" id="simDeviceId" placeholder="例如: DEV001" value="DEV001" required>
+            </div>
+            <div class="form-group">
+                <label>设备型号 <span style="color: #e74c3c;">*</span></label>
+                <select id="simDeviceModel" required>
+                    <option value="ESP32">ESP32</option>
+                    <option value="ESP8266">ESP8266</option>
+                    <option value="STM32">STM32</option>
+                    <option value="Arduino">Arduino</option>
+                    <option value="RaspberryPi">Raspberry Pi</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>当前版本 <span style="color: #e74c3c;">*</span></label>
+                <input type="text" id="simCurrentVersion" placeholder="例如: 1.0.0" value="1.0.0" required>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" onclick="checkUpgrade()">检查更新</button>
+            </div>
+            <div id="simResult" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; display: none;">
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

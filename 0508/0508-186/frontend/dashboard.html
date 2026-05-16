@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>销售管理系统 - 经理仪表盘</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <h1>📊 销售管理系统</h1>
+        <div class="nav-links">
+            <a href="index.html">客户管理</a>
+            <a href="follow-up.html">跟进记录</a>
+            <a href="dashboard.html" class="active">经理仪表盘</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h2>📈 经理仪表盘</h2>
+            <button class="btn btn-success" onclick="loadDashboardData()">🔄 刷新数据</button>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="stat-card primary">
+                <h3>预计季度成交金额</h3>
+                <div class="value" id="totalAmount">¥0.00</div>
+            </div>
+            <div class="stat-card success">
+                <h3>客户总数</h3>
+                <div class="value" id="totalCustomers">0</div>
+            </div>
+            <div class="stat-card warning">
+                <h3>近30天跟进数</h3>
+                <div class="value" id="recentFollowUps">0</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 1rem;">👥 各销售人员预计完成金额</h3>
+            <div id="salespersonList" class="salesperson-list">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 1rem;">📊 客户成交概率排名</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>公司名称</th>
+                        <th>联系人</th>
+                        <th>客户等级</th>
+                        <th>负责人</th>
+                        <th>成交概率</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="probabilityRanking">
+                    <tr>
+                        <td colspan="7" class="loading">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        async function init() {
+            await loadDashboardData();
+        }
+
+        async function loadDashboardData() {
+            try {
+                const [stats, customers] = await Promise.all([
+                    api.dashboard.getStats(),
+                    api.dashboard.getCustomers()
+                ]);
+
+                renderStats(stats);
+                renderSalespersonAmounts(stats.estimatedAmountBySalesperson);
+                renderProbabilityRanking(customers);
+            } catch (error) {
+                showToast('加载仪表盘数据失败', 'error');
+            }
+        }
+
+        function renderStats(stats) {
+            document.getElementById('totalAmount').textContent =
+                formatCurrency(stats.totalEstimatedAmount || 0);
+            document.getElementById('totalCustomers').textContent = stats.totalCustomers || 0;
+            document.getElementById('recentFollowUps').textContent = stats.followUpRecordsLast30Days || 0;
+        }
+
+        function renderSalespersonAmounts(amounts) {
+            const listDiv = document.getElementById('salespersonList');
+
+            if (!amounts || Object.keys(amounts).length === 0) {
+                listDiv.innerHTML = `
+                    <div class="empty-state">
+                        <span style="font-size: 3rem;">📭</span>
+                        <p>暂无销售数据</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const sortedEntries = Object.entries(amounts)
+                .sort((a, b) => b[1] - a[1]);
+
+            const total = Object.values(amounts).reduce((sum, val) => sum + (val || 0), 0);
+
+            listDiv.innerHTML = sortedEntries.map(([name, amount], index) => {
+                const percentage = total > 0 ? ((amount || 0) / total * 100).toFixed(1) : 0;
+                return `
+                    <div class="salesperson-item">
+                        <div>
+                            <span class="name">${index + 1}. ${name}</span>
+                            <div style="margin-top: 0.3rem;">
+                                <div style="width: 200px; height: 8px; background: #eee; border-radius: 4px; overflow: hidden;">
+                                    <div style="width: ${percentage}%; height: 100%; background: linear-gradient(90deg, #3498db, #27ae60);"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="amount">${formatCurrency(amount || 0)}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderProbabilityRanking(customers) {
+            const tbody = document.getElementById('probabilityRanking');
+
+            if (!customers || customers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <span style="font-size: 3rem;">📭</span>
+                            <p>暂无客户数据</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const sortedCustomers = [...customers]
+                .sort((a, b) => b.dealProbability - a.dealProbability);
+
+            tbody.innerHTML = sortedCustomers.map((customer, index) => `
+                <tr>
+                    <td><strong>${index + 1}</strong></td>
+                    <td>${customer.companyName}</td>
+                    <td>${customer.contactPerson}</td>
+                    <td><span class="badge badge-${customer.level || 'C'}">${customer.level || 'C'}级</span></td>
+                    <td>${customer.salesperson || '-'}</td>
+                    <td>
+                        <div class="probability-bar">
+                            <div class="probability-fill" style="width: ${customer.dealProbability}%"></div>
+                        </div>
+                        ${customer.dealProbability}%
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewCustomer(${customer.id})">查看</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function viewCustomer(id) {
+            window.location.href = `follow-up.html?customerId=${id}`;
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>销售管理系统 - 客户管理</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <h1>📊 销售管理系统</h1>
+        <div class="nav-links">
+            <a href="index.html" class="active">客户管理</a>
+            <a href="follow-up.html">跟进记录</a>
+            <a href="dashboard.html">经理仪表盘</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h2>👥 客户管理</h2>
+            <button class="btn btn-primary" onclick="openCustomerModal()">+ 新增客户</button>
+        </div>
+
+        <div class="filter-bar">
+            <select class="form-control" id="levelFilter" onchange="loadCustomers()">
+                <option value="">所有等级</option>
+                <option value="A">A级客户</option>
+                <option value="B">B级客户</option>
+                <option value="C">C级客户</option>
+            </select>
+            <select class="form-control" id="salespersonFilter" onchange="loadCustomers()">
+                <option value="">所有销售</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>公司名称</th>
+                        <th>联系人</th>
+                        <th>电话</th>
+                        <th>客户等级</th>
+                        <th>负责人</th>
+                        <th>成交概率</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTableBody">
+                    <tr>
+                        <td colspan="9" class="loading">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal" id="customerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">新增客户</h3>
+                <button class="close-modal" onclick="closeCustomerModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="customerForm">
+                    <input type="hidden" id="customerId">
+                    <div class="form-group">
+                        <label>公司名称 * (2-100字符)</label>
+                        <input type="text" class="form-control" id="companyName" required maxlength="100" placeholder="请输入公司名称">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>联系人 * (2-50字符)</label>
+                            <input type="text" class="form-control" id="contactPerson" required maxlength="50" placeholder="请输入联系人姓名">
+                        </div>
+                        <div class="form-group">
+                            <label>电话 * (7-20位，仅数字和特殊符号)</label>
+                            <input type="tel" class="form-control" id="phone" required maxlength="20" placeholder="请输入电话号码">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>客户等级</label>
+                            <select class="form-control" id="level">
+                                <option value="A">A级</option>
+                                <option value="B">B级</option>
+                                <option value="C">C级</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>负责人 (最多50字符)</label>
+                            <input type="text" class="form-control" id="salesperson" maxlength="50" placeholder="销售人员姓名">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeCustomerModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveCustomer()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        let customers = [];
+
+        async function init() {
+            await loadSalespersons();
+            await loadCustomers();
+        }
+
+        async function loadSalespersons() {
+            try {
+                const salespersons = await api.customers.getSalespersons();
+                const select = document.getElementById('salespersonFilter');
+                salespersons.forEach(sp => {
+                    const option = document.createElement('option');
+                    option.value = sp;
+                    option.textContent = sp;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('加载销售人员列表失败:', error);
+            }
+        }
+
+        async function loadCustomers() {
+            try {
+                customers = await api.customers.getAll();
+
+                const levelFilter = document.getElementById('levelFilter').value;
+                const salespersonFilter = document.getElementById('salespersonFilter').value;
+
+                let filteredCustomers = customers;
+                if (levelFilter) {
+                    filteredCustomers = filteredCustomers.filter(c => c.level === levelFilter);
+                }
+                if (salespersonFilter) {
+                    filteredCustomers = filteredCustomers.filter(c => c.salesperson === salespersonFilter);
+                }
+
+                renderCustomers(filteredCustomers);
+            } catch (error) {
+                showToast('加载客户列表失败', 'error');
+            }
+        }
+
+        function renderCustomers(customerList) {
+            const tbody = document.getElementById('customerTableBody');
+
+            if (customerList.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <span style="font-size: 3rem;">📭</span>
+                            <p>暂无客户数据</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = customerList.map(customer => `
+                <tr>
+                    <td>${customer.id}</td>
+                    <td><strong>${customer.companyName}</strong></td>
+                    <td>${customer.contactPerson}</td>
+                    <td>${customer.phone}</td>
+                    <td><span class="badge badge-${customer.level || 'C'}">${customer.level || 'C'}级</span></td>
+                    <td>${customer.salesperson || '-'}</td>
+                    <td>
+                        <div class="probability-bar">
+                            <div class="probability-fill" style="width: ${customer.dealProbability}%"></div>
+                        </div>
+                        ${customer.dealProbability}%
+                    </td>
+                    <td>${formatDate(customer.createdAt)}</td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-sm btn-primary" onclick="viewCustomer(${customer.id})">查看</button>
+                            <button class="btn btn-sm btn-success" onclick="editCustomer(${customer.id})">编辑</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteCustomer(${customer.id})">删除</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openCustomerModal() {
+            document.getElementById('modalTitle').textContent = '新增客户';
+            document.getElementById('customerForm').reset();
+            document.getElementById('customerId').value = '';
+            document.getElementById('customerModal').classList.add('active');
+        }
+
+        function closeCustomerModal() {
+            document.getElementById('customerModal').classList.remove('active');
+        }
+
+        async function editCustomer(id) {
+            try {
+                const customer = await api.customers.getById(id);
+                document.getElementById('modalTitle').textContent = '编辑客户';
+                document.getElementById('customerId').value = customer.id;
+                document.getElementById('companyName').value = customer.companyName;
+                document.getElementById('contactPerson').value = customer.contactPerson;
+                document.getElementById('phone').value = customer.phone;
+                document.getElementById('level').value = customer.level || 'C';
+                document.getElementById('salesperson').value = customer.salesperson || '';
+                document.getElementById('customerModal').classList.add('active');
+            } catch (error) {
+                showToast('加载客户信息失败', 'error');
+            }
+        }
+
+        async function saveCustomer() {
+            const companyName = document.getElementById('companyName').value;
+            const contactPerson = document.getElementById('contactPerson').value;
+            const phone = document.getElementById('phone').value;
+            const salesperson = document.getElementById('salesperson').value;
+
+            const companyNameValidation = ValidationUtils.validateCompanyName(companyName);
+            if (!companyNameValidation.valid) {
+                showToast(companyNameValidation.message, 'error');
+                return;
+            }
+
+            const contactPersonValidation = ValidationUtils.validateContactPerson(contactPerson);
+            if (!contactPersonValidation.valid) {
+                showToast(contactPersonValidation.message, 'error');
+                return;
+            }
+
+            const phoneValidation = ValidationUtils.validatePhone(phone);
+            if (!phoneValidation.valid) {
+                showToast(phoneValidation.message, 'error');
+                return;
+            }
+
+            const salespersonValidation = ValidationUtils.validateSalesperson(salesperson);
+            if (!salespersonValidation.valid) {
+                showToast(salespersonValidation.message, 'error');
+                return;
+            }
+
+            const id = document.getElementById('customerId').value;
+            const data = {
+                companyName: companyName,
+                contactPerson: contactPerson,
+                phone: phone,
+                level: document.getElementById('level').value,
+                salesperson: salesperson || null,
+            };
+
+            try {
+                if (id) {
+                    await api.customers.update(id, data);
+                    showToast('客户更新成功', 'success');
+                } else {
+                    await api.customers.create(data);
+                    showToast('客户创建成功', 'success');
+                }
+                closeCustomerModal();
+                await loadCustomers();
+                await loadSalespersons();
+            } catch (error) {
+                showToast('保存失败', 'error');
+            }
+        }
+
+        async function deleteCustomer(id) {
+            if (!confirm('确定要删除该客户吗？相关的跟进记录也会被删除。')) {
+                return;
+            }
+            try {
+                await api.customers.delete(id);
+                showToast('客户删除成功', 'success');
+                await loadCustomers();
+            } catch (error) {
+                showToast('删除失败', 'error');
+            }
+        }
+
+        async function viewCustomer(id) {
+            window.location.href = `follow-up.html?customerId=${id}`;
+        }
+
+        document.getElementById('customerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCustomerModal();
+            }
+        });
+
+        document.getElementById('phone').addEventListener('input', ValidationUtils.preventInvalidPhoneInput);
+        document.getElementById('companyName').addEventListener('input', (e) => ValidationUtils.limitInputLength(e, 100));
+        document.getElementById('contactPerson').addEventListener('input', (e) => ValidationUtils.limitInputLength(e, 50));
+        document.getElementById('salesperson').addEventListener('input', (e) => ValidationUtils.limitInputLength(e, 50));
+
+        init();
+    </script>
+</body>
+</html>

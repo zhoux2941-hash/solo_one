@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工培训报名平台</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>员工培训报名平台</h1>
+            <nav>
+                <button onclick="showPage('home')" class="nav-btn active">首页</button>
+                <button onclick="showPage('courses')" class="nav-btn">课程列表</button>
+                <button onclick="showPage('myCourses')" class="nav-btn">我的培训</button>
+                <button onclick="showPage('admin')" class="nav-btn">管理后台</button>
+            </nav>
+            <div class="user-info">
+                <span id="currentUser">当前用户: 未登录</span>
+                <select id="userSelect" onchange="switchUser()">
+                    <option value="">选择用户</option>
+                </select>
+            </div>
+        </header>
+
+        <main>
+            <div id="homePage" class="page active">
+                <div class="welcome-section">
+                    <h2>欢迎使用员工培训报名平台</h2>
+                    <p>提升技能，成就未来</p>
+                </div>
+                <div class="stats-section">
+                    <div class="stat-card">
+                        <h3 id="totalCourses">0</h3>
+                        <p>可用课程</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="skillCourses">0</h3>
+                        <p>技能培训</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="qualityCourses">0</h3>
+                        <p>素养培训</p>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <button onclick="showPage('courses')" class="btn btn-primary">浏览课程</button>
+                    <button onclick="showPage('myCourses')" class="btn btn-secondary">查看我的培训</button>
+                </div>
+            </div>
+
+            <div id="coursesPage" class="page">
+                <div class="page-header">
+                    <h2>课程列表</h2>
+                    <div class="filter-section">
+                        <select id="courseTypeFilter" onchange="filterCourses()">
+                            <option value="">全部类型</option>
+                            <option value="技能培训">技能培训</option>
+                            <option value="素养培训">素养培训</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="coursesList" class="courses-grid"></div>
+            </div>
+
+            <div id="courseDetailPage" class="page">
+                <div class="page-header">
+                    <button onclick="showPage('courses')" class="btn btn-back">← 返回</button>
+                    <h2>课程详情</h2>
+                </div>
+                <div id="courseDetail"></div>
+            </div>
+
+            <div id="myCoursesPage" class="page">
+                <div class="page-header">
+                    <h2>我的培训</h2>
+                </div>
+                <div class="tabs">
+                    <button onclick="showMyTab('enrolled')" class="tab-btn active" id="tabEnrolled">已报名</button>
+                    <button onclick="showMyTab('attended')" class="tab-btn" id="tabAttended">签到记录</button>
+                </div>
+                <div id="enrolledCourses" class="my-courses-list"></div>
+                <div id="attendedCourses" class="my-courses-list" style="display: none;"></div>
+            </div>
+
+            <div id="adminPage" class="page">
+                <div class="page-header">
+                    <h2>管理后台</h2>
+                </div>
+                <div class="admin-tabs">
+                    <button onclick="showAdminTab('create')" class="tab-btn active" id="tabCreate">发布课程</button>
+                    <button onclick="showAdminTab('statistics')" class="tab-btn" id="tabStatistics">培训统计</button>
+                </div>
+
+                <div id="createCourseSection">
+                    <div class="form-container">
+                        <h3>发布新课程</h3>
+                        <form id="courseForm" onsubmit="createCourse(event)">
+                            <div class="form-group">
+                                <label>课程名称 *</label>
+                                <input type="text" id="courseName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>课程描述</label>
+                                <textarea id="courseDescription" rows="4"></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>课程类型 *</label>
+                                    <select id="courseType" required>
+                                        <option value="技能培训">技能培训</option>
+                                        <option value="素养培训">素养培训</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>讲师 *</label>
+                                    <input type="text" id="courseInstructor" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>开始时间 *</label>
+                                    <input type="datetime-local" id="courseStartTime" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>结束时间 *</label>
+                                    <input type="datetime-local" id="courseEndTime" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>培训地点 *</label>
+                                    <input type="text" id="courseLocation" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>最大报名人数 *</label>
+                                    <input type="number" id="courseMaxEnrollment" min="1" value="30" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full">发布课程</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="statisticsSection" style="display: none;">
+                    <h3>培训统计</h3>
+                    <div id="statisticsTable"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

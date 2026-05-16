@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投票</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .poll-info {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .expired-badge {
+            display: inline-block;
+            background: #ff4757;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .active-badge {
+            display: inline-block;
+            background: #2ed573;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .options-container {
+            margin: 30px 0;
+        }
+        .option-item {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        .option-item.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .option-item.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .option-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .option-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+        }
+        .vote-count {
+            font-weight: bold;
+            color: #667eea;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        .percentage {
+            text-align: right;
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 500;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        .total-votes {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        .checkbox-custom {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .radio-custom {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="pollTitle">加载中...</h1>
+        <div class="poll-info">
+            <div id="deadlineInfo"></div>
+            <div id="statusBadge"></div>
+        </div>
+        
+        <div class="form-group" id="nicknameGroup">
+            <label for="nickname">您的昵称 (1-20个字符)</label>
+            <input type="text" id="nickname" placeholder="请输入您的昵称" maxlength="20">
+        </div>
+        
+        <div class="options-container" id="optionsContainer">
+        </div>
+        
+        <div class="total-votes" id="totalVotes"></div>
+        
+        <button class="btn" id="voteBtn" onclick="submitVote()">提交投票</button>
+        
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage">投票成功！感谢您的参与。</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@6/lib/esm5/index.js"></script>
+    <script>
+        let pollId = null;
+        let poll = null;
+        let selectedOptions = new Set();
+        let hasVoted = false;
+        let stompClient = null;
+
+        async function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            pollId = urlParams.get('id');
+            
+            if (!pollId) {
+                showError('无效的投票链接');
+                return;
+            }
+            
+            await loadPoll();
+            connectWebSocket();
+            startDeadlineCheck();
+        }
+
+        async function loadPoll() {
+            try {
+                const response = await fetch(`/api/polls/${pollId}`);
+                if (!response.ok) {
+                    showError('投票不存在');
+                    return;
+                }
+                poll = await response.json();
+                renderPoll();
+            } catch (error) {
+                showError('加载投票失败，请刷新重试');
+            }
+        }
+
+        function renderPoll() {
+            document.getElementById('pollTitle').textContent = poll.title;
+            
+            const deadline = new Date(poll.deadline);
+            const now = new Date();
+            const isExpired = now > deadline;
+            
+            document.getElementById('deadlineInfo').textContent = 
+                `截止时间：${deadline.toLocaleString('zh-CN')}`;
+            
+            const statusBadge = document.getElementById('statusBadge');
+            if (isExpired) {
+                statusBadge.innerHTML = '<span class="expired-badge">投票已结束</span>';
+            } else {
+                statusBadge.innerHTML = '<span class="active-badge">投票进行中</span>';
+            }
+            
+            const nicknameGroup = document.getElementById('nicknameGroup');
+            const voteBtn = document.getElementById('voteBtn');
+            
+            if (isExpired || hasVoted) {
+                nicknameGroup.style.display = 'none';
+                voteBtn.disabled = true;
+                voteBtn.textContent = isExpired ? '投票已截止' : '您已投票';
+            } else {
+                nicknameGroup.style.display = 'block';
+                voteBtn.disabled = false;
+                voteBtn.textContent = '提交投票';
+            }
+            
+            renderOptions();
+            updateTotalVotes();
+        }
+
+        function renderOptions() {
+            const container = document.getElementById('optionsContainer');
+            const totalVotes = poll.options.reduce((sum, opt) => sum + opt.voteCount, 0);
+            const now = new Date();
+            const isExpired = now > new Date(poll.deadline);
+            
+            container.innerHTML = poll.options.map(option => {
+                const percentage = totalVotes > 0 ? (option.voteCount / totalVotes * 100).toFixed(1) : 0;
+                const isSelected = selectedOptions.has(option.id);
+                const disabledClass = (isExpired || hasVoted) ? 'disabled' : '';
+                const selectedClass = isSelected ? 'selected' : '';
+                
+                const inputType = poll.allowMultiple ? 'checkbox' : 'radio';
+                
+                return `
+                    <div class="option-item ${disabledClass} ${selectedClass}" 
+                         onclick="toggleOption(${option.id}, ${isExpired || hasVoted})">
+                        <div class="option-header">
+                            <div style="display: flex; align-items: center;">
+                                <input type="${inputType}" class="${inputType}-custom" 
+                                       id="option-${option.id}" ${isSelected ? 'checked' : ''} 
+                                       ${isExpired || hasVoted ? 'disabled' : ''}>
+                                <span class="option-text">${option.optionText}</span>
+                            </div>
+                            <span class="vote-count">${option.voteCount} 票</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="percentage">${percentage}%</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleOption(optionId, disabled) {
+            if (disabled) return;
+            
+            if (poll.allowMultiple) {
+                if (selectedOptions.has(optionId)) {
+                    selectedOptions.delete(optionId);
+                } else {
+                    selectedOptions.add(optionId);
+                }
+            } else {
+                selectedOptions.clear();
+                selectedOptions.add(optionId);
+            }
+            
+            renderOptions();
+        }
+
+        async function submitVote() {
+            if (hasVoted) return;
+            
+            const nickname = document.getElementById('nickname').value.trim();
+            if (!nickname) {
+                showError('请输入您的昵称');
+                return;
+            }
+            
+            if (nickname.length < 1 || nickname.length > 20) {
+                showError('昵称长度必须在1-20个字符之间');
+                return;
+            }
+            
+            if (selectedOptions.size === 0) {
+                showError('请选择投票选项');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/polls/${pollId}/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nickname,
+                        optionIds: Array.from(selectedOptions)
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    showError(result.error || '投票失败');
+                    return;
+                }
+                
+                hasVoted = true;
+                poll = result;
+                hideError();
+                document.getElementById('successMessage').style.display = 'block';
+                renderPoll();
+                
+            } catch (error) {
+                showError('投票失败，请重试');
+            }
+        }
+
+        function connectWebSocket() {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function(frame) {
+                console.log('WebSocket连接成功');
+                stompClient.subscribe(`/topic/poll/${pollId}`, function(message) {
+                    poll = JSON.parse(message.body);
+                    renderPoll();
+                });
+            }, function(error) {
+                console.log('WebSocket连接失败，将重试:', error);
+                setTimeout(connectWebSocket, 3000);
+            });
+        }
+
+        function startDeadlineCheck() {
+            setInterval(() => {
+                if (poll) {
+                    const now = new Date();
+                    const deadline = new Date(poll.deadline);
+                    if (now > deadline && !document.getElementById('voteBtn').disabled) {
+                        renderPoll();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateTotalVotes() {
+            const total = poll.options.reduce((sum, opt) => sum + opt.voteCount, 0);
+            document.getElementById('totalVotes').textContent = `总投票数：${total}`;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        init();
+    </script>
+</body>
+</html>

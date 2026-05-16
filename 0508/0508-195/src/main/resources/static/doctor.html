@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医生后台 - 报告上传</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: #2c3e50;
+            color: white;
+            padding: 20px 0;
+        }
+        .sidebar h2 {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid #34495e;
+            margin-bottom: 20px;
+        }
+        .sidebar nav a {
+            display: block;
+            padding: 15px 30px;
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .sidebar nav a:hover,
+        .sidebar nav a.active {
+            background: #34495e;
+            color: white;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        .page-title {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .reservation-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .reservation-info h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        .reservation-info p {
+            color: #666;
+            margin: 3px 0;
+        }
+        .upload-btn {
+            padding: 10px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .upload-btn:hover {
+            background: #5a6fd6;
+        }
+        .uploaded-tag {
+            padding: 8px 20px;
+            background: #e8f5e9;
+            color: #388e3c;
+            border-radius: 20px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-content h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .indicator-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1.5fr 0.5fr;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .indicator-row input {
+            padding: 8px 10px;
+        }
+        .add-indicator-btn {
+            padding: 8px 20px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0 20px;
+        }
+        .remove-indicator-btn {
+            padding: 8px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .checkbox-label input {
+            width: auto;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .cancel-btn {
+            background: #e0e0e0;
+            color: #333;
+        }
+        .save-btn {
+            background: #667eea;
+            color: white;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #999;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 25px;
+            border: none;
+            background: #e0e0e0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        .reports-list .report-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        .reports-list .report-item h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .reports-list .report-item p {
+            color: #666;
+            margin: 5px 0;
+        }
+        .reports-list .report-item .abnormal-tag {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .file-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+        .file-upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .file-upload-area.dragover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .file-upload-area .icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        .file-upload-area p {
+            color: #666;
+            margin: 5px 0;
+        }
+        .file-upload-area .tips {
+            font-size: 12px;
+            color: #999;
+        }
+        .uploaded-file {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .uploaded-file .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .uploaded-file .file-icon {
+            width: 40px;
+            height: 40px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .uploaded-file .file-name {
+            color: #333;
+            font-weight: 500;
+        }
+        .uploaded-file .file-size {
+            color: #999;
+            font-size: 12px;
+        }
+        .uploaded-file .delete-btn {
+            padding: 5px 15px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .upload-progress {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .upload-progress.show {
+            display: block;
+        }
+        .upload-progress .bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .upload-or-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .upload-or-link span {
+            color: #999;
+        }
+        .upload-or-link hr {
+            flex: 1;
+            border: none;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>🏥 医生后台</h2>
+        <nav>
+            <a href="#" class="active" onclick="showTab('reservations', this)">预约管理</a>
+            <a href="#" onclick="showTab('reports', this)">报告管理</a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <h1 class="page-title">预约管理</h1>
+
+        <div id="reservations-tab">
+            <div class="card">
+                <h3>待上传报告的预约</h3>
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="filterReservations('all', this)">全部</button>
+                    <button class="tab-btn" onclick="filterReservations('pending', this)">待上传</button>
+                    <button class="tab-btn" onclick="filterReservations('uploaded', this)">已上传</button>
+                </div>
+                <div id="reservationList"></div>
+            </div>
+        </div>
+
+        <div id="reports-tab" style="display: none;">
+            <div class="card">
+                <h3>已上传报告列表</h3>
+                <div id="reportsList" class="reports-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <h3>📄 上传体检报告</h3>
+            <form id="reportForm">
+                <input type="hidden" id="reservationId">
+                <input type="hidden" id="reservationUserName">
+                <input type="hidden" id="reservationPhone">
+                <input type="hidden" id="fileType">
+                <input type="hidden" id="fileName">
+                
+                <div class="form-group">
+                    <label>上传体检报告（PDF/Word）</label>
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <div class="icon">📁</div>
+                        <p>点击或拖拽文件到此处上传</p>
+                        <p class="tips">支持 PDF、DOC、DOCX 格式，最大 50MB</p>
+                    </div>
+                    <input type="file" id="fileInput" accept=".pdf,.doc,.docx" style="display: none;">
+                    <div class="upload-progress" id="uploadProgress">
+                        <div class="bar"></div>
+                    </div>
+                    <div id="uploadedFileContainer" style="display: none;"></div>
+                </div>
+                
+                <div class="upload-or-link">
+                    <hr>
+                    <span>或者</span>
+                    <hr>
+                </div>
+                
+                <div class="form-group">
+                    <label>报告链接（可选）</label>
+                    <input type="url" id="pdfUrl" placeholder="或者输入报告文件链接">
+                </div>
+                
+                <div class="form-group">
+                    <label>医生建议（可选）</label>
+                    <textarea id="doctorNotes" rows="3" placeholder="请输入医生诊断建议"></textarea>
+                </div>
+                
+                <h4 style="margin: 20px 0 10px; color: #333;">📊 体检指标</h4>
+                <div class="indicator-row" style="font-weight: bold; color: #666;">
+                    <span>项目名称</span>
+                    <span>检测值</span>
+                    <span>单位</span>
+                    <span>参考范围</span>
+                    <span>异常</span>
+                </div>
+                <div id="indicatorsContainer"></div>
+                <button type="button" class="add-indicator-btn" onclick="addIndicatorRow()">+ 添加指标</button>
+                
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" onclick="closeModal()">取消</button>
+                    <button type="submit" class="save-btn">保存报告</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let currentFilter = 'all';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadReservations();
+            document.getElementById('reportForm').addEventListener('submit', submitReport);
+        });
+        
+        function showTab(tab, element) {
+            document.querySelectorAll('.sidebar nav a').forEach(link => link.classList.remove('active'));
+            if (element) {
+                element.classList.add('active');
+            }
+            
+            if (tab === 'reports') {
+                document.getElementById('reservations-tab').style.display = 'none';
+                document.getElementById('reports-tab').style.display = 'block';
+                document.querySelector('.page-title').textContent = '报告管理';
+                loadReports();
+            } else {
+                document.getElementById('reservations-tab').style.display = 'block';
+                document.getElementById('reports-tab').style.display = 'none';
+                document.querySelector('.page-title').textContent = '预约管理';
+                loadReservations();
+            }
+        }
+        
+        async function loadReservations() {
+            try {
+                const response = await fetch(`${API_BASE}/reservations`);
+                const reservations = await response.json();
+                renderReservations(reservations);
+            } catch (error) {
+                console.error('加载预约失败:', error);
+            }
+        }
+        
+        function filterReservations(filter, element) {
+            currentFilter = filter;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (element) {
+                element.classList.add('active');
+            }
+            loadReservations();
+        }
+        
+        function renderReservations(reservations) {
+            let filtered = reservations;
+            if (currentFilter === 'pending') {
+                filtered = reservations.filter(r => !r.reportUploaded);
+            } else if (currentFilter === 'uploaded') {
+                filtered = reservations.filter(r => r.reportUploaded);
+            }
+            
+            const container = document.getElementById('reservationList');
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无预约记录</div>';
+                return;
+            }
+            
+            container.innerHTML = filtered.map(r => `
+                <div class="reservation-item">
+                    <div class="reservation-info">
+                        <h4>${r.packageName}</h4>
+                        <p>👤 姓名：${r.userName} | 📱 手机：${r.phone}</p>
+                        <p>📅 日期：${r.reservationDate} | ⏰ 时段：${r.timeSlot}</p>
+                    </div>
+                    ${r.reportUploaded ? 
+                        '<span class="uploaded-tag">✅ 报告已上传</span>' :
+                        `<button class="upload-btn" onclick="openUploadModal(${r.id}, '${r.userName}', '${r.phone}')">上传报告</button>`
+                    }
+                </div>
+            `).join('');
+        }
+        
+        async function loadReports() {
+            try {
+                const response = await fetch(`${API_BASE}/reports`);
+                const reports = await response.json();
+                const container = document.getElementById('reportsList');
+                
+                if (reports.length === 0) {
+                    container.innerHTML = '<div class="empty-state">暂无报告记录</div>';
+                    return;
+                }
+                
+                container.innerHTML = reports.map(r => {
+                const fileIcon = r.fileType === 'WORD' ? '📘' : '📕';
+                return `
+                <div class="report-item">
+                    <h4>${fileIcon} ${r.userName} 的体检报告</h4>
+                    <p>📱 手机号：${r.phone}</p>
+                    <p>📅 上传时间：${new Date(r.createdAt).toLocaleString()}</p>
+                    <p>📊 指标数量：${r.indicators.length} 项</p>
+                    ${r.fileName ? `<p>📎 附件：${r.fileName}</p>` : ''}
+                    ${r.hasAbnormal ? '<span class="abnormal-tag">⚠️ 含异常指标</span>' : ''}
+                </div>
+            `}).join('');
+            } catch (error) {
+                console.error('加载报告失败:', error);
+            }
+        }
+        
+        function openUploadModal(id, userName, phone) {
+            document.getElementById('reservationId').value = id;
+            document.getElementById('reservationUserName').value = userName;
+            document.getElementById('reservationPhone').value = phone;
+            document.getElementById('pdfUrl').value = '';
+            document.getElementById('doctorNotes').value = '';
+            document.getElementById('indicatorsContainer').innerHTML = '';
+            
+            addIndicatorRow('血常规', '', '', '3.5-9.5');
+            addIndicatorRow('血糖', '', 'mmol/L', '3.9-6.1');
+            addIndicatorRow('总胆固醇', '', 'mmol/L', '2.8-5.2');
+            addIndicatorRow('血压', '', 'mmHg', '90-140/60-90');
+            addIndicatorRow('肝功能ALT', '', 'U/L', '0-40');
+            
+            document.getElementById('uploadModal').classList.add('show');
+        }
+        
+        function closeModal() {
+            document.getElementById('uploadModal').classList.remove('show');
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileType').value = '';
+            document.getElementById('fileName').value = '';
+            document.getElementById('uploadedFileContainer').style.display = 'none';
+            document.getElementById('uploadedFileContainer').innerHTML = '';
+        }
+        
+        function initFileUpload() {
+            const uploadArea = document.getElementById('fileUploadArea');
+            const fileInput = document.getElementById('fileInput');
+            
+            uploadArea.addEventListener('click', () => fileInput.click());
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) handleFileSelect(file);
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) handleFileSelect(file);
+            });
+        }
+        
+        async function handleFileSelect(file) {
+            const validTypes = ['application/pdf', 'application/msword', 
+                               'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            const validExtensions = ['.pdf', '.doc', '.docx'];
+            const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+            
+            if (!validExtensions.includes(fileExt)) {
+                alert('只支持 PDF、DOC、DOCX 格式的文件');
+                return;
+            }
+            
+            if (file.size > 50 * 1024 * 1024) {
+                alert('文件大小不能超过 50MB');
+                return;
+            }
+            
+            const progressBar = document.getElementById('uploadProgress');
+            progressBar.classList.add('show');
+            progressBar.querySelector('.bar').style.width = '0%';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const interval = setInterval(() => {
+                    const bar = progressBar.querySelector('.bar');
+                    const currentWidth = parseInt(bar.style.width) || 0;
+                    if (currentWidth < 90) {
+                        bar.style.width = (currentWidth + 10) + '%';
+                    }
+                }, 100);
+                
+                const response = await fetch(`${API_BASE}/files/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                clearInterval(interval);
+                progressBar.querySelector('.bar').style.width = '100%';
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('pdfUrl').value = result.fileUrl;
+                    document.getElementById('fileType').value = result.fileType;
+                    document.getElementById('fileName').value = result.fileName;
+                    showUploadedFile(result.fileName, result.fileSize, result.fileType);
+                } else {
+                    alert(result.message || '上传失败');
+                }
+                
+                setTimeout(() => {
+                    progressBar.classList.remove('show');
+                    progressBar.querySelector('.bar').style.width = '0%';
+                }, 500);
+                
+            } catch (error) {
+                console.error('文件上传失败:', error);
+                alert('文件上传失败，请重试');
+                progressBar.classList.remove('show');
+            }
+        }
+        
+        function showUploadedFile(fileName, fileSize, fileType) {
+            const container = document.getElementById('uploadedFileContainer');
+            const icon = fileType === 'PDF' ? '📕' : '📘';
+            const sizeStr = (fileSize / 1024 / 1024).toFixed(2) + ' MB';
+            
+            container.innerHTML = `
+                <div class="uploaded-file">
+                    <div class="file-info">
+                        <div class="file-icon">${icon}</div>
+                        <div>
+                            <div class="file-name">${fileName}</div>
+                            <div class="file-size">${sizeStr} · ${fileType}</div>
+                        </div>
+                    </div>
+                    <button type="button" class="delete-btn" onclick="deleteUploadedFile()">删除</button>
+                </div>
+            `;
+            container.style.display = 'block';
+        }
+        
+        function deleteUploadedFile() {
+            document.getElementById('pdfUrl').value = '';
+            document.getElementById('fileType').value = '';
+            document.getElementById('fileName').value = '';
+            document.getElementById('fileInput').value = '';
+            document.getElementById('uploadedFileContainer').style.display = 'none';
+            document.getElementById('uploadedFileContainer').innerHTML = '';
+        }
+        
+        function addIndicatorRow(name = '', value = '', unit = '', range = '') {
+            const container = document.getElementById('indicatorsContainer');
+            const row = document.createElement('div');
+            row.className = 'indicator-row';
+            row.innerHTML = `
+                <input type="text" class="ind-name" placeholder="项目名称" value="${name}">
+                <input type="text" class="ind-value" placeholder="检测值" value="${value}">
+                <input type="text" class="ind-unit" placeholder="单位" value="${unit}">
+                <input type="text" class="ind-range" placeholder="参考范围" value="${range}">
+                <label class="checkbox-label">
+                    <input type="checkbox" class="ind-abnormal">
+                </label>
+                <button type="button" class="remove-indicator-btn" onclick="this.parentElement.remove()">×</button>
+            `;
+            container.appendChild(row);
+        }
+        
+        async function submitReport(e) {
+            e.preventDefault();
+            
+            const reservationId = document.getElementById('reservationId').value;
+            const userName = document.getElementById('reservationUserName').value;
+            const phone = document.getElementById('reservationPhone').value;
+            const pdfUrl = document.getElementById('pdfUrl').value;
+            const fileType = document.getElementById('fileType').value;
+            const fileName = document.getElementById('fileName').value;
+            const doctorNotes = document.getElementById('doctorNotes').value;
+            
+            const indicators = [];
+            document.querySelectorAll('#indicatorsContainer .indicator-row').forEach(row => {
+                const name = row.querySelector('.ind-name').value.trim();
+                const value = row.querySelector('.ind-value').value.trim();
+                if (name && value) {
+                    indicators.push({
+                        name: name,
+                        value: value,
+                        unit: row.querySelector('.ind-unit').value.trim(),
+                        referenceRange: row.querySelector('.ind-range').value.trim(),
+                        isAbnormal: row.querySelector('.ind-abnormal').checked
+                    });
+                }
+            });
+            
+            if (indicators.length === 0) {
+                alert('请至少添加一项体检指标');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/reports`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        reservationId: parseInt(reservationId),
+                        userName,
+                        phone,
+                        pdfUrl,
+                        fileType,
+                        fileName,
+                        doctorNotes,
+                        indicators
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('报告上传成功！');
+                    closeModal();
+                    loadReservations();
+                } else {
+                    alert('上传失败，请重试');
+                }
+            } catch (error) {
+                console.error('上传报告失败:', error);
+                alert('上传失败，请重试');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initFileUpload();
+        });
+    </script>
+</body>
+</html>

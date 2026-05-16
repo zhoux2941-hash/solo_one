@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线答题竞赛系统</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .app {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+        .team-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            flex: 1;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .team-card.red {
+            border-top: 5px solid #e74c3c;
+        }
+        .team-card.blue {
+            border-top: 5px solid #3498db;
+        }
+        .team-name {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .team-card.red .team-name {
+            color: #e74c3c;
+        }
+        .team-card.blue .team-name {
+            color: #3498db;
+        }
+        .team-score {
+            font-size: 3em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .team-members {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        .main-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        .role-selector {
+            text-align: center;
+        }
+        .role-btn {
+            padding: 20px 40px;
+            font-size: 1.2em;
+            margin: 10px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .role-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .role-btn.host {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .role-btn.player {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        .join-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        .question-area {
+            text-align: center;
+        }
+        .countdown {
+            font-size: 4em;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+        .question-content {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .option-btn {
+            padding: 20px;
+            font-size: 1.1em;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .option-btn.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .option-btn.correct {
+            border-color: #27ae60;
+            background: #27ae60;
+            color: white;
+        }
+        .option-btn.wrong {
+            border-color: #e74c3c;
+            background: #e74c3c;
+            color: white;
+        }
+        .host-panel .form-group {
+            text-align: left;
+        }
+        .host-panel textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            min-height: 100px;
+        }
+        .host-panel .options-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .host-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .host-actions .btn {
+            flex: 1;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+        .status-message {
+            text-align: center;
+            padding: 15px;
+            background: #d4edda;
+            color: #155724;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .result-panel {
+            text-align: center;
+        }
+        .mvp-card {
+            background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .mvp-card h2 {
+            margin-bottom: 15px;
+            font-size: 2em;
+        }
+        .mvp-name {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        .mvp-stats {
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+        .waiting-message {
+            text-align: center;
+            font-size: 1.5em;
+            color: #7f8c8d;
+            padding: 50px;
+        }
+        .correct-answer {
+            padding: 15px;
+            background: #d4edda;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 1.2em;
+        }
+        .result-panel {
+            text-align: center;
+        }
+        .result-panel h2 {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .final-score-board {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .team-final-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            min-width: 180px;
+        }
+        .team-final-card.red {
+            border: 3px solid #e74c3c;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+        }
+        .team-final-card.blue {
+            border: 3px solid #3498db;
+            background: linear-gradient(135deg, #f5faff 0%, #e0f0ff 100%);
+        }
+        .team-final-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .team-final-card.red .team-final-name {
+            color: #e74c3c;
+        }
+        .team-final-card.blue .team-final-name {
+            color: #3498db;
+        }
+        .team-final-score {
+            font-size: 3.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            line-height: 1;
+        }
+        .team-final-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        .vs-badge {
+            font-size: 2em;
+            font-weight: bold;
+            color: #95a5a6;
+            padding: 10px 20px;
+            background: #ecf0f1;
+            border-radius: 50%;
+        }
+        .mvp-card {
+            background: linear-gradient(135deg, #ffd700 0%, #ffb347 50%, #ff8c00 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px auto;
+            max-width: 500px;
+            box-shadow: 0 15px 40px rgba(255, 165, 0, 0.4);
+        }
+        .mvp-badge {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .mvp-info {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .mvp-team {
+            margin-right: 10px;
+        }
+        .red-text {
+            color: #c0392b;
+        }
+        .blue-text {
+            color: #2980b9;
+        }
+        .mvp-name {
+            font-size: 1.2em;
+        }
+        .mvp-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-icon {
+            font-size: 1.5em;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .no-mvp {
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 20px 0;
+            color: #7f8c8d;
+            font-size: 1.2em;
+        }
+        .result-actions {
+            margin-top: 30px;
+        }
+        .result-actions .btn {
+            font-size: 1.2em;
+            padding: 15px 40px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="app">
+        <div class="header">
+            <h1>🎯 在线答题竞赛系统</h1>
+        </div>
+
+        <div class="score-board">
+            <div class="team-card red">
+                <div class="team-name">{{ teams[0]?.name || '红队' }}</div>
+                <div class="team-score">{{ teams[0]?.score || 0 }}</div>
+                <div class="team-members">成员: {{ teams[0]?.members?.length || 0 }}人</div>
+            </div>
+            <div class="team-card blue">
+                <div class="team-name">{{ teams[1]?.name || '蓝队' }}</div>
+                <div class="team-score">{{ teams[1]?.score || 0 }}</div>
+                <div class="team-members">成员: {{ teams[1]?.members?.length || 0 }}人</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div v-if="!role" class="role-selector">
+                <h2>请选择您的身份</h2>
+                <button class="role-btn host" @click="role = 'host'">🎤 主持人</button>
+                <button class="role-btn player" @click="role = 'player'">👤 参赛选手</button>
+            </div>
+
+            <div v-else-if="role === 'player' && !joined" class="join-form">
+                <h2>加入队伍</h2>
+                <div class="form-group">
+                    <label>您的姓名</label>
+                    <input v-model="playerName" placeholder="请输入您的姓名">
+                </div>
+                <div class="form-group">
+                    <label>选择队伍</label>
+                    <select v-model="selectedTeam">
+                        <option value="team1">红队</option>
+                        <option value="team2">蓝队</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" @click="joinTeam">加入队伍</button>
+            </div>
+
+            <div v-else-if="role === 'host'" class="host-panel">
+                <h2>主持人控制面板</h2>
+                <div v-if="statusMessage" class="status-message">{{ statusMessage }}</div>
+                
+                <div class="form-group">
+                    <label>题目内容</label>
+                    <textarea v-model="questionForm.content" placeholder="请输入题目内容"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>选项</label>
+                    <div class="options-inputs">
+                        <input v-model="questionForm.options[0]" placeholder="选项A">
+                        <input v-model="questionForm.options[1]" placeholder="选项B">
+                        <input v-model="questionForm.options[2]" placeholder="选项C">
+                        <input v-model="questionForm.options[3]" placeholder="选项D">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>正确答案</label>
+                    <select v-model="questionForm.answer">
+                        <option v-for="opt in questionForm.options" :value="opt">{{ opt }}</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>倒计时（秒）</label>
+                    <input type="number" v-model.number="questionForm.countdown" value="20">
+                </div>
+                
+                <div class="host-actions">
+                    <button class="btn btn-success" @click="sendQuestion" :disabled="questionActive">
+                        发布题目
+                    </button>
+                    <button class="btn btn-danger" @click="endQuestion" :disabled="!questionActive">
+                        结束本题
+                    </button>
+                    <button class="btn btn-primary" @click="endGame">
+                        结束游戏
+                    </button>
+                </div>
+
+                <div v-if="questionActive" class="question-area" style="margin-top: 30px;">
+                    <div class="countdown">{{ countdown }}</div>
+                    <div class="question-content">{{ currentQuestion.content }}</div>
+                </div>
+            </div>
+
+            <div v-else-if="role === 'player' && joined">
+                <div v-if="!currentQuestion" class="waiting-message">
+                    等待主持人出题...
+                </div>
+
+                <div v-else class="question-area">
+                    <div class="countdown">{{ countdown }}</div>
+                    <div class="question-content">{{ currentQuestion.content }}</div>
+                    
+                    <div class="options-grid">
+                        <button 
+                            v-for="(option, index) in currentQuestion.options" 
+                            :key="index"
+                            class="option-btn"
+                            :class="{ 
+                                selected: selectedAnswer === option,
+                                correct: showAnswer && option === currentQuestion.answer,
+                                wrong: showAnswer && selectedAnswer === option && option !== currentQuestion.answer
+                            }"
+                            :disabled="answered || showAnswer"
+                            @click="selectAnswer(option)"
+                        >
+                            {{ option }}
+                        </button>
+                    </div>
+
+                    <div v-if="answered && !showAnswer" class="status-message">
+                        答案已提交，等待结果...
+                    </div>
+
+                    <div v-if="showAnswer" class="correct-answer">
+                        正确答案是: {{ currentQuestion.answer }}
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="showResult" class="result-panel">
+                <h2>🎉 游戏结束！</h2>
+                
+                <div class="final-score-board">
+                    <div class="team-final-card red">
+                        <div class="team-final-name">{{ teams[0]?.name || '红队' }}</div>
+                        <div class="team-final-score">{{ teams[0]?.score || 0 }}</div>
+                        <div class="team-final-label">最终得分</div>
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="team-final-card blue">
+                        <div class="team-final-name">{{ teams[1]?.name || '蓝队' }}</div>
+                        <div class="team-final-score">{{ teams[1]?.score || 0 }}</div>
+                        <div class="team-final-label">最终得分</div>
+                    </div>
+                </div>
+                
+                <div v-if="mvp" class="mvp-card">
+                    <div class="mvp-badge">👑 MVP</div>
+                    <div class="mvp-info">
+                        <span class="mvp-team" :class="mvp.teamId === 'team1' ? 'red-text' : 'blue-text'">
+                            [{{ mvp.teamId === 'team1' ? '红队' : '蓝队' }}]
+                        </span>
+                        <span class="mvp-name">{{ mvp.name }}</span>
+                    </div>
+                    <div class="mvp-stats">
+                        <div class="stat-item">
+                            <span class="stat-icon">✅</span>
+                            <span class="stat-value">{{ mvp.correctCount || 0 }}</span>
+                            <span class="stat-label">题答对</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">⏱️</span>
+                            <span class="stat-value">{{ mvp.totalResponseTime || 0 }}</span>
+                            <span class="stat-label">ms总用时</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-else class="no-mvp">
+                    <p>暂无 MVP 数据</p>
+                </div>
+
+                <div class="result-actions">
+                    <button class="btn btn-primary" @click="resetGame">
+                        🔄 返回首页重新开始
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, onUnmounted } = Vue;
+
+        createApp({
+            setup() {
+                const role = ref(null);
+                const joined = ref(false);
+                const playerName = ref('');
+                const selectedTeam = ref('team1');
+                const currentMember = ref(null);
+                const teams = ref([
+                    { id: 'team1', name: '红队', score: 0, members: [] },
+                    { id: 'team2', name: '蓝队', score: 0, members: [] }
+                ]);
+                const currentQuestion = ref(null);
+                const selectedAnswer = ref('');
+                const answered = ref(false);
+                const showAnswer = ref(false);
+                const questionActive = ref(false);
+                const countdown = ref(20);
+                const showResult = ref(false);
+                const mvp = ref(null);
+                const statusMessage = ref('');
+                let ws = null;
+                let countdownInterval = null;
+
+                const questionForm = ref({
+                    content: '',
+                    options: ['', '', '', ''],
+                    answer: '',
+                    countdown: 20
+                });
+
+                const connectWebSocket = () => {
+                    ws = new WebSocket('ws://localhost:8080/ws/quiz');
+                    
+                    ws.onopen = () => {
+                        console.log('WebSocket连接成功');
+                    };
+
+                    ws.onmessage = (event) => {
+                        const message = JSON.parse(event.data);
+                        handleMessage(message);
+                    };
+
+                    ws.onclose = () => {
+                        console.log('WebSocket连接关闭');
+                    };
+
+                    ws.onerror = (error) => {
+                        console.error('WebSocket错误:', error);
+                    };
+                };
+
+                const handleMessage = (message) => {
+                    switch (message.type) {
+                        case 'JOIN_SUCCESS':
+                            currentMember.value = message.data.member;
+                            teams.value = message.data.teams;
+                            joined.value = true;
+                            if (message.data.currentQuestion) {
+                                currentQuestion.value = message.data.currentQuestion;
+                                startCountdown(message.data.currentQuestion.countdown);
+                            }
+                            break;
+                        case 'NEW_QUESTION':
+                            currentQuestion.value = message.data.question;
+                            teams.value = message.data.teams;
+                            questionActive.value = true;
+                            showAnswer.value = false;
+                            answered.value = false;
+                            selectedAnswer.value = '';
+                            startCountdown(message.data.question.countdown);
+                            if (role.value === 'host') {
+                                statusMessage.value = '题目已发布！';
+                            }
+                            break;
+                        case 'SCORE_UPDATE':
+                            teams.value = message.data.teams;
+                            break;
+                        case 'QUESTION_END':
+                            teams.value = message.data.teams;
+                            showAnswer.value = true;
+                            questionActive.value = false;
+                            stopCountdown();
+                            break;
+                        case 'GAME_END':
+                            teams.value = message.data.teams;
+                            mvp.value = message.data.mvp;
+                            showResult.value = true;
+                            questionActive.value = false;
+                            stopCountdown();
+                            break;
+                    }
+                };
+
+                const sendMessage = (type, data) => {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type, data }));
+                    }
+                };
+
+                const joinTeam = () => {
+                    if (!playerName.value.trim()) {
+                        alert('请输入姓名');
+                        return;
+                    }
+                    sendMessage('JOIN_TEAM', {
+                        memberName: playerName.value,
+                        teamId: selectedTeam.value
+                    });
+                };
+
+                const sendQuestion = () => {
+                    if (!questionForm.value.content.trim()) {
+                        alert('请输入题目内容');
+                        return;
+                    }
+                    const validOptions = questionForm.value.options.filter(opt => opt.trim());
+                    if (validOptions.length < 2) {
+                        alert('请至少输入2个选项');
+                        return;
+                    }
+                    if (!questionForm.value.answer) {
+                        alert('请选择正确答案');
+                        return;
+                    }
+                    sendMessage('HOST_QUESTION', questionForm.value);
+                };
+
+                const endQuestion = () => {
+                    sendMessage('QUESTION_END', {});
+                };
+
+                const endGame = () => {
+                    sendMessage('GAME_END', {});
+                };
+
+                const selectAnswer = (answer) => {
+                    if (answered.value || !currentMember.value) return;
+                    selectedAnswer.value = answer;
+                    answered.value = true;
+                    sendMessage('SUBMIT_ANSWER', {
+                        memberId: currentMember.value.id,
+                        memberName: currentMember.value.name,
+                        teamId: currentMember.value.teamId,
+                        answer: answer
+                    });
+                };
+
+                const startCountdown = (seconds) => {
+                    countdown.value = seconds;
+                    stopCountdown();
+                    countdownInterval = setInterval(() => {
+                        countdown.value--;
+                        if (countdown.value <= 0) {
+                            stopCountdown();
+                            if (role.value === 'host') {
+                                endQuestion();
+                            }
+                        }
+                    }, 1000);
+                };
+
+                const stopCountdown = () => {
+                    if (countdownInterval) {
+                        clearInterval(countdownInterval);
+                        countdownInterval = null;
+                    }
+                };
+
+                const resetGame = () => {
+                    role.value = null;
+                    joined.value = false;
+                    showResult.value = false;
+                    currentQuestion.value = null;
+                    currentMember.value = null;
+                    mvp.value = null;
+                    questionActive.value = false;
+                    answered.value = false;
+                    showAnswer.value = false;
+                    selectedAnswer.value = '';
+                    teams.value = [
+                        { id: 'team1', name: '红队', score: 0, members: [] },
+                        { id: 'team2', name: '蓝队', score: 0, members: [] }
+                    ];
+                    questionForm.value = {
+                        content: '',
+                        options: ['', '', '', ''],
+                        answer: '',
+                        countdown: 20
+                    };
+                };
+
+                onMounted(() => {
+                    connectWebSocket();
+                });
+
+                onUnmounted(() => {
+                    stopCountdown();
+                    if (ws) {
+                        ws.close();
+                    }
+                });
+
+                return {
+                    role,
+                    joined,
+                    playerName,
+                    selectedTeam,
+                    teams,
+                    currentQuestion,
+                    selectedAnswer,
+                    answered,
+                    showAnswer,
+                    questionActive,
+                    countdown,
+                    showResult,
+                    mvp,
+                    statusMessage,
+                    questionForm,
+                    joinTeam,
+                    sendQuestion,
+                    endQuestion,
+                    endGame,
+                    selectAnswer,
+                    resetGame
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
