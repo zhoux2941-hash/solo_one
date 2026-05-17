@@ -1,0 +1,11 @@
+{
+  "serverUrl": "",
+  "username": "",
+  "password": "",
+  "localSyncDir": "",
+  "remoteSyncDir": "",
+  "syncInterval": 30000,
+  "autoStart": true,
+  "uploadOnly": false,
+  "downloadOnly": false
+}

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设施登记 - 野外露营营地备案系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏕️ 野外露营营地备案系统</h1>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="area.html">区域划分</a></li>
+                <li><a href="facility.html" class="active">设施登记</a></li>
+                <li><a href="record.html">人员备案</a></li>
+                <li><a href="usage.html">场地使用</a></li>
+            </ul>
+        </nav>
+        
+        <div class="main-content">
+            <h2 class="section-title">🏗️ 配套设施管理</h2>
+            
+            <div class="filter-bar">
+                <div class="form-group">
+                    <label>设施类型</label>
+                    <select id="facilityTypeFilter" onchange="loadFacilities()">
+                        <option value="">全部</option>
+                        <option value="厕所">厕所</option>
+                        <option value="遮阳棚">遮阳棚</option>
+                        <option value="照明">照明</option>
+                        <option value="洗漱">洗漱</option>
+                        <option value="烧烤">烧烤</option>
+                        <option value="桌椅">桌椅</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>状态</label>
+                    <select id="statusFilter" onchange="loadFacilities()">
+                        <option value="">全部</option>
+                        <option value="正常">正常</option>
+                        <option value="维护中">维护中</option>
+                        <option value="损坏">损坏</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ 新增设施</button>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>设施名称</th>
+                            <th>设施类型</th>
+                            <th>位置</th>
+                            <th>数量</th>
+                            <th>状态</th>
+                            <th>完好程度</th>
+                            <th>描述</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="facilityTableBody">
+                        <tr>
+                            <td colspan="9" style="text-align:center;padding:30px;color:#999;">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="facilityModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('facilityModal')">&times;</span>
+            <h3 class="modal-title" id="modalTitle">新增设施</h3>
+            <form id="facilityForm">
+                <input type="hidden" id="facilityId">
+                <div class="form-group">
+                    <label>设施名称 *</label>
+                    <input type="text" id="facilityName" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>设施类型 *</label>
+                        <select id="facilityType" required>
+                            <option value="">请选择</option>
+                            <option value="厕所">厕所</option>
+                            <option value="遮阳棚">遮阳棚</option>
+                            <option value="照明">照明</option>
+                            <option value="洗漱">洗漱</option>
+                            <option value="烧烤">烧烤</option>
+                            <option value="桌椅">桌椅</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>数量</label>
+                        <input type="number" id="quantity" min="1" value="1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select id="facilityStatus">
+                            <option value="正常">正常</option>
+                            <option value="维护中">维护中</option>
+                            <option value="损坏">损坏</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>完好程度</label>
+                        <select id="conditionLevel">
+                            <option value="良好">良好</option>
+                            <option value="一般">一般</option>
+                            <option value="较差">较差</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>位置</label>
+                    <input type="text" id="location" placeholder="例如：休闲区">
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea id="description" rows="3" placeholder="设施详细描述..."></textarea>
+                </div>
+                <div style="text-align:right;margin-top:20px;">
+                    <button type="button" class="btn btn-warning" onclick="closeModal('facilityModal')" style="margin-right:10px;">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        let editingId = null;
+
+        async function loadFacilities() {
+            try {
+                let url = '/facilities';
+                const typeFilter = document.getElementById('facilityTypeFilter').value;
+                const statusFilter = document.getElementById('statusFilter').value;
+                
+                if (typeFilter) {
+                    url = `/facilities/type/${typeFilter}`;
+                } else if (statusFilter) {
+                    url = `/facilities/status/${statusFilter}`;
+                }
+                
+                const facilities = await apiRequest(url);
+                
+                renderTable('facilityTableBody', facilities, [
+                    { field: 'id' },
+                    { field: 'facilityName' },
+                    { render: (item) => getFacilityTypeLabel(item.facilityType) },
+                    { field: 'location' },
+                    { field: 'quantity' },
+                    { render: (item) => getStatusBadge(item.status) },
+                    { render: (item) => getStatusBadge(item.conditionLevel) },
+                    { field: 'description' }
+                ], (item) => `
+                    <div class="action-buttons">
+                        <button class="btn btn-warning" onclick="editFacility(${item.id})">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteFacility(${item.id})">删除</button>
+                    </div>
+                `);
+            } catch (error) {
+                console.error('加载设施列表失败:', error);
+            }
+        }
+
+        function openAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = '新增设施';
+            document.getElementById('facilityForm').reset();
+            openModal('facilityModal');
+        }
+
+        async function editFacility(id) {
+            try {
+                const facility = await apiRequest(`/facilities/${id}`);
+                editingId = id;
+                document.getElementById('modalTitle').textContent = '编辑设施';
+                document.getElementById('facilityId').value = facility.id;
+                document.getElementById('facilityName').value = facility.facilityName;
+                document.getElementById('facilityType').value = facility.facilityType;
+                document.getElementById('quantity').value = facility.quantity || 1;
+                document.getElementById('facilityStatus').value = facility.status;
+                document.getElementById('conditionLevel').value = facility.conditionLevel;
+                document.getElementById('location').value = facility.location || '';
+                document.getElementById('description').value = facility.description || '';
+                openModal('facilityModal');
+            } catch (error) {
+                console.error('加载设施详情失败:', error);
+            }
+        }
+
+        async function deleteFacility(id) {
+            if (confirm('确定要删除这个设施吗？')) {
+                try {
+                    await apiRequest(`/facilities/${id}`, 'DELETE');
+                    alert('删除成功');
+                    loadFacilities();
+                } catch (error) {
+                    console.error('删除设施失败:', error);
+                }
+            }
+        }
+
+        document.getElementById('facilityForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = {
+                facilityName: document.getElementById('facilityName').value,
+                facilityType: document.getElementById('facilityType').value,
+                quantity: parseInt(document.getElementById('quantity').value) || 1,
+                status: document.getElementById('facilityStatus').value,
+                conditionLevel: document.getElementById('conditionLevel').value,
+                location: document.getElementById('location').value || null,
+                description: document.getElementById('description').value || null
+            };
+
+            try {
+                if (editingId) {
+                    await apiRequest(`/facilities/${editingId}`, 'PUT', data);
+                    alert('更新成功');
+                } else {
+                    await apiRequest('/facilities', 'POST', data);
+                    alert('添加成功');
+                }
+                closeModal('facilityModal');
+                loadFacilities();
+            } catch (error) {
+                console.error('保存设施失败:', error);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', loadFacilities);
+    </script>
+</body>
+</html>

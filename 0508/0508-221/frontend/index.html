@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>康养机构管理系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sidebar-logo">康养管理系统</div>
+            <ul class="sidebar-menu">
+                <li><a href="index.html" class="active">首页</a></li>
+                <li><a href="organization.html">机构组织管理</a></li>
+                <li><a href="staff.html">医护人员管理</a></li>
+                <li><a href="room.html">房型床位管理</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="top-bar">
+                <span>欢迎使用康养机构管理系统</span>
+                <div class="user-info">
+                    <span id="username"></span>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>系统概览</h2>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; color: white;">
+                            <div style="font-size: 32px; font-weight: 600;" id="orgCount">-</div>
+                            <div style="font-size: 14px; opacity: 0.9;">机构总数</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); padding: 20px; border-radius: 8px; color: white;">
+                            <div style="font-size: 32px; font-weight: 600;" id="staffCount">-</div>
+                            <div style="font-size: 14px; opacity: 0.9;">人员总数</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); padding: 20px; border-radius: 8px; color: white;">
+                            <div style="font-size: 32px; font-weight: 600;" id="roomCount">-</div>
+                            <div style="font-size: 14px; opacity: 0.9;">房间总数</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 8px; color: white;">
+                            <div style="font-size: 32px; font-weight: 600;" id="bedCount">-</div>
+                            <div style="font-size: 14px; opacity: 0.9;">床位总数</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2>快捷操作</h2>
+                    </div>
+                    <div style="display: flex; gap: 20px;">
+                        <button class="btn btn-primary" onclick="window.location.href='organization.html'">
+                            管理机构组织
+                        </button>
+                        <button class="btn btn-success" onclick="window.location.href='staff.html'">
+                            管理医护人员
+                        </button>
+                        <button class="btn btn-warning" onclick="window.location.href='room.html'">
+                            管理房型床位
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('username').textContent = user.realName || user.username;
+
+        function logout() {
+            http.post('/auth/logout').then(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            });
+        }
+
+        function loadStats() {
+            Promise.all([
+                http.get('/organization/page', { size: 1 }),
+                http.get('/staff/page', { size: 1 }),
+                http.get('/room/page', { size: 1 }),
+                http.get('/bed/page', { size: 1 })
+            ]).then(([org, staff, room, bed]) => {
+                document.getElementById('orgCount').textContent = org.data.totalElements;
+                document.getElementById('staffCount').textContent = staff.data.totalElements;
+                document.getElementById('roomCount').textContent = room.data.totalElements;
+                document.getElementById('bedCount').textContent = bed.data.totalElements;
+            });
+        }
+
+        loadStats();
+    </script>
+</body>
+</html>

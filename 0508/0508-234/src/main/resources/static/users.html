@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理 - 社区驿站管理平台</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🏪 驿站管理</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <span>📊 控制台</span>
+                </a>
+                <a href="users.html" class="nav-item active">
+                    <span>👥 用户管理</span>
+                </a>
+                <a href="stations.html" class="nav-item">
+                    <span>🏠 驿站管理</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info" id="userInfo">
+                    <span class="user-name">加载中...</span>
+                    <span class="user-role"></span>
+                </div>
+                <button class="btn btn-logout" onclick="logout()">退出登录</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="page-header">
+                <h1>用户管理</h1>
+                <button class="btn btn-primary" onclick="openUserModal()">+ 添加用户</button>
+            </header>
+
+            <div class="content-section">
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>真实姓名</th>
+                                <th>手机号</th>
+                                <th>角色</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                        </tbody>
+                    </table>
+                    <div id="userPagination" class="pagination-container">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">添加用户</h3>
+                <span class="close" onclick="closeUserModal()">&times;</span>
+            </div>
+            <form id="userForm">
+                <input type="hidden" id="userId">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="formUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="formPassword">
+                    <small class="form-text">编辑时留空则不修改密码</small>
+                </div>
+                <div class="form-group">
+                    <label>真实姓名</label>
+                    <input type="text" id="formRealName" required>
+                </div>
+                <div class="form-group">
+                    <label>手机号</label>
+                    <input type="text" id="formPhone">
+                </div>
+                <div class="form-group">
+                    <label>角色</label>
+                    <select id="formRole" required>
+                        <option value="ADMIN">管理员</option>
+                        <option value="SORTER">分拣员</option>
+                        <option value="DELIVERER">派送员</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>状态</label>
+                    <select id="formEnabled">
+                        <option value="true">启用</option>
+                        <option value="false">禁用</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeUserModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script src="js/users.js"></script>
+</body>
+</html>

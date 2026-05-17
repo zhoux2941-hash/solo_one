@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工厂生产管理系统</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <style>
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+        .submenu { background-color: rgba(0, 0, 0, 0.2); }
+        .submenu .menu-item { padding-left: 48px; font-size: 14px; }
+        .hidden { display: none !important; }
+        .btn { cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">🏭 生产管理系统</div>
+            </div>
+            <nav class="sidebar-menu">
+                <div class="menu-item active" data-page="dashboard">
+                    <span class="menu-item-icon">📊</span>系统首页
+                </div>
+                <div class="menu-item" data-toggle="org">
+                    <span class="menu-item-icon">🏢</span>组织架构管理
+                    <span style="float: right;">▼</span>
+                </div>
+                <div id="org-submenu" class="submenu">
+                    <div class="menu-item" data-page="workshop">车间管理</div>
+                    <div class="menu-item" data-page="production-line">生产线管理</div>
+                    <div class="menu-item" data-page="team">班组管理</div>
+                    <div class="menu-item" data-page="employee">人员管理</div>
+                </div>
+                <div class="menu-item" data-page="material">
+                    <span class="menu-item-icon">📦</span>物料档案管理
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="header-title" id="pageTitle">系统首页</div>
+                <div class="header-user">
+                    <span class="user-name" id="userName">管理员</span>
+                    <button class="btn btn-default btn-sm" id="logoutBtn">退出登录</button>
+                </div>
+            </header>
+            <div class="content">
+                
+                <div id="page-dashboard" class="page-section active">
+                    <div class="page-header">
+                        <h1 class="page-title">欢迎使用工厂生产管理系统</h1>
+                    </div>
+                    <div class="card">
+                        <h3 style="margin-bottom: 16px;">系统说明</h3>
+                        <p style="line-height: 1.8; color: #666;">
+                            本系统为工厂车间生产协同管控系统，包含以下功能模块：
+                        </p>
+                        <ul style="margin: 16px 0; padding-left: 20px; line-height: 2; color: #666;">
+                            <li><strong>组织架构管理</strong>：车间、生产线、作业班组、人员信息管理</li>
+                            <li><strong>物料档案管理</strong>：原材料、半成品、辅料等物料基础信息维护</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="page-workshop" class="page-section">
+                    <div class="page-header">
+                        <h1 class="page-title">车间管理</h1>
+                        <button class="btn btn-primary" id="btnAddWorkshop">新增车间</button>
+                    </div>
+                    <div class="card">
+                        <div class="search-bar">
+                            <div class="search-item">
+                                <label class="form-label">车间名称</label>
+                                <input type="text" class="form-input" id="workshop-searchKeyword" placeholder="请输入车间名称">
+                            </div>
+                            <button class="btn btn-primary" id="btnSearchWorkshop">搜索</button>
+                            <button class="btn btn-default" id="btnResetWorkshop">重置</button>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>车间编码</th>
+                                    <th>车间名称</th>
+                                    <th>位置</th>
+                                    <th>负责人</th>
+                                    <th>状态</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="workshopTableBody"></tbody>
+                        </table>
+                        <div class="pagination" id="workshopPagination"></div>
+                    </div>
+                </div>
+
+                <div id="page-production-line" class="page-section">
+                    <div class="page-header">
+                        <h1 class="page-title">生产线管理</h1>
+                        <button class="btn btn-primary" id="btnAddProductionLine">新增生产线</button>
+                    </div>
+                    <div class="card">
+                        <div class="search-bar">
+                            <div class="search-item">
+                                <label class="form-label">生产线名称</label>
+                                <input type="text" class="form-input" id="line-searchKeyword" placeholder="请输入生产线名称">
+                            </div>
+                            <button class="btn btn-primary" id="btnSearchProductionLine">搜索</button>
+                            <button class="btn btn-default" id="btnResetProductionLine">重置</button>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>生产线编码</th>
+                                    <th>生产线名称</th>
+                                    <th>所属车间</th>
+                                    <th>负责人</th>
+                                    <th>状态</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productionLineTableBody"></tbody>
+                        </table>
+                        <div class="pagination" id="productionLinePagination"></div>
+                    </div>
+                </div>
+
+                <div id="page-team" class="page-section">
+                    <div class="page-header">
+                        <h1 class="page-title">班组管理</h1>
+                        <button class="btn btn-primary" id="btnAddTeam">新增班组</button>
+                    </div>
+                    <div class="card">
+                        <div class="search-bar">
+                            <div class="search-item">
+                                <label class="form-label">班组名称</label>
+                                <input type="text" class="form-input" id="team-searchKeyword" placeholder="请输入班组名称">
+                            </div>
+                            <button class="btn btn-primary" id="btnSearchTeam">搜索</button>
+                            <button class="btn btn-default" id="btnResetTeam">重置</button>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>班组编码</th>
+                                    <th>班组名称</th>
+                                    <th>所属生产线</th>
+                                    <th>班组长</th>
+                                    <th>状态</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teamTableBody"></tbody>
+                        </table>
+                        <div class="pagination" id="teamPagination"></div>
+                    </div>
+                </div>
+
+                <div id="page-employee" class="page-section">
+                    <div class="page-header">
+                        <h1 class="page-title">人员管理</h1>
+                        <button class="btn btn-primary" id="btnAddEmployee">新增人员</button>
+                    </div>
+                    <div class="card">
+                        <div class="search-bar">
+                            <div class="search-item">
+                                <label class="form-label">人员姓名</label>
+                                <input type="text" class="form-input" id="employee-searchKeyword" placeholder="请输入人员姓名">
+                            </div>
+                            <button class="btn btn-primary" id="btnSearchEmployee">搜索</button>
+                            <button class="btn btn-default" id="btnResetEmployee">重置</button>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>员工编号</th>
+                                    <th>姓名</th>
+                                    <th>岗位</th>
+                                    <th>所属班组</th>
+                                    <th>电话</th>
+                                    <th>在岗状态</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employeeTableBody"></tbody>
+                        </table>
+                        <div class="pagination" id="employeePagination"></div>
+                    </div>
+                </div>
+
+                <div id="page-material" class="page-section">
+                    <div class="page-header">
+                        <h1 class="page-title">物料档案管理</h1>
+                        <button class="btn btn-primary" id="btnAddMaterial">新增物料</button>
+                    </div>
+                    <div class="card">
+                        <div class="search-bar">
+                            <div class="search-item">
+                                <label class="form-label">物料名称</label>
+                                <input type="text" class="form-input" id="material-searchKeyword" placeholder="请输入物料名称">
+                            </div>
+                            <div class="search-item">
+                                <label class="form-label">物料类型</label>
+                                <select class="form-select" id="material-searchType">
+                                    <option value="">全部</option>
+                                    <option value="原材料">原材料</option>
+                                    <option value="半成品">半成品</option>
+                                    <option value="辅料">辅料</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" id="btnSearchMaterial">搜索</button>
+                            <button class="btn btn-default" id="btnResetMaterial">重置</button>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>物料编码</th>
+                                    <th>物料名称</th>
+                                    <th>物料类型</th>
+                                    <th>规格型号</th>
+                                    <th>材质</th>
+                                    <th>单位</th>
+                                    <th>安全库存</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="materialTableBody"></tbody>
+                        </table>
+                        <div class="pagination" id="materialPagination"></div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="workshopModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="workshopModalTitle">新增车间</span>
+                <button class="modal-close" id="btnCloseWorkshopModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="workshopForm">
+                    <input type="hidden" id="workshopId">
+                    <div class="form-group">
+                        <label class="form-label">车间编码 <span style="color: red;">*</span></label>
+                        <input type="text" class="form-input" id="workshopCode" placeholder="请输入车间编码">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">车间名称 <span style="color: red;">*</span></label>
+                        <input type="text" class="form-input" id="workshopName" placeholder="请输入车间名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">位置</label>
+                        <input type="text" class="form-input" id="workshopLocation" placeholder="请输入位置">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">负责人</label>
+                        <input type="text" class="form-input" id="workshopManager" placeholder="请输入负责人">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-input" id="workshopDescription" rows="3" placeholder="请输入描述"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">状态</label>
+                        <select class="form-select" id="workshopStatus">
+                            <option value="1">启用</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" id="btnCancelWorkshopModal">取消</button>
+                <button class="btn btn-primary" id="btnSaveWorkshop">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="productionLineModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="productionLineModalTitle">新增生产线</span>
+                <button class="modal-close" id="btnCloseProductionLineModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="productionLineForm">
+                    <input type="hidden" id="productionLineId">
+                    <div class="form-group">
+                        <label class="form-label">生产线编码 <span style="color: red;">*</span></label>
+                        <input type="text" class="form-input" id="lineCode" placeholder="请输入生产线编码">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">生产线名称 <span style="color: red;">*</span></label>
+                        <input type="text" class="form-input" id="lineName" placeholder="请输入生产线名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">所属车间 <span style="color: red;">*</span></label>
+                        <select class="form-select" id="lineWorkshopId">
+                            <option value="">请选择车间</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">负责人</label>
+                        <input type="text" class="form-input" id="lineLeader" placeholder="请输入负责人">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-input" id="lineDescription" rows="3" placeholder="请输入描述"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">状态</label>
+                        <select class="form-select" id="lineStatus">
+                            <option value="1">启用</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" id="btnCancelProductionLineModal">取消</button>
+                <button class="btn btn-primary" id="btnSaveProductionLine">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="teamModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="teamModalTitle">新增班组</span>
+                <button class="modal-close" id="btnCloseTeamModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="teamForm">
+                    <input type="hidden" id="teamId">
+                    <div class="form-group">
+                        <label class="form-label">班组编码 <span style="color: red;">*</span></label>
+                        <input type="text" class="form-input" id="teamCode" placeholder="请输入班组编码">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">班组名称 <span style="color: red;">*</span></label>
+                        <input type="text" class="form-input" id="teamName" placeholder="请输入班组名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">所属生产线 <span style="color: red;">*</span></label>
+                        <select class="form-select" id="teamLineId">
+                            <option value="">请选择生产线</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">班组长</label>
+                        <input type="text" class="form-input" id="teamLeader" placeholder="请输入班组长">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-input" id="teamDescription" rows="3" placeholder="请输入描述"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">状态</label>
+                        <select class="form-select" id="teamStatus">
+                            <option value="1">启用</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" id="btnCancelTeamModal">取消</button>
+                <button class="btn btn-primary" id="btnSaveTeam">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="employeeModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="employeeModalTitle">新增人员</span>
+                <button class="modal-close" id="btnCloseEmployeeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="employeeForm">
+                    <input type="hidden" id="employeeId">
+                    <div class="form-group">
+                        <label class="form-label">员工编号 <span style="color: red;">*</span></label>
+                        <input type="text" class="form-input" id="employeeNo" placeholder="请输入员工编号">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">姓名 <span style="color: red;">*</span></label>
+                        <input type="text" class="form-input" id="employeeName" placeholder="请输入姓名">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">身份证号</label>
+                        <input type="text" class="form-input" id="employeeIdCard" placeholder="请输入身份证号">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">电话</label>
+                        <input type="text" class="form-input" id="employeePhone" placeholder="请输入电话">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">地址</label>
+                        <input type="text" class="form-input" id="employeeAddress" placeholder="请输入地址">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">岗位</label>
+                        <input type="text" class="form-input" id="employeePosition" placeholder="请输入岗位">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">所属班组</label>
+                        <select class="form-select" id="employeeTeamId">
+                            <option value="">请选择班组</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">在岗状态</label>
+                        <select class="form-select" id="employeeOnDuty">
+                            <option value="1">在岗</option>
+                            <option value="0">离岗</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">状态</label>
+                        <select class="form-select" id="employeeStatus">
+                            <option value="1">启用</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" id="btnCancelEmployeeModal">取消</button>
+                <button class="btn btn-primary" id="btnSaveEmployee">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="materialModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="materialModalTitle">新增物料</span>
+                <button class="modal-close" id="btnCloseMaterialModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="materialForm">
+                    <input type="hidden" id="materialId">
+                    <div class="form-group">
+                        <label class="form-label">物料编码 <span style="color: red;">*</span></label>
+                        <input type="text" class="form-input" id="materialCode" placeholder="请输入物料编码">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">物料名称 <span style="color: red;">*</span></label>
+                        <input type="text" class="form-input" id="materialName" placeholder="请输入物料名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">物料类型</label>
+                        <select class="form-select" id="materialType">
+                            <option value="">请选择</option>
+                            <option value="原材料">原材料</option>
+                            <option value="半成品">半成品</option>
+                            <option value="辅料">辅料</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">规格型号</label>
+                        <input type="text" class="form-input" id="materialSpec" placeholder="请输入规格型号">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">材质</label>
+                        <input type="text" class="form-input" id="materialMaterial" placeholder="请输入材质">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">单位</label>
+                        <input type="text" class="form-input" id="materialUnit" placeholder="请输入单位">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">存放库区</label>
+                        <input type="text" class="form-input" id="materialWarehouse" placeholder="请输入存放库区">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">安全库存</label>
+                        <input type="number" class="form-input" id="materialSafetyStock" placeholder="请输入安全库存">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-input" id="materialDescription" rows="3" placeholder="请输入描述"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">状态</label>
+                        <select class="form-select" id="materialStatus">
+                            <option value="1">启用</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" id="btnCancelMaterialModal">取消</button>
+                <button class="btn btn-primary" id="btnSaveMaterial">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:8080/api';
+        let workshopListData = [];
+        let productionLineListData = [];
+        let teamListData = [];
+        let workshopPageNum = 0;
+        let productionLinePageNum = 0;
+        let teamPageNum = 0;
+        let employeePageNum = 0;
+        let materialPageNum = 0;
+        const PAGE_SIZE = 10;
+
+        function getHeaders() {
+            const token = localStorage.getItem('token');
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : ''
+            };
+        }
+
+        function showMessage(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 24px;
+                border-radius: 4px;
+                color: white;
+                font-size: 14px;
+                z-index: 10000;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                background-color: ${type === 'success' ? '#52c41a' : type === 'error' ? '#ff4d4f' : '#1890ff'};
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        function toggleSubmenu(id) {
+            const submenu = document.getElementById(id + '-submenu');
+            submenu.classList.toggle('hidden');
+        }
+
+        function loadPage(page) {
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            const targetSection = document.getElementById('page-' + page);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+
+            const titles = {
+                'dashboard': '系统首页',
+                'workshop': '车间管理',
+                'production-line': '生产线管理',
+                'team': '班组管理',
+                'employee': '人员管理',
+                'material': '物料档案管理'
+            };
+            document.getElementById('pageTitle').textContent = titles[page] || '系统首页';
+
+            if (page === 'workshop') loadWorkshopData();
+            if (page === 'production-line') { loadWorkshopListForSelect(); loadProductionLineData(); }
+            if (page === 'team') { loadAllLinesForTeamSelect(); loadTeamData(); }
+            if (page === 'employee') { loadAllTeamsForEmployeeSelect(); loadEmployeeData(); }
+            if (page === 'material') loadMaterialData();
+        }
+
+        async function loadWorkshopData() {
+            try {
+                const keyword = document.getElementById('workshop-searchKeyword')?.value || '';
+                const response = await fetch(`${BASE_URL}/workshop/page?page=${workshopPageNum}&size=${PAGE_SIZE}&keyword=${keyword}`, {
+                    headers: getHeaders()
+                });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    workshopListData = result.data.content;
+                    const tbody = document.getElementById('workshopTableBody');
+                    tbody.innerHTML = '';
+                    
+                    result.data.content.forEach(workshop => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${workshop.workshopCode}</td>
+                            <td>${workshop.workshopName}</td>
+                            <td>${workshop.workshopLocation || '-'}</td>
+                            <td>${workshop.workshopManager || '-'}</td>
+                            <td><span class="status-tag ${workshop.status === 1 ? 'status-active' : 'status-inactive'}">${workshop.status === 1 ? '启用' : '禁用'}</span></td>
+                            <td>${workshop.createTime ? new Date(workshop.createTime).toLocaleString() : '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-default btn-edit-workshop" data-id="${workshop.id}">编辑</button>
+                                <button class="btn btn-sm btn-danger btn-delete-workshop" data-id="${workshop.id}">删除</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    renderWorkshopPagination(result.data.totalPages, result.data.totalElements);
+                }
+            } catch (error) {
+                console.error('加载车间数据失败:', error);
+            }
+        }
+
+        function renderWorkshopPagination(totalPages, totalElements) {
+            const pagination = document.getElementById('workshopPagination');
+            pagination.innerHTML = `
+                <span class="pagination-info">共 ${totalElements} 条记录，第 ${workshopPageNum + 1}/${totalPages} 页</span>
+                <button class="btn btn-sm btn-default btn-workshop-page" data-page="0" ${workshopPageNum === 0 ? 'disabled' : ''}>首页</button>
+                <button class="btn btn-sm btn-default btn-workshop-page" data-page="${workshopPageNum - 1}" ${workshopPageNum === 0 ? 'disabled' : ''}>上一页</button>
+                <button class="btn btn-sm btn-default btn-workshop-page" data-page="${workshopPageNum + 1}" ${workshopPageNum >= totalPages - 1 ? 'disabled' : ''}>下一页</button>
+                <button class="btn btn-sm btn-default btn-workshop-page" data-page="${totalPages - 1}" ${workshopPageNum >= totalPages - 1 ? 'disabled' : ''}>末页</button>
+            `;
+        }
+
+        function openWorkshopModal() {
+            document.getElementById('workshopModalTitle').textContent = '新增车间';
+            document.getElementById('workshopForm').reset();
+            document.getElementById('workshopId').value = '';
+            document.getElementById('workshopModal').classList.remove('hidden');
+        }
+
+        function closeWorkshopModal() {
+            document.getElementById('workshopModal').classList.add('hidden');
+        }
+
+        async function editWorkshop(id) {
+            try {
+                const response = await fetch(`${BASE_URL}/workshop/${id}`, { headers: getHeaders() });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    const workshop = result.data;
+                    document.getElementById('workshopModalTitle').textContent = '编辑车间';
+                    document.getElementById('workshopId').value = workshop.id;
+                    document.getElementById('workshopCode').value = workshop.workshopCode;
+                    document.getElementById('workshopName').value = workshop.workshopName;
+                    document.getElementById('workshopLocation').value = workshop.workshopLocation || '';
+                    document.getElementById('workshopManager').value = workshop.workshopManager || '';
+                    document.getElementById('workshopDescription').value = workshop.description || '';
+                    document.getElementById('workshopStatus').value = workshop.status;
+                    document.getElementById('workshopModal').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('加载车间详情失败:', error);
+            }
+        }
+
+        async function saveWorkshop() {
+            const id = document.getElementById('workshopId').value;
+            const data = {
+                workshopCode: document.getElementById('workshopCode').value,
+                workshopName: document.getElementById('workshopName').value,
+                workshopLocation: document.getElementById('workshopLocation').value,
+                workshopManager: document.getElementById('workshopManager').value,
+                description: document.getElementById('workshopDescription').value,
+                status: parseInt(document.getElementById('workshopStatus').value)
+            };
+
+            if (!data.workshopCode || !data.workshopName) {
+                showMessage('请填写必填项', 'error');
+                return;
+            }
+
+            try {
+                let response;
+                if (id) {
+                    response = await fetch(`${BASE_URL}/workshop/${id}`, {
+                        method: 'PUT',
+                        headers: getHeaders(),
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    response = await fetch(`${BASE_URL}/workshop`, {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify(data)
+                    });
+                }
+
+                const result = await response.json();
+                if (result.code === 200) {
+                    showMessage('保存成功', 'success');
+                    closeWorkshopModal();
+                    loadWorkshopData();
+                } else {
+                    showMessage(result.message || '保存失败', 'error');
+                }
+            } catch (error) {
+                showMessage('保存失败', 'error');
+                console.error('保存失败:', error);
+            }
+        }
+
+        async function deleteWorkshop(id) {
+            if (confirm('确定要删除该车间吗？')) {
+                try {
+                    const response = await fetch(`${BASE_URL}/workshop/${id}`, {
+                        method: 'DELETE',
+                        headers: getHeaders()
+                    });
+                    const result = await response.json();
+                    if (result.code === 200) {
+                        showMessage('删除成功', 'success');
+                        loadWorkshopData();
+                    } else {
+                        showMessage(result.message || '删除失败', 'error');
+                    }
+                } catch (error) {
+                    showMessage('删除失败', 'error');
+                    console.error('删除失败:', error);
+                }
+            }
+        }
+
+        async function loadWorkshopListForSelect() {
+            try {
+                const response = await fetch(`${BASE_URL}/workshop/list`, { headers: getHeaders() });
+                const result = await response.json();
+                if (result.code === 200) {
+                    const select = document.getElementById('lineWorkshopId');
+                    select.innerHTML = '<option value="">请选择车间</option>';
+                    result.data.forEach(workshop => {
+                        const option = document.createElement('option');
+                        option.value = workshop.id;
+                        option.textContent = workshop.workshopName;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('加载车间列表失败:', error);
+            }
+        }
+
+        function getWorkshopNameById(workshopId) {
+            const workshop = workshopListData.find(w => w.id === workshopId);
+            return workshop ? workshop.workshopName : '-';
+        }
+
+        async function loadProductionLineData() {
+            try {
+                const keyword = document.getElementById('line-searchKeyword')?.value || '';
+                const response = await fetch(`${BASE_URL}/production-line/page?page=${productionLinePageNum}&size=${PAGE_SIZE}&keyword=${keyword}`, {
+                    headers: getHeaders()
+                });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    productionLineListData = result.data.content;
+                    const tbody = document.getElementById('productionLineTableBody');
+                    tbody.innerHTML = '';
+                    
+                    result.data.content.forEach(line => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${line.lineCode}</td>
+                            <td>${line.lineName}</td>
+                            <td>${getWorkshopNameById(line.workshopId)}</td>
+                            <td>${line.lineLeader || '-'}</td>
+                            <td><span class="status-tag ${line.status === 1 ? 'status-active' : 'status-inactive'}">${line.status === 1 ? '启用' : '禁用'}</span></td>
+                            <td>${line.createTime ? new Date(line.createTime).toLocaleString() : '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-default btn-edit-line" data-id="${line.id}">编辑</button>
+                                <button class="btn btn-sm btn-danger btn-delete-line" data-id="${line.id}">删除</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    renderProductionLinePagination(result.data.totalPages, result.data.totalElements);
+                }
+            } catch (error) {
+                console.error('加载生产线数据失败:', error);
+            }
+        }
+
+        function renderProductionLinePagination(totalPages, totalElements) {
+            const pagination = document.getElementById('productionLinePagination');
+            pagination.innerHTML = `
+                <span class="pagination-info">共 ${totalElements} 条记录，第 ${productionLinePageNum + 1}/${totalPages} 页</span>
+                <button class="btn btn-sm btn-default btn-line-page" data-page="0" ${productionLinePageNum === 0 ? 'disabled' : ''}>首页</button>
+                <button class="btn btn-sm btn-default btn-line-page" data-page="${productionLinePageNum - 1}" ${productionLinePageNum === 0 ? 'disabled' : ''}>上一页</button>
+                <button class="btn btn-sm btn-default btn-line-page" data-page="${productionLinePageNum + 1}" ${productionLinePageNum >= totalPages - 1 ? 'disabled' : ''}>下一页</button>
+                <button class="btn btn-sm btn-default btn-line-page" data-page="${totalPages - 1}" ${productionLinePageNum >= totalPages - 1 ? 'disabled' : ''}>末页</button>
+            `;
+        }
+
+        function openProductionLineModal() {
+            document.getElementById('productionLineModalTitle').textContent = '新增生产线';
+            document.getElementById('productionLineForm').reset();
+            document.getElementById('productionLineId').value = '';
+            document.getElementById('productionLineModal').classList.remove('hidden');
+        }
+
+        function closeProductionLineModal() {
+            document.getElementById('productionLineModal').classList.add('hidden');
+        }
+
+        async function editProductionLine(id) {
+            try {
+                const response = await fetch(`${BASE_URL}/production-line/${id}`, { headers: getHeaders() });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    const line = result.data;
+                    document.getElementById('productionLineModalTitle').textContent = '编辑生产线';
+                    document.getElementById('productionLineId').value = line.id;
+                    document.getElementById('lineCode').value = line.lineCode;
+                    document.getElementById('lineName').value = line.lineName;
+                    document.getElementById('lineWorkshopId').value = line.workshopId;
+                    document.getElementById('lineLeader').value = line.lineLeader || '';
+                    document.getElementById('lineDescription').value = line.description || '';
+                    document.getElementById('lineStatus').value = line.status;
+                    document.getElementById('productionLineModal').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('加载生产线详情失败:', error);
+            }
+        }
+
+        async function saveProductionLine() {
+            const id = document.getElementById('productionLineId').value;
+            const data = {
+                lineCode: document.getElementById('lineCode').value,
+                lineName: document.getElementById('lineName').value,
+                workshopId: parseInt(document.getElementById('lineWorkshopId').value),
+                lineLeader: document.getElementById('lineLeader').value,
+                description: document.getElementById('lineDescription').value,
+                status: parseInt(document.getElementById('lineStatus').value)
+            };
+
+            if (!data.lineCode || !data.lineName || !data.workshopId) {
+                showMessage('请填写必填项', 'error');
+                return;
+            }
+
+            try {
+                let response;
+                if (id) {
+                    response = await fetch(`${BASE_URL}/production-line/${id}`, {
+                        method: 'PUT',
+                        headers: getHeaders(),
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    response = await fetch(`${BASE_URL}/production-line`, {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify(data)
+                    });
+                }
+
+                const result = await response.json();
+                if (result.code === 200) {
+                    showMessage('保存成功', 'success');
+                    closeProductionLineModal();
+                    loadProductionLineData();
+                } else {
+                    showMessage(result.message || '保存失败', 'error');
+                }
+            } catch (error) {
+                showMessage('保存失败', 'error');
+                console.error('保存失败:', error);
+            }
+        }
+
+        async function deleteProductionLine(id) {
+            if (confirm('确定要删除该生产线吗？')) {
+                try {
+                    const response = await fetch(`${BASE_URL}/production-line/${id}`, {
+                        method: 'DELETE',
+                        headers: getHeaders()
+                    });
+                    const result = await response.json();
+                    if (result.code === 200) {
+                        showMessage('删除成功', 'success');
+                        loadProductionLineData();
+                    } else {
+                        showMessage(result.message || '删除失败', 'error');
+                    }
+                } catch (error) {
+                    showMessage('删除失败', 'error');
+                    console.error('删除失败:', error);
+                }
+            }
+        }
+
+        async function loadAllLinesForTeamSelect() {
+            try {
+                const workshopResponse = await fetch(`${BASE_URL}/workshop/list`, { headers: getHeaders() });
+                const workshopResult = await workshopResponse.json();
+                
+                const select = document.getElementById('teamLineId');
+                select.innerHTML = '<option value="">请选择生产线</option>';
+                
+                if (workshopResult.code === 200) {
+                    for (const workshop of workshopResult.data) {
+                        const lineResponse = await fetch(`${BASE_URL}/production-line/workshop/${workshop.id}`, { headers: getHeaders() });
+                        const lineResult = await lineResponse.json();
+                        
+                        if (lineResult.code === 200) {
+                            const group = document.createElement('optgroup');
+                            group.label = workshop.workshopName;
+                            
+                            lineResult.data.forEach(line => {
+                                const option = document.createElement('option');
+                                option.value = line.id;
+                                option.textContent = line.lineName;
+                                group.appendChild(option);
+                            });
+                            
+                            select.appendChild(group);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('加载生产线列表失败:', error);
+            }
+        }
+
+        function getLineNameById(lineId) {
+            const line = productionLineListData.find(l => l.id === lineId);
+            return line ? line.lineName : '-';
+        }
+
+        async function loadTeamData() {
+            try {
+                const keyword = document.getElementById('team-searchKeyword')?.value || '';
+                const response = await fetch(`${BASE_URL}/team/page?page=${teamPageNum}&size=${PAGE_SIZE}&keyword=${keyword}`, {
+                    headers: getHeaders()
+                });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    teamListData = result.data.content;
+                    const tbody = document.getElementById('teamTableBody');
+                    tbody.innerHTML = '';
+                    
+                    result.data.content.forEach(team => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${team.teamCode}</td>
+                            <td>${team.teamName}</td>
+                            <td>${getLineNameById(team.lineId)}</td>
+                            <td>${team.teamLeader || '-'}</td>
+                            <td><span class="status-tag ${team.status === 1 ? 'status-active' : 'status-inactive'}">${team.status === 1 ? '启用' : '禁用'}</span></td>
+                            <td>${team.createTime ? new Date(team.createTime).toLocaleString() : '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-default btn-edit-team" data-id="${team.id}">编辑</button>
+                                <button class="btn btn-sm btn-danger btn-delete-team" data-id="${team.id}">删除</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    renderTeamPagination(result.data.totalPages, result.data.totalElements);
+                }
+            } catch (error) {
+                console.error('加载班组数据失败:', error);
+            }
+        }
+
+        function renderTeamPagination(totalPages, totalElements) {
+            const pagination = document.getElementById('teamPagination');
+            pagination.innerHTML = `
+                <span class="pagination-info">共 ${totalElements} 条记录，第 ${teamPageNum + 1}/${totalPages} 页</span>
+                <button class="btn btn-sm btn-default btn-team-page" data-page="0" ${teamPageNum === 0 ? 'disabled' : ''}>首页</button>
+                <button class="btn btn-sm btn-default btn-team-page" data-page="${teamPageNum - 1}" ${teamPageNum === 0 ? 'disabled' : ''}>上一页</button>
+                <button class="btn btn-sm btn-default btn-team-page" data-page="${teamPageNum + 1}" ${teamPageNum >= totalPages - 1 ? 'disabled' : ''}>下一页</button>
+                <button class="btn btn-sm btn-default btn-team-page" data-page="${totalPages - 1}" ${teamPageNum >= totalPages - 1 ? 'disabled' : ''}>末页</button>
+            `;
+        }
+
+        function openTeamModal() {
+            document.getElementById('teamModalTitle').textContent = '新增班组';
+            document.getElementById('teamForm').reset();
+            document.getElementById('teamId').value = '';
+            document.getElementById('teamModal').classList.remove('hidden');
+        }
+
+        function closeTeamModal() {
+            document.getElementById('teamModal').classList.add('hidden');
+        }
+
+        async function editTeam(id) {
+            try {
+                const response = await fetch(`${BASE_URL}/team/${id}`, { headers: getHeaders() });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    const team = result.data;
+                    document.getElementById('teamModalTitle').textContent = '编辑班组';
+                    document.getElementById('teamId').value = team.id;
+                    document.getElementById('teamCode').value = team.teamCode;
+                    document.getElementById('teamName').value = team.teamName;
+                    document.getElementById('teamLineId').value = team.lineId;
+                    document.getElementById('teamLeader').value = team.teamLeader || '';
+                    document.getElementById('teamDescription').value = team.description || '';
+                    document.getElementById('teamStatus').value = team.status;
+                    document.getElementById('teamModal').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('加载班组详情失败:', error);
+            }
+        }
+
+        async function saveTeam() {
+            const id = document.getElementById('teamId').value;
+            const data = {
+                teamCode: document.getElementById('teamCode').value,
+                teamName: document.getElementById('teamName').value,
+                lineId: parseInt(document.getElementById('teamLineId').value),
+                teamLeader: document.getElementById('teamLeader').value,
+                description: document.getElementById('teamDescription').value,
+                status: parseInt(document.getElementById('teamStatus').value)
+            };
+
+            if (!data.teamCode || !data.teamName || !data.lineId) {
+                showMessage('请填写必填项', 'error');
+                return;
+            }
+
+            try {
+                let response;
+                if (id) {
+                    response = await fetch(`${BASE_URL}/team/${id}`, {
+                        method: 'PUT',
+                        headers: getHeaders(),
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    response = await fetch(`${BASE_URL}/team`, {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify(data)
+                    });
+                }
+
+                const result = await response.json();
+                if (result.code === 200) {
+                    showMessage('保存成功', 'success');
+                    closeTeamModal();
+                    loadTeamData();
+                } else {
+                    showMessage(result.message || '保存失败', 'error');
+                }
+            } catch (error) {
+                showMessage('保存失败', 'error');
+                console.error('保存失败:', error);
+            }
+        }
+
+        async function deleteTeam(id) {
+            if (confirm('确定要删除该班组吗？')) {
+                try {
+                    const response = await fetch(`${BASE_URL}/team/${id}`, {
+                        method: 'DELETE',
+                        headers: getHeaders()
+                    });
+                    const result = await response.json();
+                    if (result.code === 200) {
+                        showMessage('删除成功', 'success');
+                        loadTeamData();
+                    } else {
+                        showMessage(result.message || '删除失败', 'error');
+                    }
+                } catch (error) {
+                    showMessage('删除失败', 'error');
+                    console.error('删除失败:', error);
+                }
+            }
+        }
+
+        async function loadAllTeamsForEmployeeSelect() {
+            try {
+                const workshopResponse = await fetch(`${BASE_URL}/workshop/list`, { headers: getHeaders() });
+                const workshopResult = await workshopResponse.json();
+                
+                const select = document.getElementById('employeeTeamId');
+                select.innerHTML = '<option value="">请选择班组</option>';
+                
+                if (workshopResult.code === 200) {
+                    for (const workshop of workshopResult.data) {
+                        const lineResponse = await fetch(`${BASE_URL}/production-line/workshop/${workshop.id}`, { headers: getHeaders() });
+                        const lineResult = await lineResponse.json();
+                        
+                        if (lineResult.code === 200) {
+                            for (const line of lineResult.data) {
+                                const teamResponse = await fetch(`${BASE_URL}/team/line/${line.id}`, { headers: getHeaders() });
+                                const teamResult = await teamResponse.json();
+                                
+                                if (teamResult.code === 200) {
+                                    const group = document.createElement('optgroup');
+                                    group.label = `${workshop.workshopName} - ${line.lineName}`;
+                                    
+                                    teamResult.data.forEach(team => {
+                                        const option = document.createElement('option');
+                                        option.value = team.id;
+                                        option.textContent = team.teamName;
+                                        group.appendChild(option);
+                                    });
+                                    
+                                    select.appendChild(group);
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('加载班组列表失败:', error);
+            }
+        }
+
+        function getTeamNameById(teamId) {
+            if (!teamId) return '-';
+            const team = teamListData.find(t => t.id === teamId);
+            return team ? team.teamName : '-';
+        }
+
+        async function loadEmployeeData() {
+            try {
+                const keyword = document.getElementById('employee-searchKeyword')?.value || '';
+                const response = await fetch(`${BASE_URL}/employee/page?page=${employeePageNum}&size=${PAGE_SIZE}&keyword=${keyword}`, {
+                    headers: getHeaders()
+                });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    const tbody = document.getElementById('employeeTableBody');
+                    tbody.innerHTML = '';
+                    
+                    result.data.content.forEach(employee => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${employee.employeeNo}</td>
+                            <td>${employee.employeeName}</td>
+                            <td>${employee.position || '-'}</td>
+                            <td>${getTeamNameById(employee.teamId)}</td>
+                            <td>${employee.phone || '-'}</td>
+                            <td><span class="status-tag ${employee.onDuty === 1 ? 'status-active' : 'status-inactive'}">${employee.onDuty === 1 ? '在岗' : '离岗'}</span></td>
+                            <td>${employee.createTime ? new Date(employee.createTime).toLocaleString() : '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-default btn-edit-employee" data-id="${employee.id}">编辑</button>
+                                <button class="btn btn-sm btn-danger btn-delete-employee" data-id="${employee.id}">删除</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    renderEmployeePagination(result.data.totalPages, result.data.totalElements);
+                }
+            } catch (error) {
+                console.error('加载人员数据失败:', error);
+            }
+        }
+
+        function renderEmployeePagination(totalPages, totalElements) {
+            const pagination = document.getElementById('employeePagination');
+            pagination.innerHTML = `
+                <span class="pagination-info">共 ${totalElements} 条记录，第 ${employeePageNum + 1}/${totalPages} 页</span>
+                <button class="btn btn-sm btn-default btn-employee-page" data-page="0" ${employeePageNum === 0 ? 'disabled' : ''}>首页</button>
+                <button class="btn btn-sm btn-default btn-employee-page" data-page="${employeePageNum - 1}" ${employeePageNum === 0 ? 'disabled' : ''}>上一页</button>
+                <button class="btn btn-sm btn-default btn-employee-page" data-page="${employeePageNum + 1}" ${employeePageNum >= totalPages - 1 ? 'disabled' : ''}>下一页</button>
+                <button class="btn btn-sm btn-default btn-employee-page" data-page="${totalPages - 1}" ${employeePageNum >= totalPages - 1 ? 'disabled' : ''}>末页</button>
+            `;
+        }
+
+        function openEmployeeModal() {
+            document.getElementById('employeeModalTitle').textContent = '新增人员';
+            document.getElementById('employeeForm').reset();
+            document.getElementById('employeeId').value = '';
+            document.getElementById('employeeModal').classList.remove('hidden');
+        }
+
+        function closeEmployeeModal() {
+            document.getElementById('employeeModal').classList.add('hidden');
+        }
+
+        async function editEmployee(id) {
+            try {
+                const response = await fetch(`${BASE_URL}/employee/${id}`, { headers: getHeaders() });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    const employee = result.data;
+                    document.getElementById('employeeModalTitle').textContent = '编辑人员';
+                    document.getElementById('employeeId').value = employee.id;
+                    document.getElementById('employeeNo').value = employee.employeeNo;
+                    document.getElementById('employeeName').value = employee.employeeName;
+                    document.getElementById('employeeIdCard').value = employee.idCard || '';
+                    document.getElementById('employeePhone').value = employee.phone || '';
+                    document.getElementById('employeeAddress').value = employee.address || '';
+                    document.getElementById('employeePosition').value = employee.position || '';
+                    document.getElementById('employeeTeamId').value = employee.teamId || '';
+                    document.getElementById('employeeOnDuty').value = employee.onDuty;
+                    document.getElementById('employeeStatus').value = employee.status;
+                    document.getElementById('employeeModal').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('加载人员详情失败:', error);
+            }
+        }
+
+        async function saveEmployee() {
+            const id = document.getElementById('employeeId').value;
+            const data = {
+                employeeNo: document.getElementById('employeeNo').value,
+                employeeName: document.getElementById('employeeName').value,
+                idCard: document.getElementById('employeeIdCard').value,
+                phone: document.getElementById('employeePhone').value,
+                address: document.getElementById('employeeAddress').value,
+                position: document.getElementById('employeePosition').value,
+                teamId: document.getElementById('employeeTeamId').value ? parseInt(document.getElementById('employeeTeamId').value) : null,
+                onDuty: parseInt(document.getElementById('employeeOnDuty').value),
+                status: parseInt(document.getElementById('employeeStatus').value)
+            };
+
+            if (!data.employeeNo || !data.employeeName) {
+                showMessage('请填写必填项', 'error');
+                return;
+            }
+
+            try {
+                let response;
+                if (id) {
+                    response = await fetch(`${BASE_URL}/employee/${id}`, {
+                        method: 'PUT',
+                        headers: getHeaders(),
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    response = await fetch(`${BASE_URL}/employee`, {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify(data)
+                    });
+                }
+
+                const result = await response.json();
+                if (result.code === 200) {
+                    showMessage('保存成功', 'success');
+                    closeEmployeeModal();
+                    loadEmployeeData();
+                } else {
+                    showMessage(result.message || '保存失败', 'error');
+                }
+            } catch (error) {
+                showMessage('保存失败', 'error');
+                console.error('保存失败:', error);
+            }
+        }
+
+        async function deleteEmployee(id) {
+            if (confirm('确定要删除该人员吗？')) {
+                try {
+                    const response = await fetch(`${BASE_URL}/employee/${id}`, {
+                        method: 'DELETE',
+                        headers: getHeaders()
+                    });
+                    const result = await response.json();
+                    if (result.code === 200) {
+                        showMessage('删除成功', 'success');
+                        loadEmployeeData();
+                    } else {
+                        showMessage(result.message || '删除失败', 'error');
+                    }
+                } catch (error) {
+                    showMessage('删除失败', 'error');
+                    console.error('删除失败:', error);
+                }
+            }
+        }
+
+        async function loadMaterialData() {
+            try {
+                const keyword = document.getElementById('material-searchKeyword')?.value || '';
+                const type = document.getElementById('material-searchType')?.value || '';
+                const response = await fetch(`${BASE_URL}/material/page?page=${materialPageNum}&size=${PAGE_SIZE}&keyword=${keyword}&type=${type}`, {
+                    headers: getHeaders()
+                });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    const tbody = document.getElementById('materialTableBody');
+                    tbody.innerHTML = '';
+                    
+                    result.data.content.forEach(material => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${material.materialCode}</td>
+                            <td>${material.materialName}</td>
+                            <td>${material.materialType || '-'}</td>
+                            <td>${material.specification || '-'}</td>
+                            <td>${material.material || '-'}</td>
+                            <td>${material.unit || '-'}</td>
+                            <td>${material.safetyStock || '-'}</td>
+                            <td><span class="status-tag ${material.status === 1 ? 'status-active' : 'status-inactive'}">${material.status === 1 ? '启用' : '禁用'}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-default btn-edit-material" data-id="${material.id}">编辑</button>
+                                <button class="btn btn-sm btn-danger btn-delete-material" data-id="${material.id}">删除</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    renderMaterialPagination(result.data.totalPages, result.data.totalElements);
+                }
+            } catch (error) {
+                console.error('加载物料数据失败:', error);
+            }
+        }
+
+        function renderMaterialPagination(totalPages, totalElements) {
+            const pagination = document.getElementById('materialPagination');
+            pagination.innerHTML = `
+                <span class="pagination-info">共 ${totalElements} 条记录，第 ${materialPageNum + 1}/${totalPages} 页</span>
+                <button class="btn btn-sm btn-default btn-material-page" data-page="0" ${materialPageNum === 0 ? 'disabled' : ''}>首页</button>
+                <button class="btn btn-sm btn-default btn-material-page" data-page="${materialPageNum - 1}" ${materialPageNum === 0 ? 'disabled' : ''}>上一页</button>
+                <button class="btn btn-sm btn-default btn-material-page" data-page="${materialPageNum + 1}" ${materialPageNum >= totalPages - 1 ? 'disabled' : ''}>下一页</button>
+                <button class="btn btn-sm btn-default btn-material-page" data-page="${totalPages - 1}" ${materialPageNum >= totalPages - 1 ? 'disabled' : ''}>末页</button>
+            `;
+        }
+
+        function openMaterialModal() {
+            document.getElementById('materialModalTitle').textContent = '新增物料';
+            document.getElementById('materialForm').reset();
+            document.getElementById('materialId').value = '';
+            document.getElementById('materialModal').classList.remove('hidden');
+        }
+
+        function closeMaterialModal() {
+            document.getElementById('materialModal').classList.add('hidden');
+        }
+
+        async function editMaterial(id) {
+            try {
+                const response = await fetch(`${BASE_URL}/material/${id}`, { headers: getHeaders() });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    const material = result.data;
+                    document.getElementById('materialModalTitle').textContent = '编辑物料';
+                    document.getElementById('materialId').value = material.id;
+                    document.getElementById('materialCode').value = material.materialCode;
+                    document.getElementById('materialName').value = material.materialName;
+                    document.getElementById('materialType').value = material.materialType || '';
+                    document.getElementById('materialSpec').value = material.specification || '';
+                    document.getElementById('materialMaterial').value = material.material || '';
+                    document.getElementById('materialUnit').value = material.unit || '';
+                    document.getElementById('materialWarehouse').value = material.warehouse || '';
+                    document.getElementById('materialSafetyStock').value = material.safetyStock || '';
+                    document.getElementById('materialDescription').value = material.description || '';
+                    document.getElementById('materialStatus').value = material.status;
+                    document.getElementById('materialModal').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('加载物料详情失败:', error);
+            }
+        }
+
+        async function saveMaterial() {
+            const id = document.getElementById('materialId').value;
+            const data = {
+                materialCode: document.getElementById('materialCode').value,
+                materialName: document.getElementById('materialName').value,
+                materialType: document.getElementById('materialType').value,
+                specification: document.getElementById('materialSpec').value,
+                material: document.getElementById('materialMaterial').value,
+                unit: document.getElementById('materialUnit').value,
+                warehouse: document.getElementById('materialWarehouse').value,
+                safetyStock: document.getElementById('materialSafetyStock').value ? parseFloat(document.getElementById('materialSafetyStock').value) : null,
+                description: document.getElementById('materialDescription').value,
+                status: parseInt(document.getElementById('materialStatus').value)
+            };
+
+            if (!data.materialCode || !data.materialName) {
+                showMessage('请填写必填项', 'error');
+                return;
+            }
+
+            try {
+                let response;
+                if (id) {
+                    response = await fetch(`${BASE_URL}/material/${id}`, {
+                        method: 'PUT',
+                        headers: getHeaders(),
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    response = await fetch(`${BASE_URL}/material`, {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify(data)
+                    });
+                }
+
+                const result = await response.json();
+                if (result.code === 200) {
+                    showMessage('保存成功', 'success');
+                    closeMaterialModal();
+                    loadMaterialData();
+                } else {
+                    showMessage(result.message || '保存失败', 'error');
+                }
+            } catch (error) {
+                showMessage('保存失败', 'error');
+                console.error('保存失败:', error);
+            }
+        }
+
+        async function deleteMaterial(id) {
+            if (confirm('确定要删除该物料吗？')) {
+                try {
+                    const response = await fetch(`${BASE_URL}/material/${id}`, {
+                        method: 'DELETE',
+                        headers: getHeaders()
+                    });
+                    const result = await response.json();
+                    if (result.code === 200) {
+                        showMessage('删除成功', 'success');
+                        loadMaterialData();
+                    } else {
+                        showMessage(result.message || '删除失败', 'error');
+                    }
+                } catch (error) {
+                    showMessage('删除失败', 'error');
+                    console.error('删除失败:', error);
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            document.getElementById('userName').textContent = user.realName || '用户';
+
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                logout();
+            });
+
+            document.addEventListener('click', function(e) {
+                const target = e.target;
+                
+                if (target.classList.contains('menu-item')) {
+                    const page = target.getAttribute('data-page');
+                    if (page) {
+                        loadPage(page);
+                        document.querySelectorAll('.menu-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+                        target.classList.add('active');
+                    }
+                    
+                    const toggle = target.getAttribute('data-toggle');
+                    if (toggle) {
+                        toggleSubmenu(toggle);
+                    }
+                }
+
+                if (target.id === 'btnAddWorkshop') { openWorkshopModal(); }
+                if (target.id === 'btnCloseWorkshopModal' || target.id === 'btnCancelWorkshopModal') { closeWorkshopModal(); }
+                if (target.id === 'btnSaveWorkshop') { saveWorkshop(); }
+                if (target.id === 'btnSearchWorkshop') { workshopPageNum = 0; loadWorkshopData(); }
+                if (target.id === 'btnResetWorkshop') { document.getElementById('workshop-searchKeyword').value = ''; workshopPageNum = 0; loadWorkshopData(); }
+                if (target.classList.contains('btn-edit-workshop')) { editWorkshop(parseInt(target.getAttribute('data-id'))); }
+                if (target.classList.contains('btn-delete-workshop')) { deleteWorkshop(parseInt(target.getAttribute('data-id'))); }
+                if (target.classList.contains('btn-workshop-page')) { 
+                    const page = parseInt(target.getAttribute('data-page')); 
+                    if (page >= 0) { workshopPageNum = page; loadWorkshopData(); } 
+                }
+
+                if (target.id === 'btnAddProductionLine') { openProductionLineModal(); }
+                if (target.id === 'btnCloseProductionLineModal' || target.id === 'btnCancelProductionLineModal') { closeProductionLineModal(); }
+                if (target.id === 'btnSaveProductionLine') { saveProductionLine(); }
+                if (target.id === 'btnSearchProductionLine') { productionLinePageNum = 0; loadProductionLineData(); }
+                if (target.id === 'btnResetProductionLine') { document.getElementById('line-searchKeyword').value = ''; productionLinePageNum = 0; loadProductionLineData(); }
+                if (target.classList.contains('btn-edit-line')) { editProductionLine(parseInt(target.getAttribute('data-id'))); }
+                if (target.classList.contains('btn-delete-line')) { deleteProductionLine(parseInt(target.getAttribute('data-id'))); }
+                if (target.classList.contains('btn-line-page')) { 
+                    const page = parseInt(target.getAttribute('data-page')); 
+                    if (page >= 0) { productionLinePageNum = page; loadProductionLineData(); } 
+                }
+
+                if (target.id === 'btnAddTeam') { openTeamModal(); }
+                if (target.id === 'btnCloseTeamModal' || target.id === 'btnCancelTeamModal') { closeTeamModal(); }
+                if (target.id === 'btnSaveTeam') { saveTeam(); }
+                if (target.id === 'btnSearchTeam') { teamPageNum = 0; loadTeamData(); }
+                if (target.id === 'btnResetTeam') { document.getElementById('team-searchKeyword').value = ''; teamPageNum = 0; loadTeamData(); }
+                if (target.classList.contains('btn-edit-team')) { editTeam(parseInt(target.getAttribute('data-id'))); }
+                if (target.classList.contains('btn-delete-team')) { deleteTeam(parseInt(target.getAttribute('data-id'))); }
+                if (target.classList.contains('btn-team-page')) { 
+                    const page = parseInt(target.getAttribute('data-page')); 
+                    if (page >= 0) { teamPageNum = page; loadTeamData(); } 
+                }
+
+                if (target.id === 'btnAddEmployee') { openEmployeeModal(); }
+                if (target.id === 'btnCloseEmployeeModal' || target.id === 'btnCancelEmployeeModal') { closeEmployeeModal(); }
+                if (target.id === 'btnSaveEmployee') { saveEmployee(); }
+                if (target.id === 'btnSearchEmployee') { employeePageNum = 0; loadEmployeeData(); }
+                if (target.id === 'btnResetEmployee') { document.getElementById('employee-searchKeyword').value = ''; employeePageNum = 0; loadEmployeeData(); }
+                if (target.classList.contains('btn-edit-employee')) { editEmployee(parseInt(target.getAttribute('data-id'))); }
+                if (target.classList.contains('btn-delete-employee')) { deleteEmployee(parseInt(target.getAttribute('data-id'))); }
+                if (target.classList.contains('btn-employee-page')) { 
+                    const page = parseInt(target.getAttribute('data-page')); 
+                    if (page >= 0) { employeePageNum = page; loadEmployeeData(); } 
+                }
+
+                if (target.id === 'btnAddMaterial') { openMaterialModal(); }
+                if (target.id === 'btnCloseMaterialModal' || target.id === 'btnCancelMaterialModal') { closeMaterialModal(); }
+                if (target.id === 'btnSaveMaterial') { saveMaterial(); }
+                if (target.id === 'btnSearchMaterial') { materialPageNum = 0; loadMaterialData(); }
+                if (target.id === 'btnResetMaterial') { document.getElementById('material-searchKeyword').value = ''; document.getElementById('material-searchType').value = ''; materialPageNum = 0; loadMaterialData(); }
+                if (target.classList.contains('btn-edit-material')) { editMaterial(parseInt(target.getAttribute('data-id'))); }
+                if (target.classList.contains('btn-delete-material')) { deleteMaterial(parseInt(target.getAttribute('data-id'))); }
+                if (target.classList.contains('btn-material-page')) { 
+                    const page = parseInt(target.getAttribute('data-page')); 
+                    if (page >= 0) { materialPageNum = page; loadMaterialData(); } 
+                }
+            });
+        });
+    </script>
+</body>
+</html>

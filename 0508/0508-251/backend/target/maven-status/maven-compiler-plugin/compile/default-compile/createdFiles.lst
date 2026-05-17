@@ -1,0 +1,12 @@
+com\ballistic\trajectory\dto\SlopeCalculationRequest.class
+com\ballistic\trajectory\service\BallisticCalculationService$BallisticResult.class
+com\ballistic\trajectory\config\WebConfig.class
+com\ballistic\trajectory\TrajectoryCompensationApplication.class
+com\ballistic\trajectory\model\TrajectoryRecord.class
+com\ballistic\trajectory\repository\TrajectoryRecordRepository.class
+com\ballistic\trajectory\controller\BallisticController.class
+com\ballistic\trajectory\service\BallisticCalculationService$AmmoData.class
+com\ballistic\trajectory\dto\CalculationResult.class
+com\ballistic\trajectory\service\BallisticCalculationService.class
+com\ballistic\trajectory\dto\BallisticCalculationRequest.class
+com\ballistic\trajectory\service\DataService.class

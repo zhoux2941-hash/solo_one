@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>房型床位管理 - 康养机构管理系统</title>
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        .tab-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sidebar-logo">康养管理系统</div>
+            <ul class="sidebar-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="organization.html">机构组织管理</a></li>
+                <li><a href="staff.html">医护人员管理</a></li>
+                <li><a href="room.html" class="active">房型床位管理</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="top-bar">
+                <span>房型床位管理</span>
+                <div class="user-info">
+                    <span id="username"></span>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="tab-bar">
+                        <button class="tab-btn active" onclick="switchTab('room')">房间管理</button>
+                        <button class="tab-btn" onclick="switchTab('bed')">床位管理</button>
+                    </div>
+
+                    <div class="tab-content active" id="roomTab">
+                        <div class="card-header">
+                            <h2>房间列表</h2>
+                            <button class="btn btn-primary" onclick="openRoomModal()">新增房间</button>
+                        </div>
+                        <div class="filter-bar">
+                            <div class="filter-item">
+                                <label>房间名称</label>
+                                <input type="text" class="form-control" id="filterRoomName" placeholder="请输入房间名称">
+                            </div>
+                            <div class="filter-item">
+                                <label>房型</label>
+                                <select class="form-control" id="filterRoomType">
+                                    <option value="">全部</option>
+                                    <option value="单人间">单人间</option>
+                                    <option value="双人间">双人间</option>
+                                    <option value="陪护房">陪护房</option>
+                                </select>
+                            </div>
+                            <div class="filter-item">
+                                <label>楼层</label>
+                                <input type="text" class="form-control" id="filterFloorNo" placeholder="请输入楼层">
+                            </div>
+                            <button class="btn btn-primary" onclick="loadRooms()">查询</button>
+                            <button class="btn btn-warning" onclick="resetRoomFilter()">重置</button>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>房间编号</th>
+                                    <th>房间名称</th>
+                                    <th>房型</th>
+                                    <th>楼层</th>
+                                    <th>床位数</th>
+                                    <th>日费用</th>
+                                    <th>配套设施</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="roomTable"></tbody>
+                        </table>
+                        <div class="pagination">
+                            <button class="btn btn-sm" id="roomPrevBtn" onclick="prevRoomPage()">上一页</button>
+                            <span id="roomPageInfo"></span>
+                            <button class="btn btn-sm" id="roomNextBtn" onclick="nextRoomPage()">下一页</button>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="bedTab">
+                        <div class="card-header">
+                            <h2>床位列表</h2>
+                            <button class="btn btn-primary" onclick="openBedModal()">新增床位</button>
+                        </div>
+                        <div class="filter-bar">
+                            <div class="filter-item">
+                                <label>床位编号</label>
+                                <input type="text" class="form-control" id="filterBedNo" placeholder="请输入床位编号">
+                            </div>
+                            <div class="filter-item">
+                                <label>所属房间</label>
+                                <select class="form-control" id="filterBedRoomId">
+                                    <option value="">全部</option>
+                                </select>
+                            </div>
+                            <div class="filter-item">
+                                <label>床位状态</label>
+                                <select class="form-control" id="filterBedStatus">
+                                    <option value="">全部</option>
+                                    <option value="空闲">空闲</option>
+                                    <option value="已占用">已占用</option>
+                                    <option value="维修中">维修中</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="loadBeds()">查询</button>
+                            <button class="btn btn-warning" onclick="resetBedFilter()">重置</button>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>床位编号</th>
+                                    <th>所属房间</th>
+                                    <th>房间状态</th>
+                                    <th>床位类型</th>
+                                    <th>日费用</th>
+                                    <th>配套设施</th>
+                                    <th>床位状态</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bedTable"></tbody>
+                        </table>
+                        <div class="pagination">
+                            <button class="btn btn-sm" id="bedPrevBtn" onclick="prevBedPage()">上一页</button>
+                            <span id="bedPageInfo"></span>
+                            <button class="btn btn-sm" id="bedNextBtn" onclick="nextBedPage()">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="roomModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="roomModalTitle">新增房间</h3>
+                <button class="modal-close" onclick="closeRoomModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="roomForm">
+                    <input type="hidden" id="roomId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>房间编号 *</label>
+                            <input type="text" class="form-control" id="roomNo" required>
+                        </div>
+                        <div class="form-group">
+                            <label>房间名称 *</label>
+                            <input type="text" class="form-control" id="roomName" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>房型</label>
+                            <select class="form-control" id="roomType">
+                                <option value="单人间">单人间</option>
+                                <option value="双人间">双人间</option>
+                                <option value="陪护房">陪护房</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>楼层</label>
+                            <input type="text" class="form-control" id="floorNo">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>床位数</label>
+                            <input type="number" class="form-control" id="bedCount" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label>日费用(元)</label>
+                            <input type="number" class="form-control" id="roomPrice" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>所属机构</label>
+                        <select class="form-control" id="roomOrgId">
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>配套设施</label>
+                        <input type="text" class="form-control" id="roomFacilities" placeholder="多个设施用逗号分隔">
+                    </div>
+                    <div class="form-group">
+                        <label>描述</label>
+                        <textarea class="form-control" id="roomDescription" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select class="form-control" id="roomStatus">
+                            <option value="1">启用</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeRoomModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveRoom()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="bedModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="bedModalTitle">新增床位</h3>
+                <button class="modal-close" onclick="closeBedModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="bedForm">
+                    <input type="hidden" id="bedId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>床位编号 *</label>
+                            <input type="text" class="form-control" id="bedNo" required>
+                        </div>
+                        <div class="form-group">
+                            <label>所属房间 *</label>
+                            <select class="form-control" id="bedRoomId" required>
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>床位类型</label>
+                            <select class="form-control" id="bedType">
+                                <option value="普通床">普通床</option>
+                                <option value="护理床">护理床</option>
+                                <option value="医疗床">医疗床</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>日费用(元)</label>
+                            <input type="number" class="form-control" id="bedPrice" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>床位状态</label>
+                        <select class="form-control" id="bedStatus">
+                            <option value="空闲">空闲</option>
+                            <option value="已占用">已占用</option>
+                            <option value="维修中">维修中</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>配套设施</label>
+                        <input type="text" class="form-control" id="bedFacilities" placeholder="多个设施用逗号分隔">
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea class="form-control" id="bedRemark" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select class="form-control" id="bedStatusFlag">
+                            <option value="1">启用</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeBedModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveBed()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('username').textContent = user.realName || user.username;
+
+        let currentRoomPage = 0;
+        let currentBedPage = 0;
+        const pageSize = 10;
+        let totalRoomPages = 0;
+        let totalBedPages = 0;
+        let roomList = [];
+
+        function logout() {
+            http.post('/auth/logout').then(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            });
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+            
+            if (tab === 'room') {
+                loadRooms();
+            } else {
+                loadRoomsForSelect();
+                loadAllRooms();
+                loadBeds();
+            }
+        }
+
+        function loadOrganizations() {
+            http.get('/organization/list').then(result => {
+                const selects = ['roomOrgId'];
+                selects.forEach(id => {
+                    const select = document.getElementById(id);
+                    select.innerHTML = '<option value="">请选择</option>';
+                    result.data.forEach(org => {
+                        select.innerHTML += `<option value="${org.id}">${org.name}</option>`;
+                    });
+                });
+            });
+        }
+
+        let allRoomList = [];
+
+        function loadAllRooms() {
+            return http.get('/room/list').then(result => {
+                allRoomList = result.data;
+                return result;
+            });
+        }
+
+        function loadRoomsForSelect() {
+            http.get('/room/list/enabled').then(result => {
+                roomList = result.data;
+                const selects = ['bedRoomId', 'filterBedRoomId'];
+                selects.forEach(id => {
+                    const select = document.getElementById(id);
+                    select.innerHTML = '<option value="">全部</option>';
+                    result.data.forEach(room => {
+                        select.innerHTML += `<option value="${room.id}">${room.name}</option>`;
+                    });
+                });
+            });
+        }
+
+        function loadRooms() {
+            const name = document.getElementById('filterRoomName').value;
+            const roomType = document.getElementById('filterRoomType').value;
+            const floorNo = document.getElementById('filterFloorNo').value;
+            
+            const params = {
+                page: currentRoomPage,
+                size: pageSize
+            };
+            if (name) params.name = name;
+            if (roomType) params.roomType = roomType;
+            if (floorNo) params.floorNo = floorNo;
+
+            http.get('/room/page', params).then(result => {
+                const data = result.data;
+                totalRoomPages = data.totalPages;
+                document.getElementById('roomPageInfo').textContent = `第 ${currentRoomPage + 1} / ${totalRoomPages} 页，共 ${data.totalElements} 条`;
+                
+                const tbody = document.getElementById('roomTable');
+                tbody.innerHTML = '';
+                data.content.forEach(item => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${item.roomNo}</td>
+                            <td>${item.name}</td>
+                            <td>${item.roomType || '-'}</td>
+                            <td>${item.floorNo || '-'}</td>
+                            <td>${item.bedCount || 0}</td>
+                            <td>${item.pricePerDay || '-'}</td>
+                            <td>${item.facilities || '-'}</td>
+                            <td><span class="status-tag ${item.status === 1 ? 'status-active' : 'status-inactive'}">${item.status === 1 ? '启用' : '禁用'}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editRoom(${item.id})">编辑</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteRoom(${item.id})">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('roomPrevBtn').disabled = currentRoomPage === 0;
+                document.getElementById('roomNextBtn').disabled = currentRoomPage >= totalRoomPages - 1;
+            });
+        }
+
+        function resetRoomFilter() {
+            document.getElementById('filterRoomName').value = '';
+            document.getElementById('filterRoomType').value = '';
+            document.getElementById('filterFloorNo').value = '';
+            currentRoomPage = 0;
+            loadRooms();
+        }
+
+        function prevRoomPage() {
+            if (currentRoomPage > 0) {
+                currentRoomPage--;
+                loadRooms();
+            }
+        }
+
+        function nextRoomPage() {
+            if (currentRoomPage < totalRoomPages - 1) {
+                currentRoomPage++;
+                loadRooms();
+            }
+        }
+
+        function loadBeds() {
+            const bedNo = document.getElementById('filterBedNo').value;
+            const roomId = document.getElementById('filterBedRoomId').value;
+            const bedStatus = document.getElementById('filterBedStatus').value;
+            
+            const params = {
+                page: currentBedPage,
+                size: pageSize
+            };
+            if (bedNo) params.bedNo = bedNo;
+            if (roomId) params.roomId = roomId;
+            if (bedStatus) params.bedStatus = bedStatus;
+
+            http.get('/bed/page', params).then(result => {
+                const data = result.data;
+                totalBedPages = data.totalPages;
+                document.getElementById('bedPageInfo').textContent = `第 ${currentBedPage + 1} / ${totalBedPages} 页，共 ${data.totalElements} 条`;
+                
+                const tbody = document.getElementById('bedTable');
+                tbody.innerHTML = '';
+                data.content.forEach(item => {
+                    const room = allRoomList.find(r => r.id === item.roomId);
+                    const isRoomDisabled = room && room.status === 0;
+                    tbody.innerHTML += `
+                        <tr style="${isRoomDisabled ? 'background-color: #fff3cd;' : ''}">
+                            <td>${item.bedNo}</td>
+                            <td>${room ? room.name : '-'}</td>
+                            <td><span class="status-tag ${room && room.status === 1 ? 'status-active' : 'status-inactive'}">${room && room.status === 1 ? '启用' : '禁用'}</span></td>
+                            <td>${item.bedType || '-'}</td>
+                            <td>${item.pricePerDay || '-'}</td>
+                            <td>${item.facilities || '-'}</td>
+                            <td>${item.bedStatus || '-'}</td>
+                            <td><span class="status-tag ${item.status === 1 ? 'status-active' : 'status-inactive'}">${item.status === 1 ? '启用' : '禁用'}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editBed(${item.id})" ${isRoomDisabled ? 'disabled style="cursor: not-allowed; opacity: 0.5;"' : ''}>编辑</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteBed(${item.id})" ${isRoomDisabled ? 'disabled style="cursor: not-allowed; opacity: 0.5;"' : ''}>删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('bedPrevBtn').disabled = currentBedPage === 0;
+                document.getElementById('bedNextBtn').disabled = currentBedPage >= totalBedPages - 1;
+            });
+        }
+
+        function resetBedFilter() {
+            document.getElementById('filterBedNo').value = '';
+            document.getElementById('filterBedRoomId').value = '';
+            document.getElementById('filterBedStatus').value = '';
+            currentBedPage = 0;
+            loadBeds();
+        }
+
+        function prevBedPage() {
+            if (currentBedPage > 0) {
+                currentBedPage--;
+                loadBeds();
+            }
+        }
+
+        function nextBedPage() {
+            if (currentBedPage < totalBedPages - 1) {
+                currentBedPage++;
+                loadBeds();
+            }
+        }
+
+        function openRoomModal(id = null) {
+            document.getElementById('roomModal').classList.add('active');
+            document.getElementById('roomId').value = id || '';
+            document.getElementById('roomModalTitle').textContent = id ? '编辑房间' : '新增房间';
+            
+            if (id) {
+                http.get('/room/' + id).then(result => {
+                    const data = result.data;
+                    document.getElementById('roomNo').value = data.roomNo || '';
+                    document.getElementById('roomName').value = data.name || '';
+                    document.getElementById('roomType').value = data.roomType || '';
+                    document.getElementById('floorNo').value = data.floorNo || '';
+                    document.getElementById('bedCount').value = data.bedCount || 1;
+                    document.getElementById('roomPrice').value = data.pricePerDay || '';
+                    document.getElementById('roomOrgId').value = data.orgId || '';
+                    document.getElementById('roomFacilities').value = data.facilities || '';
+                    document.getElementById('roomDescription').value = data.description || '';
+                    document.getElementById('roomStatus').value = data.status;
+                });
+            } else {
+                document.getElementById('roomForm').reset();
+            }
+        }
+
+        function closeRoomModal() {
+            document.getElementById('roomModal').classList.remove('active');
+        }
+
+        function editRoom(id) {
+            openRoomModal(id);
+        }
+
+        function saveRoom() {
+            const id = document.getElementById('roomId').value;
+            const status = parseInt(document.getElementById('roomStatus').value);
+            
+            if (id && status === 0) {
+                if (!confirm('禁用房间将同时禁用该房间下的所有床位，是否继续？')) {
+                    return;
+                }
+            }
+
+            const data = {
+                roomNo: document.getElementById('roomNo').value,
+                name: document.getElementById('roomName').value,
+                roomType: document.getElementById('roomType').value,
+                floorNo: document.getElementById('floorNo').value,
+                bedCount: parseInt(document.getElementById('bedCount').value) || 1,
+                pricePerDay: parseFloat(document.getElementById('roomPrice').value) || 0,
+                orgId: document.getElementById('roomOrgId').value || null,
+                facilities: document.getElementById('roomFacilities').value,
+                description: document.getElementById('roomDescription').value,
+                status: status
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            http.post('/room', data).then(() => {
+                alert('保存成功');
+                closeRoomModal();
+                loadRooms();
+                loadRoomsForSelect();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function deleteRoom(id) {
+            if (confirm('确定要删除吗？')) {
+                http.delete('/room/' + id).then(() => {
+                    alert('删除成功');
+                    loadRooms();
+                });
+            }
+        }
+
+        function openBedModal(id = null) {
+            document.getElementById('bedModal').classList.add('active');
+            document.getElementById('bedId').value = id || '';
+            document.getElementById('bedModalTitle').textContent = id ? '编辑床位' : '新增床位';
+            
+            if (id) {
+                http.get('/bed/' + id).then(result => {
+                    const data = result.data;
+                    document.getElementById('bedNo').value = data.bedNo || '';
+                    document.getElementById('bedRoomId').value = data.roomId || '';
+                    document.getElementById('bedType').value = data.bedType || '';
+                    document.getElementById('bedPrice').value = data.pricePerDay || '';
+                    document.getElementById('bedStatus').value = data.bedStatus || '空闲';
+                    document.getElementById('bedFacilities').value = data.facilities || '';
+                    document.getElementById('bedRemark').value = data.remark || '';
+                    document.getElementById('bedStatusFlag').value = data.status;
+                });
+            } else {
+                document.getElementById('bedForm').reset();
+            }
+        }
+
+        function closeBedModal() {
+            document.getElementById('bedModal').classList.remove('active');
+        }
+
+        function editBed(id) {
+            openBedModal(id);
+        }
+
+        function saveBed() {
+            const id = document.getElementById('bedId').value;
+            const data = {
+                bedNo: document.getElementById('bedNo').value,
+                roomId: parseInt(document.getElementById('bedRoomId').value),
+                bedType: document.getElementById('bedType').value,
+                pricePerDay: parseFloat(document.getElementById('bedPrice').value) || 0,
+                bedStatus: document.getElementById('bedStatus').value,
+                facilities: document.getElementById('bedFacilities').value,
+                remark: document.getElementById('bedRemark').value,
+                status: parseInt(document.getElementById('bedStatusFlag').value)
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            http.post('/bed', data).then(() => {
+                alert('保存成功');
+                closeBedModal();
+                loadBeds();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function deleteBed(id) {
+            if (confirm('确定要删除吗？')) {
+                http.delete('/bed/' + id).then(() => {
+                    alert('删除成功');
+                    loadBeds();
+                });
+            }
+        }
+
+        loadOrganizations();
+        loadRooms();
+        loadRoomsForSelect();
+    </script>
+</body>
+</html>

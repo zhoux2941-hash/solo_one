@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场地使用 - 野外露营营地备案系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏕️ 野外露营营地备案系统</h1>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="area.html">区域划分</a></li>
+                <li><a href="facility.html">设施登记</a></li>
+                <li><a href="record.html">人员备案</a></li>
+                <li><a href="usage.html" class="active">场地使用</a></li>
+            </ul>
+        </nav>
+        
+        <div class="main-content">
+            <h2 class="section-title">📋 场地使用与维护记录</h2>
+            
+            <div class="filter-bar">
+                <div class="form-group">
+                    <label>记录类型</label>
+                    <select id="recordTypeFilter" onchange="loadUsageRecords()">
+                        <option value="">全部</option>
+                        <option value="使用记录">使用记录</option>
+                        <option value="维护记录">维护记录</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>维护状态</label>
+                    <select id="maintenanceFilter" onchange="loadUsageRecords()">
+                        <option value="">全部</option>
+                        <option value="待维护">待维护</option>
+                        <option value="已完成">已完成</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ 新增记录</button>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>记录类型</th>
+                            <th>区域ID</th>
+                            <th>备案ID</th>
+                            <th>开始时间</th>
+                            <th>结束时间</th>
+                            <th>时长(小时)</th>
+                            <th>维护状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usageTableBody">
+                        <tr>
+                            <td colspan="9" style="text-align:center;padding:30px;color:#999;">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="usageModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('usageModal')">&times;</span>
+            <h3 class="modal-title" id="modalTitle">新增记录</h3>
+            <form id="usageForm">
+                <input type="hidden" id="usageId">
+                <div class="form-group">
+                    <label>记录类型</label>
+                    <select id="recordType" onchange="toggleMaintenanceFields()">
+                        <option value="使用记录">使用记录</option>
+                        <option value="维护记录">维护记录</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>区域ID</label>
+                        <input type="number" id="areaId" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>备案ID</label>
+                        <input type="number" id="campRecordId" min="1">
+                    </div>
+                </div>
+                <div id="usageFields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>开始时间</label>
+                            <input type="datetime-local" id="startTime">
+                        </div>
+                        <div class="form-group">
+                            <label>结束时间</label>
+                            <input type="datetime-local" id="endTime">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>使用时长(小时)</label>
+                        <input type="number" id="durationHours" step="0.5" min="0">
+                    </div>
+                </div>
+                <div id="maintenanceFields" style="display:none;">
+                    <div class="form-group">
+                        <label>维护状态</label>
+                        <select id="maintenanceStatus">
+                            <option value="待维护">待维护</option>
+                            <option value="已完成">已完成</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>维护人员</label>
+                        <input type="text" id="maintenancePerson">
+                    </div>
+                    <div class="form-group">
+                        <label>维护时间</label>
+                        <input type="datetime-local" id="maintenanceDate">
+                    </div>
+                    <div class="form-group">
+                        <label>维护内容</label>
+                        <textarea id="maintenanceNotes" rows="3" placeholder="维护工作内容..."></textarea>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>备注</label>
+                    <textarea id="notes" rows="2" placeholder="其他备注信息..."></textarea>
+                </div>
+                <div style="text-align:right;margin-top:20px;">
+                    <button type="button" class="btn btn-warning" onclick="closeModal('usageModal')" style="margin-right:10px;">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        let editingId = null;
+
+        async function loadUsageRecords() {
+            try {
+                let url = '/usage';
+                const typeFilter = document.getElementById('recordTypeFilter').value;
+                const maintenanceFilter = document.getElementById('maintenanceFilter').value;
+                
+                if (typeFilter) {
+                    url = `/usage/type/${typeFilter}`;
+                } else if (maintenanceFilter) {
+                    url = `/usage/maintenance/${maintenanceFilter}`;
+                }
+                
+                const records = await apiRequest(url);
+                
+                renderTable('usageTableBody', records, [
+                    { field: 'id' },
+                    { field: 'recordType' },
+                    { field: 'areaId' },
+                    { field: 'campRecordId' },
+                    { render: (item) => formatDateTime(item.startTime) },
+                    { render: (item) => formatDateTime(item.endTime) },
+                    { field: 'durationHours' },
+                    { render: (item) => getStatusBadge(item.maintenanceStatus) }
+                ], (item) => `
+                    <div class="action-buttons">
+                        <button class="btn btn-warning" onclick="editUsage(${item.id})">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteUsage(${item.id})">删除</button>
+                    </div>
+                `);
+            } catch (error) {
+                console.error('加载使用记录失败:', error);
+            }
+        }
+
+        function toggleMaintenanceFields() {
+            const recordType = document.getElementById('recordType').value;
+            const usageFields = document.getElementById('usageFields');
+            const maintenanceFields = document.getElementById('maintenanceFields');
+            
+            if (recordType === '维护记录') {
+                usageFields.style.display = 'none';
+                maintenanceFields.style.display = 'block';
+            } else {
+                usageFields.style.display = 'block';
+                maintenanceFields.style.display = 'none';
+            }
+        }
+
+        function formatLocalDateTime(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        function openAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = '新增记录';
+            document.getElementById('usageForm').reset();
+            toggleMaintenanceFields();
+            openModal('usageModal');
+        }
+
+        async function editUsage(id) {
+            try {
+                const record = await apiRequest(`/usage/${id}`);
+                editingId = id;
+                document.getElementById('modalTitle').textContent = '编辑记录';
+                document.getElementById('usageId').value = record.id;
+                document.getElementById('recordType').value = record.recordType || '使用记录';
+                document.getElementById('areaId').value = record.areaId || '';
+                document.getElementById('campRecordId').value = record.campRecordId || '';
+                document.getElementById('startTime').value = formatLocalDateTime(record.startTime);
+                document.getElementById('endTime').value = formatLocalDateTime(record.endTime);
+                document.getElementById('durationHours').value = record.durationHours || '';
+                document.getElementById('maintenanceStatus').value = record.maintenanceStatus || '待维护';
+                document.getElementById('maintenancePerson').value = record.maintenancePerson || '';
+                document.getElementById('maintenanceDate').value = formatLocalDateTime(record.maintenanceDate);
+                document.getElementById('maintenanceNotes').value = record.maintenanceNotes || '';
+                document.getElementById('notes').value = record.notes || '';
+                toggleMaintenanceFields();
+                openModal('usageModal');
+            } catch (error) {
+                console.error('加载记录详情失败:', error);
+            }
+        }
+
+        async function deleteUsage(id) {
+            if (confirm('确定要删除这条记录吗？')) {
+                try {
+                    await apiRequest(`/usage/${id}`, 'DELETE');
+                    alert('删除成功');
+                    loadUsageRecords();
+                } catch (error) {
+                    console.error('删除记录失败:', error);
+                }
+            }
+        }
+
+        document.getElementById('usageForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const recordType = document.getElementById('recordType').value;
+            const data = {
+                recordType: recordType,
+                areaId: document.getElementById('areaId').value ? parseInt(document.getElementById('areaId').value) : null,
+                campRecordId: document.getElementById('campRecordId').value ? parseInt(document.getElementById('campRecordId').value) : null,
+                notes: document.getElementById('notes').value || null
+            };
+
+            if (recordType === '使用记录') {
+                data.startTime = document.getElementById('startTime').value ? new Date(document.getElementById('startTime').value).toISOString() : null;
+                data.endTime = document.getElementById('endTime').value ? new Date(document.getElementById('endTime').value).toISOString() : null;
+                data.durationHours = document.getElementById('durationHours').value ? parseFloat(document.getElementById('durationHours').value) : null;
+            } else {
+                data.maintenanceStatus = document.getElementById('maintenanceStatus').value;
+                data.maintenancePerson = document.getElementById('maintenancePerson').value || null;
+                data.maintenanceDate = document.getElementById('maintenanceDate').value ? new Date(document.getElementById('maintenanceDate').value).toISOString() : null;
+                data.maintenanceNotes = document.getElementById('maintenanceNotes').value || null;
+            }
+
+            try {
+                if (editingId) {
+                    await apiRequest(`/usage/${editingId}`, 'PUT', data);
+                    alert('更新成功');
+                } else {
+                    await apiRequest('/usage', 'POST', data);
+                    alert('添加成功');
+                }
+                closeModal('usageModal');
+                loadUsageRecords();
+            } catch (error) {
+                console.error('保存记录失败:', error);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', loadUsageRecords);
+    </script>
+</body>
+</html>

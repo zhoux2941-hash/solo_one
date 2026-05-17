@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>机构组织管理 - 康养机构管理系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sidebar-logo">康养管理系统</div>
+            <ul class="sidebar-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="organization.html" class="active">机构组织管理</a></li>
+                <li><a href="staff.html">医护人员管理</a></li>
+                <li><a href="room.html">房型床位管理</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="top-bar">
+                <span>机构组织管理</span>
+                <div class="user-info">
+                    <span id="username"></span>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>机构组织列表</h2>
+                        <button class="btn btn-primary" onclick="openModal()">新增机构</button>
+                    </div>
+                    <div class="filter-bar">
+                        <div class="filter-item">
+                            <label>机构名称</label>
+                            <input type="text" class="form-control" id="filterName" placeholder="请输入机构名称">
+                        </div>
+                        <div class="filter-item">
+                            <label>机构类型</label>
+                            <select class="form-control" id="filterType">
+                                <option value="">全部</option>
+                                <option value="总院">总院</option>
+                                <option value="分院">分院</option>
+                                <option value="部门">部门</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>状态</label>
+                            <select class="form-control" id="filterStatus">
+                                <option value="">全部</option>
+                                <option value="1">启用</option>
+                                <option value="0">禁用</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadData()">查询</button>
+                        <button class="btn btn-warning" onclick="resetFilter()">重置</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>机构名称</th>
+                                <th>机构类型</th>
+                                <th>地址</th>
+                                <th>联系电话</th>
+                                <th>排序</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTable"></tbody>
+                    </table>
+                    <div class="pagination">
+                        <button class="btn btn-sm" id="prevBtn" onclick="prevPage()">上一页</button>
+                        <span id="pageInfo"></span>
+                        <button class="btn btn-sm" id="nextBtn" onclick="nextPage()">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">新增机构</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <div class="form-group">
+                        <label>机构名称 *</label>
+                        <input type="text" class="form-control" id="editName" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>机构类型</label>
+                            <select class="form-control" id="editType">
+                                <option value="总院">总院</option>
+                                <option value="分院">分院</option>
+                                <option value="部门">部门</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>上级机构</label>
+                            <select class="form-control" id="editParentId">
+                                <option value="">无</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>联系电话</label>
+                            <input type="text" class="form-control" id="editPhone">
+                        </div>
+                        <div class="form-group">
+                            <label>排序</label>
+                            <input type="number" class="form-control" id="editSortOrder" value="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>地址</label>
+                        <input type="text" class="form-control" id="editAddress">
+                    </div>
+                    <div class="form-group">
+                        <label>描述</label>
+                        <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select class="form-control" id="editStatus">
+                            <option value="1">启用</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveData()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('username').textContent = user.realName || user.username;
+
+        let currentPage = 0;
+        const pageSize = 10;
+        let totalPages = 0;
+
+        function logout() {
+            http.post('/auth/logout').then(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            });
+        }
+
+        function loadOrganizationsForSelect() {
+            http.get('/organization/list').then(result => {
+                const select = document.getElementById('editParentId');
+                select.innerHTML = '<option value="">无</option>';
+                result.data.forEach(org => {
+                    select.innerHTML += `<option value="${org.id}">${org.name}</option>`;
+                });
+            });
+        }
+
+        function loadData() {
+            const name = document.getElementById('filterName').value;
+            const type = document.getElementById('filterType').value;
+            const status = document.getElementById('filterStatus').value;
+            
+            const params = {
+                page: currentPage,
+                size: pageSize
+            };
+            if (name) params.name = name;
+            if (type) params.type = type;
+            if (status) params.status = status;
+
+            http.get('/organization/page', params).then(result => {
+                const data = result.data;
+                totalPages = data.totalPages;
+                document.getElementById('pageInfo').textContent = `第 ${currentPage + 1} / ${totalPages} 页，共 ${data.totalElements} 条`;
+                
+                const tbody = document.getElementById('dataTable');
+                tbody.innerHTML = '';
+                data.content.forEach(item => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${item.id}</td>
+                            <td>${item.name}</td>
+                            <td>${item.type || '-'}</td>
+                            <td>${item.address || '-'}</td>
+                            <td>${item.phone || '-'}</td>
+                            <td>${item.sortOrder || 0}</td>
+                            <td><span class="status-tag ${item.status === 1 ? 'status-active' : 'status-inactive'}">${item.status === 1 ? '启用' : '禁用'}</span></td>
+                            <td>${item.createTime ? item.createTime.substring(0, 10) : '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editData(${item.id})">编辑</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('prevBtn').disabled = currentPage === 0;
+                document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
+            });
+        }
+
+        function resetFilter() {
+            document.getElementById('filterName').value = '';
+            document.getElementById('filterType').value = '';
+            document.getElementById('filterStatus').value = '';
+            currentPage = 0;
+            loadData();
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadData();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadData();
+            }
+        }
+
+        function openModal(id = null) {
+            document.getElementById('editModal').classList.add('active');
+            document.getElementById('editId').value = id || '';
+            document.getElementById('modalTitle').textContent = id ? '编辑机构' : '新增机构';
+            
+            if (id) {
+                http.get('/organization/' + id).then(result => {
+                    const data = result.data;
+                    document.getElementById('editName').value = data.name || '';
+                    document.getElementById('editType').value = data.type || '';
+                    document.getElementById('editParentId').value = data.parentId || '';
+                    document.getElementById('editPhone').value = data.phone || '';
+                    document.getElementById('editAddress').value = data.address || '';
+                    document.getElementById('editSortOrder').value = data.sortOrder || 0;
+                    document.getElementById('editDescription').value = data.description || '';
+                    document.getElementById('editStatus').value = data.status;
+                });
+            } else {
+                document.getElementById('editForm').reset();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function editData(id) {
+            openModal(id);
+        }
+
+        function saveData() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                name: document.getElementById('editName').value,
+                type: document.getElementById('editType').value,
+                parentId: document.getElementById('editParentId').value || null,
+                phone: document.getElementById('editPhone').value,
+                address: document.getElementById('editAddress').value,
+                sortOrder: parseInt(document.getElementById('editSortOrder').value) || 0,
+                description: document.getElementById('editDescription').value,
+                status: parseInt(document.getElementById('editStatus').value)
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            http.post('/organization', data).then(() => {
+                alert('保存成功');
+                closeModal();
+                loadData();
+                loadOrganizationsForSelect();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function deleteData(id) {
+            if (confirm('确定要删除吗？')) {
+                http.delete('/organization/' + id).then(() => {
+                    alert('删除成功');
+                    loadData();
+                });
+            }
+        }
+
+        loadOrganizationsForSelect();
+        loadData();
+    </script>
+</body>
+</html>

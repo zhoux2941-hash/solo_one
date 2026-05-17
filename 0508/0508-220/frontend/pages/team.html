@@ -1,0 +1,262 @@
+<div class="page-header">
+    <h1 class="page-title">班组管理</h1>
+    <button class="btn btn-primary" onclick="openTeamModal()">新增班组</button>
+</div>
+
+<div class="card">
+    <div class="search-bar">
+        <div class="search-item">
+            <label class="form-label">班组名称</label>
+            <input type="text" class="form-input" id="searchKeyword" placeholder="请输入班组名称">
+        </div>
+        <button class="btn btn-primary" onclick="searchTeam()">搜索</button>
+        <button class="btn btn-default" onclick="resetSearch()">重置</button>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>班组编码</th>
+                <th>班组名称</th>
+                <th>所属生产线</th>
+                <th>班组长</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="teamTableBody">
+        </tbody>
+    </table>
+
+    <div class="pagination" id="pagination">
+    </div>
+</div>
+
+<div id="teamModal" class="modal-overlay hidden">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title" id="modalTitle">新增班组</span>
+            <button class="modal-close" onclick="closeTeamModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="teamForm">
+                <input type="hidden" id="teamId">
+                <div class="form-group">
+                    <label class="form-label">班组编码 <span style="color: red;">*</span></label>
+                    <input type="text" class="form-input" id="teamCode" placeholder="请输入班组编码">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">班组名称 <span style="color: red;">*</span></label>
+                    <input type="text" class="form-input" id="teamName" placeholder="请输入班组名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">所属生产线 <span style="color: red;">*</span></label>
+                    <select class="form-select" id="lineId">
+                        <option value="">请选择生产线</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">班组长</label>
+                    <input type="text" class="form-input" id="teamLeader" placeholder="请输入班组长">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">描述</label>
+                    <textarea class="form-input" id="teamDescription" rows="3" placeholder="请输入描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">状态</label>
+                    <select class="form-select" id="teamStatus">
+                        <option value="1">启用</option>
+                        <option value="0">禁用</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-default" onclick="closeTeamModal()">取消</button>
+            <button class="btn btn-primary" onclick="saveTeam()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPage = 0;
+    const pageSize = 10;
+    let lineList = [];
+
+    function initteamPage() {
+        loadLineList();
+        loadTeamData();
+    }
+
+    async function loadLineList() {
+        try {
+            const result = await get('/workshop/list');
+            const workshops = result.data;
+            
+            const select = document.getElementById('lineId');
+            select.innerHTML = '<option value="">请选择生产线</option>';
+            
+            for (const workshop of workshops) {
+                const lineResult = await get(`/production-line/workshop/${workshop.id}`);
+                const lines = lineResult.data;
+                lineList = lineList.concat(lines);
+                
+                const group = document.createElement('optgroup');
+                group.label = workshop.workshopName;
+                lines.forEach(line => {
+                    const option = document.createElement('option');
+                    option.value = line.id;
+                    option.textContent = line.lineName;
+                    group.appendChild(option);
+                });
+                select.appendChild(group);
+            }
+        } catch (error) {
+            console.error('加载生产线列表失败', error);
+        }
+    }
+
+    function getLineName(lineId) {
+        const line = lineList.find(l => l.id === lineId);
+        return line ? line.lineName : '-';
+    }
+
+    async function loadTeamData() {
+        try {
+            const keyword = document.getElementById('searchKeyword')?.value || '';
+            const result = await get('/team/page', { page: currentPage, size: pageSize, keyword });
+            
+            const tbody = document.getElementById('teamTableBody');
+            tbody.innerHTML = '';
+            
+            result.data.content.forEach(team => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${team.teamCode}</td>
+                    <td>${team.teamName}</td>
+                    <td>${getLineName(team.lineId)}</td>
+                    <td>${team.teamLeader || '-'}</td>
+                    <td><span class="status-tag ${team.status === 1 ? 'status-active' : 'status-inactive'}">${team.status === 1 ? '启用' : '禁用'}</span></td>
+                    <td>${team.createTime ? new Date(team.createTime).toLocaleString() : '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-default" onclick="editTeam(${team.id})">编辑</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteTeam(${team.id})">删除</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            renderPagination(result.data.totalPages, result.data.totalElements);
+        } catch (error) {
+            console.error('加载班组数据失败', error);
+        }
+    }
+
+    function renderPagination(totalPages, totalElements) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = `
+            <span class="pagination-info">共 ${totalElements} 条记录，第 ${currentPage + 1}/${totalPages} 页</span>
+            <button class="btn btn-sm btn-default" onclick="goToPage(0)" ${currentPage === 0 ? 'disabled' : ''}>首页</button>
+            <button class="btn btn-sm btn-default" onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>上一页</button>
+            <button class="btn btn-sm btn-default" onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>下一页</button>
+            <button class="btn btn-sm btn-default" onclick="goToPage(${totalPages - 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>末页</button>
+        `;
+    }
+
+    function goToPage(page) {
+        if (page >= 0) {
+            currentPage = page;
+            loadTeamData();
+        }
+    }
+
+    function searchTeam() {
+        currentPage = 0;
+        loadTeamData();
+    }
+
+    function resetSearch() {
+        document.getElementById('searchKeyword').value = '';
+        currentPage = 0;
+        loadTeamData();
+    }
+
+    function openTeamModal() {
+        document.getElementById('modalTitle').textContent = '新增班组';
+        document.getElementById('teamForm').reset();
+        document.getElementById('teamId').value = '';
+        document.getElementById('teamModal').classList.remove('hidden');
+    }
+
+    function closeTeamModal() {
+        document.getElementById('teamModal').classList.add('hidden');
+    }
+
+    async function editTeam(id) {
+        try {
+            const result = await get(`/team/${id}`);
+            const team = result.data;
+            
+            document.getElementById('modalTitle').textContent = '编辑班组';
+            document.getElementById('teamId').value = team.id;
+            document.getElementById('teamCode').value = team.teamCode;
+            document.getElementById('teamName').value = team.teamName;
+            document.getElementById('lineId').value = team.lineId;
+            document.getElementById('teamLeader').value = team.teamLeader || '';
+            document.getElementById('teamDescription').value = team.description || '';
+            document.getElementById('teamStatus').value = team.status;
+            
+            document.getElementById('teamModal').classList.remove('hidden');
+        } catch (error) {
+            console.error('加载班组详情失败', error);
+        }
+    }
+
+    async function saveTeam() {
+        const id = document.getElementById('teamId').value;
+        const data = {
+            teamCode: document.getElementById('teamCode').value,
+            teamName: document.getElementById('teamName').value,
+            lineId: parseInt(document.getElementById('lineId').value),
+            teamLeader: document.getElementById('teamLeader').value,
+            description: document.getElementById('teamDescription').value,
+            status: parseInt(document.getElementById('teamStatus').value)
+        };
+
+        const codeError = Validator.required(data.teamCode, '请输入班组编码');
+        const nameError = Validator.required(data.teamName, '请输入班组名称');
+        const lineError = Validator.required(data.lineId, '请选择所属生产线');
+
+        if (codeError) { showMessage(codeError, 'error'); return; }
+        if (nameError) { showMessage(nameError, 'error'); return; }
+        if (lineError) { showMessage(lineError, 'error'); return; }
+
+        try {
+            if (id) {
+                await put(`/team/${id}`, data);
+                showMessage('更新成功', 'success');
+            } else {
+                await post('/team', data);
+                showMessage('创建成功', 'success');
+            }
+            closeTeamModal();
+            loadTeamData();
+        } catch (error) {
+            console.error('保存失败', error);
+        }
+    }
+
+    async function deleteTeam(id) {
+        if (confirm('确定要删除该班组吗？')) {
+            try {
+                await del(`/team/${id}`);
+                showMessage('删除成功', 'success');
+                loadTeamData();
+            } catch (error) {
+                console.error('删除失败', error);
+            }
+        }
+    }
+</script>

@@ -1,0 +1,289 @@
+<div class="page-header">
+    <h1 class="page-title">人员管理</h1>
+    <button class="btn btn-primary" onclick="openEmployeeModal()">新增人员</button>
+</div>
+
+<div class="card">
+    <div class="search-bar">
+        <div class="search-item">
+            <label class="form-label">人员姓名</label>
+            <input type="text" class="form-input" id="searchKeyword" placeholder="请输入人员姓名">
+        </div>
+        <button class="btn btn-primary" onclick="searchEmployee()">搜索</button>
+        <button class="btn btn-default" onclick="resetSearch()">重置</button>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>员工编号</th>
+                <th>姓名</th>
+                <th>岗位</th>
+                <th>所属班组</th>
+                <th>电话</th>
+                <th>在岗状态</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="employeeTableBody">
+        </tbody>
+    </table>
+
+    <div class="pagination" id="pagination">
+    </div>
+</div>
+
+<div id="employeeModal" class="modal-overlay hidden">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title" id="modalTitle">新增人员</span>
+            <button class="modal-close" onclick="closeEmployeeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="employeeForm">
+                <input type="hidden" id="employeeId">
+                <div class="form-group">
+                    <label class="form-label">员工编号 <span style="color: red;">*</span></label>
+                    <input type="text" class="form-input" id="employeeNo" placeholder="请输入员工编号">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">姓名 <span style="color: red;">*</span></label>
+                    <input type="text" class="form-input" id="employeeName" placeholder="请输入姓名">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">身份证号</label>
+                    <input type="text" class="form-input" id="idCard" placeholder="请输入身份证号">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">电话</label>
+                    <input type="text" class="form-input" id="phone" placeholder="请输入电话">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">地址</label>
+                    <input type="text" class="form-input" id="address" placeholder="请输入地址">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">岗位</label>
+                    <input type="text" class="form-input" id="position" placeholder="请输入岗位">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">所属班组</label>
+                    <select class="form-select" id="teamId">
+                        <option value="">请选择班组</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">在岗状态</label>
+                    <select class="form-select" id="onDuty">
+                        <option value="1">在岗</option>
+                        <option value="0">离岗</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">状态</label>
+                    <select class="form-select" id="employeeStatus">
+                        <option value="1">启用</option>
+                        <option value="0">禁用</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-default" onclick="closeEmployeeModal()">取消</button>
+            <button class="btn btn-primary" onclick="saveEmployee()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPage = 0;
+    const pageSize = 10;
+    let teamList = [];
+
+    function initemployeePage() {
+        loadTeamList();
+        loadEmployeeData();
+    }
+
+    async function loadTeamList() {
+        try {
+            const result = await get('/workshop/list');
+            const workshops = result.data;
+            
+            const select = document.getElementById('teamId');
+            select.innerHTML = '<option value="">请选择班组</option>';
+            
+            for (const workshop of workshops) {
+                const lineResult = await get(`/production-line/workshop/${workshop.id}`);
+                const lines = lineResult.data;
+                
+                for (const line of lines) {
+                    const teamResult = await get(`/team/line/${line.id}`);
+                    const teams = teamResult.data;
+                    teamList = teamList.concat(teams);
+                    
+                    const group = document.createElement('optgroup');
+                    group.label = `${workshop.workshopName} - ${line.lineName}`;
+                    teams.forEach(team => {
+                        const option = document.createElement('option');
+                        option.value = team.id;
+                        option.textContent = team.teamName;
+                        group.appendChild(option);
+                    });
+                    select.appendChild(group);
+                }
+            }
+        } catch (error) {
+            console.error('加载班组列表失败', error);
+        }
+    }
+
+    function getTeamName(teamId) {
+        if (!teamId) return '-';
+        const team = teamList.find(t => t.id === teamId);
+        return team ? team.teamName : '-';
+    }
+
+    async function loadEmployeeData() {
+        try {
+            const keyword = document.getElementById('searchKeyword')?.value || '';
+            const result = await get('/employee/page', { page: currentPage, size: pageSize, keyword });
+            
+            const tbody = document.getElementById('employeeTableBody');
+            tbody.innerHTML = '';
+            
+            result.data.content.forEach(employee => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${employee.employeeNo}</td>
+                    <td>${employee.employeeName}</td>
+                    <td>${employee.position || '-'}</td>
+                    <td>${getTeamName(employee.teamId)}</td>
+                    <td>${employee.phone || '-'}</td>
+                    <td><span class="status-tag ${employee.onDuty === 1 ? 'status-active' : 'status-inactive'}">${employee.onDuty === 1 ? '在岗' : '离岗'}</span></td>
+                    <td>${employee.createTime ? new Date(employee.createTime).toLocaleString() : '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-default" onclick="editEmployee(${employee.id})">编辑</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteEmployee(${employee.id})">删除</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            renderPagination(result.data.totalPages, result.data.totalElements);
+        } catch (error) {
+            console.error('加载人员数据失败', error);
+        }
+    }
+
+    function renderPagination(totalPages, totalElements) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = `
+            <span class="pagination-info">共 ${totalElements} 条记录，第 ${currentPage + 1}/${totalPages} 页</span>
+            <button class="btn btn-sm btn-default" onclick="goToPage(0)" ${currentPage === 0 ? 'disabled' : ''}>首页</button>
+            <button class="btn btn-sm btn-default" onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>上一页</button>
+            <button class="btn btn-sm btn-default" onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>下一页</button>
+            <button class="btn btn-sm btn-default" onclick="goToPage(${totalPages - 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>末页</button>
+        `;
+    }
+
+    function goToPage(page) {
+        if (page >= 0) {
+            currentPage = page;
+            loadEmployeeData();
+        }
+    }
+
+    function searchEmployee() {
+        currentPage = 0;
+        loadEmployeeData();
+    }
+
+    function resetSearch() {
+        document.getElementById('searchKeyword').value = '';
+        currentPage = 0;
+        loadEmployeeData();
+    }
+
+    function openEmployeeModal() {
+        document.getElementById('modalTitle').textContent = '新增人员';
+        document.getElementById('employeeForm').reset();
+        document.getElementById('employeeId').value = '';
+        document.getElementById('employeeModal').classList.remove('hidden');
+    }
+
+    function closeEmployeeModal() {
+        document.getElementById('employeeModal').classList.add('hidden');
+    }
+
+    async function editEmployee(id) {
+        try {
+            const result = await get(`/employee/${id}`);
+            const employee = result.data;
+            
+            document.getElementById('modalTitle').textContent = '编辑人员';
+            document.getElementById('employeeId').value = employee.id;
+            document.getElementById('employeeNo').value = employee.employeeNo;
+            document.getElementById('employeeName').value = employee.employeeName;
+            document.getElementById('idCard').value = employee.idCard || '';
+            document.getElementById('phone').value = employee.phone || '';
+            document.getElementById('address').value = employee.address || '';
+            document.getElementById('position').value = employee.position || '';
+            document.getElementById('teamId').value = employee.teamId || '';
+            document.getElementById('onDuty').value = employee.onDuty;
+            document.getElementById('employeeStatus').value = employee.status;
+            
+            document.getElementById('employeeModal').classList.remove('hidden');
+        } catch (error) {
+            console.error('加载人员详情失败', error);
+        }
+    }
+
+    async function saveEmployee() {
+        const id = document.getElementById('employeeId').value;
+        const data = {
+            employeeNo: document.getElementById('employeeNo').value,
+            employeeName: document.getElementById('employeeName').value,
+            idCard: document.getElementById('idCard').value,
+            phone: document.getElementById('phone').value,
+            address: document.getElementById('address').value,
+            position: document.getElementById('position').value,
+            teamId: document.getElementById('teamId').value ? parseInt(document.getElementById('teamId').value) : null,
+            onDuty: parseInt(document.getElementById('onDuty').value),
+            status: parseInt(document.getElementById('employeeStatus').value)
+        };
+
+        const noError = Validator.required(data.employeeNo, '请输入员工编号');
+        const nameError = Validator.required(data.employeeName, '请输入姓名');
+
+        if (noError) { showMessage(noError, 'error'); return; }
+        if (nameError) { showMessage(nameError, 'error'); return; }
+
+        try {
+            if (id) {
+                await put(`/employee/${id}`, data);
+                showMessage('更新成功', 'success');
+            } else {
+                await post('/employee', data);
+                showMessage('创建成功', 'success');
+            }
+            closeEmployeeModal();
+            loadEmployeeData();
+        } catch (error) {
+            console.error('保存失败', error);
+        }
+    }
+
+    async function deleteEmployee(id) {
+        if (confirm('确定要删除该人员吗？')) {
+            try {
+                await del(`/employee/${id}`);
+                showMessage('删除成功', 'success');
+                loadEmployeeData();
+            } catch (error) {
+                console.error('删除失败', error);
+            }
+        }
+    }
+</script>

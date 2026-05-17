@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工人管理 - 建筑施工现场管控系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">工人实名制管理</h2>
+                <button class="btn btn-primary" onclick="openAddModal()">+ 添加工人</button>
+            </div>
+
+            <div class="search-bar">
+                <div class="search-item">
+                    <label>所属项目</label>
+                    <select id="searchProjectId" class="form-select" onchange="loadTeamList()">
+                        <option value="">全部项目</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>所属班组</label>
+                    <select id="searchTeamId" class="form-select">
+                        <option value="">全部班组</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>关键词搜索</label>
+                    <input type="text" id="searchKeyword" class="form-input" placeholder="姓名/身份证/手机号">
+                </div>
+                <div class="search-item">
+                    <label>人员状态</label>
+                    <select id="searchStatus" class="form-select">
+                        <option value="">全部</option>
+                        <option value="1">在场</option>
+                        <option value="0">离场</option>
+                    </select>
+                </div>
+                <div class="search-buttons">
+                    <button class="btn btn-primary" onclick="loadWorkerList()">搜索</button>
+                    <button class="btn btn-info" onclick="resetSearch()">重置</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>身份证号</th>
+                            <th>手机号</th>
+                            <th>性别</th>
+                            <th>工种</th>
+                            <th>所属班组</th>
+                            <th>进场日期</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workerTableBody"></tbody>
+                </table>
+            </div>
+            <div id="pagination"></div>
+        </div>
+    </div>
+
+    <div id="workerModal" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">添加工人</h3>
+                <button class="modal-close" onclick="closeModal('workerModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="workerForm">
+                    <input type="hidden" name="id">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label class="form-label">所属项目 <span style="color: #f56c6c;">*</span></label>
+                            <select name="projectId" class="form-select" onchange="loadModalTeamList()">
+                                <option value="">请选择项目</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">所属班组</label>
+                            <select name="teamId" class="form-select">
+                                <option value="">请选择班组</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label class="form-label">姓名 <span style="color: #f56c6c;">*</span></label>
+                            <input type="text" name="workerName" class="form-input" placeholder="请输入姓名">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">身份证号 <span style="color: #f56c6c;">*</span></label>
+                            <input type="text" name="idCard" class="form-input" placeholder="请输入身份证号">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label class="form-label">手机号</label>
+                            <input type="text" name="phone" class="form-input" placeholder="请输入手机号">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">性别</label>
+                            <select name="gender" class="form-select">
+                                <option value="">请选择</option>
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label class="form-label">年龄</label>
+                            <input type="number" name="age" class="form-input" placeholder="请输入年龄">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">工种</label>
+                            <select name="workType" class="form-select">
+                                <option value="">请选择工种</option>
+                                <option value="木工">木工</option>
+                                <option value="钢筋工">钢筋工</option>
+                                <option value="混凝土工">混凝土工</option>
+                                <option value="架子工">架子工</option>
+                                <option value="电工">电工</option>
+                                <option value="焊工">焊工</option>
+                                <option value="水暖工">水暖工</option>
+                                <option value="油漆工">油漆工</option>
+                                <option value="瓦工">瓦工</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label class="form-label">持证类型</label>
+                            <input type="text" name="certificateType" class="form-input" placeholder="请输入持证类型">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">证件编号</label>
+                            <input type="text" name="certificateNo" class="form-input" placeholder="请输入证件编号">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label class="form-label">进场日期</label>
+                            <input type="date" name="entryDate" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">离场日期</label>
+                            <input type="date" name="exitDate" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">家庭住址</label>
+                        <input type="text" name="address" class="form-input" placeholder="请输入家庭住址">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label class="form-label">紧急联系人</label>
+                            <input type="text" name="emergencyContact" class="form-input" placeholder="请输入紧急联系人">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">紧急联系电话</label>
+                            <input type="text" name="emergencyPhone" class="form-input" placeholder="请输入紧急联系电话">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">备注</label>
+                        <textarea name="remark" class="form-textarea" placeholder="请输入备注信息"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" onclick="closeModal('workerModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveWorker()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/http.js"></script>
+    <script src="js/validator.js"></script>
+    <script src="js/layout.js"></script>
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+        let currentEditId = null;
+
+        const workerRules = {
+            workerName: [{ type: 'required', message: '请输入姓名' }],
+            idCard: [{ type: 'required', message: '请输入身份证号' }],
+            projectId: [{ type: 'required', message: '请选择所属项目' }],
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initPage('worker');
+            loadProjectList();
+            loadWorkerList();
+        });
+
+        async function loadProjectList() {
+            const result = await http.get('/api/project/active');
+            if (result.success) {
+                const options = result.data.map(p => `<option value="${p.id}">${p.projectName}</option>`).join('');
+                document.querySelector('#searchProjectId').innerHTML = '<option value="">全部项目</option>' + options;
+                document.querySelector('[name="projectId"]').innerHTML = '<option value="">请选择项目</option>' + options;
+            }
+        }
+
+        async function loadTeamList() {
+            const projectId = document.querySelector('#searchProjectId').value;
+            if (projectId) {
+                const result = await http.get('/api/labor/team/active', { projectId });
+                if (result.success) {
+                    const options = result.data.map(t => `<option value="${t.id}">${t.teamName}</option>`).join('');
+                    document.querySelector('#searchTeamId').innerHTML = '<option value="">全部班组</option>' + options;
+                }
+            } else {
+                document.querySelector('#searchTeamId').innerHTML = '<option value="">全部班组</option>';
+            }
+        }
+
+        async function loadModalTeamList() {
+            const projectId = document.querySelector('[name="projectId"]').value;
+            if (projectId) {
+                const result = await http.get('/api/labor/team/active', { projectId });
+                if (result.success) {
+                    const options = result.data.map(t => `<option value="${t.id}">${t.teamName}</option>`).join('');
+                    document.querySelector('[name="teamId"]').innerHTML = '<option value="">请选择班组</option>' + options;
+                }
+            } else {
+                document.querySelector('[name="teamId"]').innerHTML = '<option value="">请选择班组</option>';
+            }
+        }
+
+        async function loadWorkerList() {
+            const projectId = document.querySelector('#searchProjectId').value;
+            const teamId = document.querySelector('#searchTeamId').value;
+            const keyword = document.querySelector('#searchKeyword').value;
+            const status = document.querySelector('#searchStatus').value;
+
+            const params = {
+                pageNum: currentPage,
+                pageSize: pageSize,
+            };
+
+            if (projectId) params.projectId = projectId;
+            if (teamId) params.teamId = teamId;
+            if (keyword) params.keyword = keyword;
+            if (status !== '') params.status = status;
+
+            const result = await http.get('/api/labor/worker/list', params);
+
+            if (result.success) {
+                renderWorkerTable(result.data.list);
+                renderPagination('pagination', result.data.pageNum, result.data.pageSize, result.data.total, 'goToPage');
+            }
+        }
+
+        function renderWorkerTable(workers) {
+            const tbody = document.getElementById('workerTableBody');
+
+            if (!workers || workers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <div class="empty-state-icon">👷</div>
+                            <div class="empty-state-text">暂无数据</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = workers.map(worker => `
+                <tr>
+                    <td>${worker.workerName}</td>
+                    <td>${worker.idCard}</td>
+                    <td>${worker.phone || '-'}</td>
+                    <td>${worker.gender || '-'}</td>
+                    <td>${worker.workType || '-'}</td>
+                    <td>${worker.teamId ? '已分配' : '未分配'}</td>
+                    <td>${formatDate(worker.entryDate)}</td>
+                    <td>
+                        <span class="status-tag ${worker.status === 1 ? 'status-active' : 'status-inactive'}">
+                            ${worker.status === 1 ? '在场' : '离场'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="btn btn-warning btn-small" onclick="toggleStatus(${worker.id})">
+                                ${worker.status === 1 ? '离场' : '在场'}
+                            </button>
+                            <button class="btn btn-primary btn-small" onclick="openEditModal(${worker.id})">编辑</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteWorker(${worker.id})">删除</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            loadWorkerList();
+        }
+
+        function resetSearch() {
+            document.querySelector('#searchProjectId').value = '';
+            document.querySelector('#searchTeamId').value = '';
+            document.querySelector('#searchKeyword').value = '';
+            document.querySelector('#searchStatus').value = '';
+            currentPage = 1;
+            loadWorkerList();
+        }
+
+        function openAddModal() {
+            currentEditId = null;
+            document.getElementById('modalTitle').textContent = '添加工人';
+            document.getElementById('workerForm').reset();
+            Validator.clearErrors('workerForm');
+            document.querySelector('[name="teamId"]').innerHTML = '<option value="">请选择班组</option>';
+            openModal('workerModal');
+        }
+
+        async function openEditModal(id) {
+            currentEditId = id;
+            document.getElementById('modalTitle').textContent = '编辑工人';
+
+            const result = await http.get(`/api/labor/worker/${id}`);
+
+            if (result.success) {
+                const worker = result.data;
+                const form = document.getElementById('workerForm');
+                form.querySelector('[name="id"]').value = worker.id || '';
+                form.querySelector('[name="projectId"]').value = worker.projectId || '';
+                await loadModalTeamList();
+                form.querySelector('[name="teamId"]').value = worker.teamId || '';
+                form.querySelector('[name="workerName"]').value = worker.workerName || '';
+                form.querySelector('[name="idCard"]').value = worker.idCard || '';
+                form.querySelector('[name="phone"]').value = worker.phone || '';
+                form.querySelector('[name="gender"]').value = worker.gender || '';
+                form.querySelector('[name="age"]').value = worker.age || '';
+                form.querySelector('[name="workType"]').value = worker.workType || '';
+                form.querySelector('[name="certificateType"]').value = worker.certificateType || '';
+                form.querySelector('[name="certificateNo"]').value = worker.certificateNo || '';
+                form.querySelector('[name="entryDate"]').value = worker.entryDate ? worker.entryDate.split('T')[0] : '';
+                form.querySelector('[name="exitDate"]').value = worker.exitDate ? worker.exitDate.split('T')[0] : '';
+                form.querySelector('[name="address"]').value = worker.address || '';
+                form.querySelector('[name="emergencyContact"]').value = worker.emergencyContact || '';
+                form.querySelector('[name="emergencyPhone"]').value = worker.emergencyPhone || '';
+                form.querySelector('[name="remark"]').value = worker.remark || '';
+
+                Validator.clearErrors('workerForm');
+                openModal('workerModal');
+            }
+        }
+
+        async function saveWorker() {
+            const formData = Validator.getFormData('workerForm');
+            const validation = Validator.validate(workerRules, formData);
+
+            if (!validation.isValid) {
+                Validator.showErrors('workerForm', validation.errors);
+                return;
+            }
+
+            Validator.clearErrors('workerForm');
+
+            let result;
+            if (currentEditId) {
+                result = await http.put(`/api/labor/worker/${currentEditId}`, formData);
+            } else {
+                result = await http.post('/api/labor/worker', formData);
+            }
+
+            if (result.success) {
+                showToast(currentEditId ? '更新成功' : '添加成功', 'success');
+                closeModal('workerModal');
+                loadWorkerList();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+
+        async function toggleStatus(id) {
+            if (!confirm('确定要切换该工人的状态吗？')) return;
+
+            const result = await http.put(`/api/labor/worker/${id}/toggle-status`);
+
+            if (result.success) {
+                showToast('状态切换成功', 'success');
+                loadWorkerList();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+
+        async function deleteWorker(id) {
+            if (!confirm('确定要删除该工人吗？此操作不可恢复！')) return;
+
+            const result = await http.delete(`/api/labor/worker/${id}`);
+
+            if (result.success) {
+                showToast('删除成功', 'success');
+                loadWorkerList();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

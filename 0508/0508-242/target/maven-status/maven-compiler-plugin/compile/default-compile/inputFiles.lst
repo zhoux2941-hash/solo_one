@@ -1,0 +1,15 @@
+E:\trae-project\0508-242\src\main\java\com\cloudsync\ui\ConfigPanel.java
+E:\trae-project\0508-242\src\main\java\com\cloudsync\util\ConfigManager.java
+E:\trae-project\0508-242\src\main\java\com\cloudsync\entity\SyncStats.java
+E:\trae-project\0508-242\src\main\java\com\cloudsync\entity\SyncConfig.java
+E:\trae-project\0508-242\src\main\java\com\cloudsync\ui\MainFrame.java
+E:\trae-project\0508-242\src\main\java\com\cloudsync\sync\SyncEngine.java
+E:\trae-project\0508-242\src\main\java\com\cloudsync\CloudSyncApplication.java
+E:\trae-project\0508-242\src\main\java\com\cloudsync\util\FileUtils.java
+E:\trae-project\0508-242\src\main\java\com\cloudsync\entity\SyncTask.java
+E:\trae-project\0508-242\src\main\java\com\cloudsync\network\CloudApiClient.java
+E:\trae-project\0508-242\src\main\java\com\cloudsync\sync\FileComparator.java
+E:\trae-project\0508-242\src\main\java\com\cloudsync\ui\SyncProgressPanel.java
+E:\trae-project\0508-242\src\main\java\com\cloudsync\ui\SyncQueuePanel.java
+E:\trae-project\0508-242\src\main\java\com\cloudsync\entity\FileInfo.java
+E:\trae-project\0508-242\src\main\java\com\cloudsync\sync\DirectoryWatcher.java

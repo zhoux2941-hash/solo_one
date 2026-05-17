@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康档案管理 - 康养机构管理系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sidebar-logo">康养管理系统</div>
+            <ul class="sidebar-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="organization.html">机构组织管理</a></li>
+                <li><a href="staff.html">医护人员管理</a></li>
+                <li><a href="room.html">房型床位管理</a></li>
+                <li><a href="checkin-application.html">入住申请管理</a></li>
+                <li><a href="elder-list.html">入住人员管理</a></li>
+                <li><a href="health-record.html" class="active">健康档案管理</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="top-bar">
+                <span>健康档案管理</span>
+                <div class="user-info">
+                    <span id="username"></span>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>健康档案列表</h2>
+                        <button class="btn btn-primary" onclick="openModal()">新增档案</button>
+                    </div>
+                    <div class="filter-bar">
+                        <div class="filter-item">
+                            <label>选择长者</label>
+                            <select class="form-control" id="filterElderId" onchange="loadData()">
+                                <option value="">全部</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-warning" onclick="resetFilter()">重置</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>档案编号</th>
+                                <th>记录日期</th>
+                                <th>身高(cm)</th>
+                                <th>体重(kg)</th>
+                                <th>血压</th>
+                                <th>心率</th>
+                                <th>血糖</th>
+                                <th>护理等级</th>
+                                <th>记录人</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTable"></tbody>
+                    </table>
+                    <div class="pagination">
+                        <button class="btn btn-sm" id="prevBtn" onclick="prevPage()">上一页</button>
+                        <span id="pageInfo"></span>
+                        <button class="btn btn-sm" id="nextBtn" onclick="nextPage()">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3 id="modalTitle">健康档案</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <h4 style="margin: 15px 0; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px;">一、基本信息</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>档案编号</label>
+                            <input type="text" class="form-control" id="editRecordNo" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>长者 *</label>
+                            <select class="form-control" id="editElderId" required>
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>记录日期</label>
+                            <input type="date" class="form-control" id="editRecordDate">
+                        </div>
+                        <div class="form-group">
+                            <label>血型</label>
+                            <select class="form-control" id="editBloodType">
+                                <option value="">未知</option>
+                                <option value="A型">A型</option>
+                                <option value="B型">B型</option>
+                                <option value="AB型">AB型</option>
+                                <option value="O型">O型</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 20px 0 15px 0; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px;">二、身体指标</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>身高(cm)</label>
+                            <input type="number" class="form-control" id="editHeight" step="0.01" min="0" max="300" placeholder="0-300">
+                        </div>
+                        <div class="form-group">
+                            <label>体重(kg)</label>
+                            <input type="number" class="form-control" id="editWeight" step="0.01" min="0" max="500" placeholder="0-500">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>收缩压(mmHg)</label>
+                            <input type="number" class="form-control" id="editBloodPressureSystolic" min="0" max="300" placeholder="0-300">
+                        </div>
+                        <div class="form-group">
+                            <label>舒张压(mmHg)</label>
+                            <input type="number" class="form-control" id="editBloodPressureDiastolic" min="0" max="200" placeholder="0-200">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>心率(次/分)</label>
+                            <input type="number" class="form-control" id="editHeartRate" min="0" max="300" placeholder="0-300">
+                        </div>
+                        <div class="form-group">
+                            <label>血糖(mmol/L)</label>
+                            <input type="number" class="form-control" id="editBloodSugar" step="0.1" min="0" max="50" placeholder="0-50">
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 20px 0 15px 0; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px;">三、健康状况</h4>
+                    <div class="form-group">
+                        <label>过敏史</label>
+                        <textarea class="form-control" id="editAllergies" rows="2" placeholder="请描述过敏情况"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>慢性病情况</label>
+                        <textarea class="form-control" id="editChronicDiseases" rows="2" placeholder="如：高血压、糖尿病等"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>用药记录</label>
+                        <textarea class="form-control" id="editMedications" rows="2" placeholder="请记录正在使用的药物"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>既往病史</label>
+                        <textarea class="form-control" id="editMedicalHistory" rows="2" placeholder="请描述过往病史"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>家族病史</label>
+                        <textarea class="form-control" id="editFamilyHistory" rows="2" placeholder="请描述家族病史"></textarea>
+                    </div>
+
+                    <h4 style="margin: 20px 0 15px 0; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px;">四、护理评估</h4>
+                    <div class="form-group">
+                        <label>健康评估</label>
+                        <textarea class="form-control" id="editHealthAssessment" rows="2"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>护理等级</label>
+                            <select class="form-control" id="editNursingLevel">
+                                <option value="">请选择</option>
+                                <option value="自理">自理</option>
+                                <option value="半护">半护</option>
+                                <option value="全护">全护</option>
+                                <option value="特护">特护</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>ADL评分</label>
+                            <input type="number" class="form-control" id="editAdlScore" min="0" max="100" placeholder="0-100分">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>护理需求</label>
+                        <textarea class="form-control" id="editNursingNeeds" rows="2"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>饮食要求</label>
+                            <input type="text" class="form-control" id="editDietaryRequirements">
+                        </div>
+                        <div class="form-group">
+                            <label>睡眠质量</label>
+                            <select class="form-control" id="editSleepQuality">
+                                <option value="">请选择</option>
+                                <option value="良好">良好</option>
+                                <option value="一般">一般</option>
+                                <option value="较差">较差</option>
+                                <option value="失眠">失眠</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>精神状态</label>
+                            <select class="form-control" id="editMentalStatus">
+                                <option value="">请选择</option>
+                                <option value="清醒">清醒</option>
+                                <option value="偶有糊涂">偶有糊涂</option>
+                                <option value="认知障碍">认知障碍</option>
+                                <option value="痴呆">痴呆</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>认知功能</label>
+                            <select class="form-control" id="editCognitiveFunction">
+                                <option value="">请选择</option>
+                                <option value="正常">正常</option>
+                                <option value="轻度下降">轻度下降</option>
+                                <option value="中度下降">中度下降</option>
+                                <option value="重度下降">重度下降</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>运动习惯</label>
+                        <textarea class="form-control" id="editExerciseHabits" rows="2"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea class="form-control" id="editRemark" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveData()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('username').textContent = user.realName || user.username;
+
+        let currentPage = 0;
+        const pageSize = 10;
+        let totalPages = 0;
+
+        function getQueryParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        function logout() {
+            http.post('/auth/logout').then(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            });
+        }
+
+        function generateRecordNo() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+            return `HR${year}${month}${day}${random}`;
+        }
+
+        function loadElders() {
+            http.get('/elder/list').then(result => {
+                const filterSelect = document.getElementById('filterElderId');
+                const editSelect = document.getElementById('editElderId');
+                filterSelect.innerHTML = '<option value="">全部</option>';
+                editSelect.innerHTML = '<option value="">请选择</option>';
+                result.data.forEach(elder => {
+                    filterSelect.innerHTML += `<option value="${elder.id}">${elder.name}</option>`;
+                    editSelect.innerHTML += `<option value="${elder.id}">${elder.name}</option>`;
+                });
+
+                const elderIdFromUrl = getQueryParam('elderId');
+                if (elderIdFromUrl) {
+                    filterSelect.value = elderIdFromUrl;
+                    loadData();
+                }
+            });
+        }
+
+        function loadData() {
+            const elderId = document.getElementById('filterElderId').value;
+
+            const params = {
+                page: currentPage,
+                size: pageSize
+            };
+            if (elderId) params.elderId = parseInt(elderId);
+
+            http.get('/health-record/page', params).then(result => {
+                const data = result.data;
+                totalPages = data.totalPages;
+                document.getElementById('pageInfo').textContent = `第 ${currentPage + 1} / ${totalPages} 页，共 ${data.totalElements} 条`;
+
+                const tbody = document.getElementById('dataTable');
+                tbody.innerHTML = '';
+                data.content.forEach(item => {
+                    const bloodPressure = item.bloodPressureSystolic && item.bloodPressureDiastolic 
+                        ? `${item.bloodPressureSystolic}/${item.bloodPressureDiastolic}` 
+                        : '-';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${item.recordNo}</td>
+                            <td>${item.recordDate ? item.recordDate.substring(0, 10) : '-'}</td>
+                            <td>${item.height || '-'}</td>
+                            <td>${item.weight || '-'}</td>
+                            <td>${bloodPressure}</td>
+                            <td>${item.heartRate || '-'}</td>
+                            <td>${item.bloodSugar || '-'}</td>
+                            <td>${item.nursingLevel || '-'}</td>
+                            <td>${item.recordedByName || '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editData(${item.id})">编辑</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('prevBtn').disabled = currentPage === 0;
+                document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
+            });
+        }
+
+        function resetFilter() {
+            document.getElementById('filterElderId').value = '';
+            currentPage = 0;
+            loadData();
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadData();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadData();
+            }
+        }
+
+        function openModal(id = null) {
+            document.getElementById('editModal').classList.add('active');
+            document.getElementById('editId').value = id || '';
+            document.getElementById('modalTitle').textContent = id ? '编辑档案' : '新增档案';
+
+            if (id) {
+                http.get('/health-record/' + id).then(result => {
+                    const data = result.data;
+                    document.getElementById('editRecordNo').value = data.recordNo || '';
+                    document.getElementById('editElderId').value = data.elderId || '';
+                    document.getElementById('editRecordDate').value = data.recordDate ? data.recordDate.substring(0, 10) : '';
+                    document.getElementById('editBloodType').value = data.bloodType || '';
+                    document.getElementById('editHeight').value = data.height || '';
+                    document.getElementById('editWeight').value = data.weight || '';
+                    document.getElementById('editBloodPressureSystolic').value = data.bloodPressureSystolic || '';
+                    document.getElementById('editBloodPressureDiastolic').value = data.bloodPressureDiastolic || '';
+                    document.getElementById('editHeartRate').value = data.heartRate || '';
+                    document.getElementById('editBloodSugar').value = data.bloodSugar || '';
+                    document.getElementById('editAllergies').value = data.allergies || '';
+                    document.getElementById('editChronicDiseases').value = data.chronicDiseases || '';
+                    document.getElementById('editMedications').value = data.medications || '';
+                    document.getElementById('editMedicalHistory').value = data.medicalHistory || '';
+                    document.getElementById('editFamilyHistory').value = data.familyHistory || '';
+                    document.getElementById('editHealthAssessment').value = data.healthAssessment || '';
+                    document.getElementById('editNursingLevel').value = data.nursingLevel || '';
+                    document.getElementById('editAdlScore').value = data.adlScore || '';
+                    document.getElementById('editNursingNeeds').value = data.nursingNeeds || '';
+                    document.getElementById('editDietaryRequirements').value = data.dietaryRequirements || '';
+                    document.getElementById('editSleepQuality').value = data.sleepQuality || '';
+                    document.getElementById('editMentalStatus').value = data.mentalStatus || '';
+                    document.getElementById('editCognitiveFunction').value = data.cognitiveFunction || '';
+                    document.getElementById('editExerciseHabits').value = data.exerciseHabits || '';
+                    document.getElementById('editRemark').value = data.remark || '';
+                });
+            } else {
+                document.getElementById('editForm').reset();
+                document.getElementById('editRecordNo').value = generateRecordNo();
+                document.getElementById('editRecordDate').value = new Date().toISOString().split('T')[0];
+
+                const elderIdFromUrl = getQueryParam('elderId');
+                if (elderIdFromUrl) {
+                    document.getElementById('editElderId').value = elderIdFromUrl;
+                }
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function editData(id) {
+            openModal(id);
+        }
+
+        function safeParseInt(value, min = null, max = null) {
+            if (!value || value.trim() === '') return null;
+            const num = parseInt(value.trim(), 10);
+            if (isNaN(num)) return null;
+            if (min !== null && num < min) return min;
+            if (max !== null && num > max) return max;
+            return num;
+        }
+
+        function safeParseFloat(value, min = null, max = null) {
+            if (!value || value.trim() === '') return null;
+            const num = parseFloat(value.trim());
+            if (isNaN(num)) return null;
+            if (min !== null && num < min) return min;
+            if (max !== null && num > max) return max;
+            return num;
+        }
+
+        function saveData() {
+            const id = document.getElementById('editId').value;
+            const elderId = document.getElementById('editElderId').value;
+
+            if (!elderId) {
+                alert('请选择长者');
+                return;
+            }
+
+            const systolic = safeParseInt(document.getElementById('editBloodPressureSystolic').value, 0, 300);
+            const diastolic = safeParseInt(document.getElementById('editBloodPressureDiastolic').value, 0, 200);
+
+            if (systolic !== null && diastolic !== null && systolic <= diastolic) {
+                alert('收缩压必须大于舒张压');
+                return;
+            }
+
+            const data = {
+                recordNo: document.getElementById('editRecordNo').value,
+                elderId: parseInt(elderId),
+                recordDate: document.getElementById('editRecordDate').value || null,
+                bloodType: document.getElementById('editBloodType').value,
+                height: safeParseFloat(document.getElementById('editHeight').value, 0, 300),
+                weight: safeParseFloat(document.getElementById('editWeight').value, 0, 500),
+                bloodPressureSystolic: systolic,
+                bloodPressureDiastolic: diastolic,
+                heartRate: safeParseInt(document.getElementById('editHeartRate').value, 0, 300),
+                bloodSugar: safeParseFloat(document.getElementById('editBloodSugar').value, 0, 50),
+                allergies: document.getElementById('editAllergies').value,
+                chronicDiseases: document.getElementById('editChronicDiseases').value,
+                medications: document.getElementById('editMedications').value,
+                medicalHistory: document.getElementById('editMedicalHistory').value,
+                familyHistory: document.getElementById('editFamilyHistory').value,
+                healthAssessment: document.getElementById('editHealthAssessment').value,
+                nursingLevel: document.getElementById('editNursingLevel').value,
+                adlScore: safeParseInt(document.getElementById('editAdlScore').value, 0, 100),
+                nursingNeeds: document.getElementById('editNursingNeeds').value,
+                dietaryRequirements: document.getElementById('editDietaryRequirements').value,
+                sleepQuality: document.getElementById('editSleepQuality').value,
+                mentalStatus: document.getElementById('editMentalStatus').value,
+                cognitiveFunction: document.getElementById('editCognitiveFunction').value,
+                exerciseHabits: document.getElementById('editExerciseHabits').value,
+                recordedById: user.id,
+                recordedByName: user.realName || user.username,
+                remark: document.getElementById('editRemark').value
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            http.post('/health-record', data).then(() => {
+                alert('保存成功');
+                closeModal();
+                loadData();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function deleteData(id) {
+            if (confirm('确定要删除吗？')) {
+                http.delete('/health-record/' + id).then(() => {
+                    alert('删除成功');
+                    loadData();
+                });
+            }
+        }
+
+        loadElders();
+        if (!getQueryParam('elderId')) {
+            loadData();
+        }
+    </script>
+</body>
+</html>

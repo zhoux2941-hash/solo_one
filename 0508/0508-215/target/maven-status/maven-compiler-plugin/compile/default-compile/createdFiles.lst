@@ -1,0 +1,12 @@
+com\pumpstation\config\DataInitializer.class
+com\pumpstation\entity\OperationRecord.class
+com\pumpstation\PumpMonitoringApplication.class
+com\pumpstation\controller\PumpStationController.class
+com\pumpstation\repository\WaterLevelRecordRepository.class
+com\pumpstation\repository\PumpStationRepository.class
+com\pumpstation\service\ReportService.class
+com\pumpstation\controller\ReportController.class
+com\pumpstation\service\PumpStationService.class
+com\pumpstation\repository\OperationRecordRepository.class
+com\pumpstation\entity\PumpStation.class
+com\pumpstation\entity\WaterLevelRecord.class

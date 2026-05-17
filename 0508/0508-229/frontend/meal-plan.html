@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>膳食计划管理 - 康养机构管理系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sidebar-logo">康养管理系统</div>
+            <ul class="sidebar-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="organization.html">机构组织管理</a></li>
+                <li><a href="staff.html">医护人员管理</a></li>
+                <li><a href="room.html">房型床位管理</a></li>
+                <li><a href="checkin-application.html">入住申请管理</a></li>
+                <li><a href="elder-list.html">入住人员管理</a></li>
+                <li><a href="health-record.html">健康档案管理</a></li>
+                <li><a href="care-schedule.html">护理排班管理</a></li>
+                <li><a href="care-record.html">护理记录管理</a></li>
+                <li><a href="meal-plan.html" class="active">膳食计划管理</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="top-bar">
+                <span>膳食计划管理</span>
+                <div class="user-info">
+                    <span id="username"></span>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>用餐计划列表</h2>
+                        <div>
+                            <button class="btn btn-primary" onclick="openModal()">新增计划</button>
+                            <button class="btn btn-success" onclick="openAutoGenerateModal()">自动生成</button>
+                            <button class="btn btn-info" onclick="openBatchGenerateModal()">批量生成</button>
+                            <button class="btn btn-warning" onclick="openRecipeModal()">食谱管理</button>
+                        </div>
+                    </div>
+                    <div class="filter-bar">
+                        <div class="filter-item">
+                            <label>长者</label>
+                            <select class="form-control" id="filterElderId">
+                                <option value="">全部</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>开始日期</label>
+                            <input type="date" class="form-control" id="filterStartDate">
+                        </div>
+                        <div class="filter-item">
+                            <label>结束日期</label>
+                            <input type="date" class="form-control" id="filterEndDate">
+                        </div>
+                        <div class="filter-item">
+                            <label>状态</label>
+                            <select class="form-control" id="filterStatus">
+                                <option value="">全部</option>
+                                <option value="待确认">待确认</option>
+                                <option value="已确认">已确认</option>
+                                <option value="已执行">已执行</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadData()">查询</button>
+                        <button class="btn btn-warning" onclick="resetFilter()">重置</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>计划编号</th>
+                                <th>长者</th>
+                                <th>计划日期</th>
+                                <th>早餐</th>
+                                <th>午餐</th>
+                                <th>晚餐</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTable"></tbody>
+                    </table>
+                    <div class="pagination">
+                        <button class="btn btn-sm" id="prevBtn" onclick="prevPage()">上一页</button>
+                        <span id="pageInfo"></span>
+                        <button class="btn btn-sm" id="nextBtn" onclick="nextPage()">下一页</button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h2>用餐记录统计</h2>
+                        <button class="btn btn-info" onclick="loadMealRecords()">刷新统计</button>
+                    </div>
+                    <div class="filter-bar">
+                        <div class="filter-item">
+                            <label>统计开始日期</label>
+                            <input type="date" class="form-control" id="statStartDate">
+                        </div>
+                        <div class="filter-item">
+                            <label>统计结束日期</label>
+                            <input type="date" class="form-control" id="statEndDate">
+                        </div>
+                        <button class="btn btn-primary" onclick="loadMealRecords()">统计</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>记录编号</th>
+                                <th>长者</th>
+                                <th>用餐日期</th>
+                                <th>餐别</th>
+                                <th>食谱</th>
+                                <th>出勤状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mealRecordTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 id="modalTitle">用餐计划</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>长者 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="editElderId" onchange="loadSuitableRecipes()">
+                                <option value="">请选择长者</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>计划日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="editPlanDate">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>早餐</label>
+                        <select class="form-control" id="editBreakfastRecipeId">
+                            <option value="">请选择早餐</option>
+                        </select>
+                        <small class="text-muted" id="breakfastHint"></small>
+                    </div>
+                    <div class="form-group">
+                        <label>午餐</label>
+                        <select class="form-control" id="editLunchRecipeId">
+                            <option value="">请选择午餐</option>
+                        </select>
+                        <small class="text-muted" id="lunchHint"></small>
+                    </div>
+                    <div class="form-group">
+                        <label>晚餐</label>
+                        <select class="form-control" id="editDinnerRecipeId">
+                            <option value="">请选择晚餐</option>
+                        </select>
+                        <small class="text-muted" id="dinnerHint"></small>
+                    </div>
+                    <div class="form-group">
+                        <label>特殊要求</label>
+                        <textarea class="form-control" id="editSpecialRequirements" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select class="form-control" id="editStatus">
+                            <option value="待确认">待确认</option>
+                            <option value="已确认">已确认</option>
+                            <option value="已执行">已执行</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeModal()">关闭</button>
+                <button class="btn btn-primary" onclick="validateAndSave()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="autoGenerateModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>自动生成用餐计划</h3>
+                <button class="modal-close" onclick="closeAutoGenerateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>长者 <span class="text-danger">*</span></label>
+                    <select class="form-control" id="autoElderId">
+                        <option value="">请选择长者</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>开始日期 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="autoStartDate">
+                    </div>
+                    <div class="form-group">
+                        <label>结束日期 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="autoEndDate">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeAutoGenerateModal()">关闭</button>
+                <button class="btn btn-primary" onclick="autoGenerate()">生成计划</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="batchGenerateModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>批量生成用餐计划</h3>
+                <button class="modal-close" onclick="closeBatchGenerateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>开始日期 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="batchStartDate">
+                    </div>
+                    <div class="form-group">
+                        <label>结束日期 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="batchEndDate">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>护理等级</label>
+                    <select class="form-control" id="batchCareLevel">
+                        <option value="">全部</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeBatchGenerateModal()">关闭</button>
+                <button class="btn btn-primary" onclick="batchGenerate()">批量生成</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="recipeModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>食谱管理</h3>
+                <button class="modal-close" onclick="closeRecipeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 15px;">
+                    <button class="btn btn-sm btn-primary" onclick="openAddRecipeModal()">新增食谱</button>
+                </div>
+                <table class="table" style="font-size: 14px;">
+                    <thead>
+                        <tr>
+                            <th>食谱编号</th>
+                            <th>食谱名称</th>
+                            <th>餐别</th>
+                            <th>热量(千卡)</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recipeTable"></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeRecipeModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="addRecipeModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 id="recipeModalTitle">新增食谱</h3>
+                <button class="modal-close" onclick="closeAddRecipeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="recipeForm">
+                    <input type="hidden" id="recipeId">
+                    <div class="form-group">
+                        <label>食谱编号 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="recipeCode" placeholder="如：R001">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>食谱名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="recipeName" placeholder="请输入食谱名称">
+                        </div>
+                        <div class="form-group">
+                            <label>餐别 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="recipeMealType">
+                                <option value="早餐">早餐</option>
+                                <option value="午餐">午餐</option>
+                                <option value="晚餐">晚餐</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>食材</label>
+                        <textarea class="form-control" id="recipeIngredients" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>烹饪方法</label>
+                        <textarea class="form-control" id="recipeCookingMethod" rows="2"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>热量(千卡)</label>
+                            <input type="number" class="form-control" id="recipeCalories" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>营养信息</label>
+                        <textarea class="form-control" id="recipeNutritionalInfo" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>适合人群</label>
+                        <input type="text" class="form-control" id="recipeSuitableFor" placeholder="如：糖尿病、高血压">
+                    </div>
+                    <div class="form-group">
+                        <label>不适合人群</label>
+                        <input type="text" class="form-control" id="recipeNotSuitableFor" placeholder="如：糖尿病、高血压">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeAddRecipeModal()">关闭</button>
+                <button class="btn btn-primary" onclick="saveRecipe()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('username').textContent = user.realName || user.username;
+
+        let currentPage = 0;
+        const pageSize = 10;
+        let totalPages = 0;
+
+        function logout() {
+            http.post('/auth/logout').then(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            });
+        }
+
+        function loadData() {
+            const elderId = document.getElementById('filterElderId').value;
+            const startDate = document.getElementById('filterStartDate').value;
+            const endDate = document.getElementById('filterEndDate').value;
+            const status = document.getElementById('filterStatus').value;
+
+            const params = {
+                page: currentPage,
+                size: pageSize
+            };
+            if (elderId) params.elderId = elderId;
+            if (startDate) params.startDate = startDate;
+            if (endDate) params.endDate = endDate;
+            if (status) params.status = status;
+
+            http.get('/meal-plan/page', params).then(result => {
+                const data = result.data;
+                totalPages = data.totalPages;
+                document.getElementById('pageInfo').textContent = `第 ${currentPage + 1} / ${totalPages} 页，共 ${data.totalElements} 条`;
+
+                const tbody = document.getElementById('dataTable');
+                tbody.innerHTML = '';
+                data.content.forEach(item => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${item.planNo}</td>
+                            <td>${item.elderId || '-'}</td>
+                            <td>${item.planDate || '-'}</td>
+                            <td>${item.breakfastRecipeId || '-'}</td>
+                            <td>${item.lunchRecipeId || '-'}</td>
+                            <td>${item.dinnerRecipeId || '-'}</td>
+                            <td><span class="status-tag ${getStatusClass(item.status)}">${item.status || '-'}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="openModal(${item.id})">编辑</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('prevBtn').disabled = currentPage === 0;
+                document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
+            });
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case '待确认': return 'status-info';
+                case '已确认': return 'status-success';
+                case '已执行': return 'status-warning';
+                default: return '';
+            }
+        }
+
+        function resetFilter() {
+            document.getElementById('filterElderId').value = '';
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            document.getElementById('filterStatus').value = '';
+            currentPage = 0;
+            loadData();
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadData();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadData();
+            }
+        }
+
+        function openModal(id = null) {
+            document.getElementById('editModal').classList.add('active');
+            document.getElementById('editId').value = id || '';
+            document.getElementById('modalTitle').textContent = id ? '编辑用餐计划' : '新增用餐计划';
+
+            loadElders();
+
+            if (id) {
+                http.get('/meal-plan/' + id).then(result => {
+                    const data = result.data;
+                    document.getElementById('editElderId').value = data.elderId || '';
+                    document.getElementById('editPlanDate').value = data.planDate || '';
+                    document.getElementById('editBreakfastRecipeId').value = data.breakfastRecipeId || '';
+                    document.getElementById('editLunchRecipeId').value = data.lunchRecipeId || '';
+                    document.getElementById('editDinnerRecipeId').value = data.dinnerRecipeId || '';
+                    document.getElementById('editSpecialRequirements').value = data.specialRequirements || '';
+                    document.getElementById('editStatus').value = data.status || '待确认';
+                    loadSuitableRecipes();
+                });
+            } else {
+                document.getElementById('editForm').reset();
+                document.getElementById('editStatus').value = '待确认';
+                document.getElementById('editPlanDate').value = new Date().toISOString().split('T')[0];
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function loadSuitableRecipes() {
+            const elderId = document.getElementById('editElderId').value;
+            if (!elderId) return;
+
+            ['breakfast', 'lunch', 'dinner'].forEach(mealType => {
+                http.get('/meal-recipe/suitable/' + elderId, { mealType: mealType === 'breakfast' ? '早餐' : mealType === 'lunch' ? '午餐' : '晚餐' }).then(result => {
+                    const selectId = 'edit' + mealType.charAt(0).toUpperCase() + mealType.slice(1) + 'RecipeId';
+                    const select = document.getElementById(selectId);
+                    const currentValue = select.value;
+                    select.innerHTML = '<option value="">请选择' + (mealType === 'breakfast' ? '早餐' : mealType === 'lunch' ? '午餐' : '晚餐') + '</option>';
+                    result.data.forEach(recipe => {
+                        select.innerHTML += `<option value="${recipe.id}">${recipe.recipeName}</option>`;
+                    });
+                    select.value = currentValue;
+                });
+            });
+        }
+
+        function validateAndSave() {
+            const elderId = document.getElementById('editElderId').value;
+            const breakfastId = document.getElementById('editBreakfastRecipeId').value;
+            const lunchId = document.getElementById('editLunchRecipeId').value;
+            const dinnerId = document.getElementById('editDinnerRecipeId').value;
+
+            if (!elderId) {
+                alert('请选择长者');
+                return;
+            }
+
+            http.post('/meal-plan/validate', {
+                elderId: parseInt(elderId),
+                breakfastRecipeId: breakfastId ? parseInt(breakfastId) : null,
+                lunchRecipeId: lunchId ? parseInt(lunchId) : null,
+                dinnerRecipeId: dinnerId ? parseInt(dinnerId) : null
+            }).then(result => {
+                if (!result.data) {
+                    alert('所选食谱可能不适合该长者，请确认饮食禁忌和慢性病情况！');
+                }
+                saveData();
+            }).catch(error => {
+                alert('校验失败：' + error.message);
+            });
+        }
+
+        function saveData() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                elderId: parseInt(document.getElementById('editElderId').value),
+                planDate: document.getElementById('editPlanDate').value,
+                breakfastRecipeId: document.getElementById('editBreakfastRecipeId').value ? parseInt(document.getElementById('editBreakfastRecipeId').value) : null,
+                lunchRecipeId: document.getElementById('editLunchRecipeId').value ? parseInt(document.getElementById('editLunchRecipeId').value) : null,
+                dinnerRecipeId: document.getElementById('editDinnerRecipeId').value ? parseInt(document.getElementById('editDinnerRecipeId').value) : null,
+                specialRequirements: document.getElementById('editSpecialRequirements').value,
+                status: document.getElementById('editStatus').value
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            http.post('/meal-plan', data).then(() => {
+                alert('保存成功');
+                closeModal();
+                loadData();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function deleteData(id) {
+            if (confirm('确定要删除该用餐计划吗？')) {
+                http.delete('/meal-plan/' + id).then(() => {
+                    alert('删除成功');
+                    loadData();
+                });
+            }
+        }
+
+        function openAutoGenerateModal() {
+            document.getElementById('autoGenerateModal').classList.add('active');
+            loadElders();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('autoStartDate').value = today;
+            document.getElementById('autoEndDate').value = new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        }
+
+        function closeAutoGenerateModal() {
+            document.getElementById('autoGenerateModal').classList.remove('active');
+        }
+
+        function autoGenerate() {
+            const elderId = document.getElementById('autoElderId').value;
+            const startDate = document.getElementById('autoStartDate').value;
+            const endDate = document.getElementById('autoEndDate').value;
+
+            if (!elderId || !startDate || !endDate) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            http.post('/meal-plan/auto-generate', { elderId: parseInt(elderId), startDate, endDate }).then(() => {
+                alert('生成成功');
+                closeAutoGenerateModal();
+                loadData();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function openBatchGenerateModal() {
+            document.getElementById('batchGenerateModal').classList.add('active');
+            loadCareLevels();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('batchStartDate').value = today;
+            document.getElementById('batchEndDate').value = new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        }
+
+        function closeBatchGenerateModal() {
+            document.getElementById('batchGenerateModal').classList.remove('active');
+        }
+
+        function batchGenerate() {
+            const startDate = document.getElementById('batchStartDate').value;
+            const endDate = document.getElementById('batchEndDate').value;
+            const careLevel = document.getElementById('batchCareLevel').value;
+
+            if (!startDate || !endDate) {
+                alert('请填写日期范围');
+                return;
+            }
+
+            http.post('/meal-plan/batch-generate', { startDate, endDate, careLevel }).then(() => {
+                alert('批量生成成功');
+                closeBatchGenerateModal();
+                loadData();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function openRecipeModal() {
+            document.getElementById('recipeModal').classList.add('active');
+            loadRecipes();
+        }
+
+        function closeRecipeModal() {
+            document.getElementById('recipeModal').classList.remove('active');
+        }
+
+        function loadRecipes() {
+            http.get('/meal-recipe/list').then(result => {
+                const tbody = document.getElementById('recipeTable');
+                tbody.innerHTML = '';
+                result.data.forEach(recipe => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${recipe.recipeCode}</td>
+                            <td>${recipe.recipeName}</td>
+                            <td>${recipe.mealType || '-'}</td>
+                            <td>${recipe.calories || '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="deleteRecipe(${recipe.id})">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        function openAddRecipeModal() {
+            document.getElementById('addRecipeModal').classList.add('active');
+            document.getElementById('recipeModalTitle').textContent = '新增食谱';
+            document.getElementById('recipeForm').reset();
+            document.getElementById('recipeId').value = '';
+        }
+
+        function closeAddRecipeModal() {
+            document.getElementById('addRecipeModal').classList.remove('active');
+        }
+
+        function saveRecipe() {
+            const id = document.getElementById('recipeId').value;
+            const data = {
+                recipeCode: document.getElementById('recipeCode').value,
+                recipeName: document.getElementById('recipeName').value,
+                mealType: document.getElementById('recipeMealType').value,
+                ingredients: document.getElementById('recipeIngredients').value,
+                cookingMethod: document.getElementById('recipeCookingMethod').value,
+                calories: document.getElementById('recipeCalories').value ? parseFloat(document.getElementById('recipeCalories').value) : null,
+                nutritionalInfo: document.getElementById('recipeNutritionalInfo').value,
+                suitableFor: document.getElementById('recipeSuitableFor').value,
+                notSuitableFor: document.getElementById('recipeNotSuitableFor').value,
+                status: 1
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            http.post('/meal-recipe', data).then(() => {
+                alert('保存成功');
+                closeAddRecipeModal();
+                loadRecipes();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function deleteRecipe(id) {
+            if (confirm('确定要删除该食谱吗？')) {
+                http.delete('/meal-recipe/' + id).then(() => {
+                    alert('删除成功');
+                    loadRecipes();
+                });
+            }
+        }
+
+        function loadMealRecords() {
+            const startDate = document.getElementById('statStartDate').value;
+            const endDate = document.getElementById('statEndDate').value;
+
+            const params = { page: 0, size: 50 };
+            if (startDate) params.startDate = startDate;
+            if (endDate) params.endDate = endDate;
+
+            http.get('/meal-record/page', params).then(result => {
+                const tbody = document.getElementById('mealRecordTable');
+                tbody.innerHTML = '';
+                result.data.content.forEach(record => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${record.recordNo}</td>
+                            <td>${record.elderId || '-'}</td>
+                            <td>${record.mealDate || '-'}</td>
+                            <td>${record.mealType || '-'}</td>
+                            <td>${record.recipeId || '-'}</td>
+                            <td><span class="status-tag ${record.attendanceStatus === '已用餐' ? 'status-success' : 'status-warning'}">${record.attendanceStatus || '-'}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="deleteMealRecord(${record.id})">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        function deleteMealRecord(id) {
+            if (confirm('确定要删除该用餐记录吗？')) {
+                http.delete('/meal-record/' + id).then(() => {
+                    alert('删除成功');
+                    loadMealRecords();
+                });
+            }
+        }
+
+        function loadElders() {
+            http.get('/elder/list').then(result => {
+                const selects = ['filterElderId', 'editElderId', 'autoElderId'];
+                selects.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    if (select) {
+                        const currentValue = select.value;
+                        select.innerHTML = '<option value="">请选择长者</option>';
+                        result.data.forEach(elder => {
+                            select.innerHTML += `<option value="${elder.id}">${elder.name}</option>`;
+                        });
+                        select.value = currentValue;
+                    }
+                });
+            });
+        }
+
+        function loadCareLevels() {
+            http.get('/care-level/list').then(result => {
+                const select = document.getElementById('batchCareLevel');
+                select.innerHTML = '<option value="">全部</option>';
+                result.data.forEach(level => {
+                    select.innerHTML += `<option value="${level.levelName}">${level.levelName}</option>`;
+                });
+            });
+        }
+
+        loadElders();
+        loadData();
+        loadMealRecords();
+    </script>
+</body>
+</html>

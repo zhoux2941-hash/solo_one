@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>入住人员管理 - 康养机构管理系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sidebar-logo">康养管理系统</div>
+            <ul class="sidebar-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="organization.html">机构组织管理</a></li>
+                <li><a href="staff.html">医护人员管理</a></li>
+                <li><a href="room.html">房型床位管理</a></li>
+                <li><a href="checkin-application.html">入住申请管理</a></li>
+                <li><a href="elder-list.html" class="active">入住人员管理</a></li>
+                <li><a href="health-record.html">健康档案管理</a></li>
+                <li><a href="care-schedule.html">护理排班管理</a></li>
+                <li><a href="care-record.html">护理记录管理</a></li>
+                <li><a href="meal-plan.html">膳食计划管理</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="top-bar">
+                <span>入住人员管理</span>
+                <div class="user-info">
+                    <span id="username"></span>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>入住人员列表</h2>
+                        <button class="btn btn-primary" onclick="openModal()">新增人员</button>
+                    </div>
+                    <div class="filter-bar">
+                        <div class="filter-item">
+                            <label>姓名</label>
+                            <input type="text" class="form-control" id="filterName" placeholder="请输入姓名">
+                        </div>
+                        <div class="filter-item">
+                            <label>居住状态</label>
+                            <select class="form-control" id="filterLivingStatus">
+                                <option value="">全部</option>
+                                <option value="在住">在住</option>
+                                <option value="外出">外出</option>
+                                <option value="出院">出院</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadData()">查询</button>
+                        <button class="btn btn-warning" onclick="resetFilter()">重置</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>编号</th>
+                                <th>姓名</th>
+                                <th>性别</th>
+                                <th>年龄</th>
+                                <th>联系电话</th>
+                                <th>床位</th>
+                                <th>护理员</th>
+                                <th>入住日期</th>
+                                <th>居住状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTable"></tbody>
+                    </table>
+                    <div class="pagination">
+                        <button class="btn btn-sm" id="prevBtn" onclick="prevPage()">上一页</button>
+                        <span id="pageInfo"></span>
+                        <button class="btn btn-sm" id="nextBtn" onclick="nextPage()">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3 id="modalTitle">长者信息</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <h4 style="margin: 15px 0; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px;">一、基本信息</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>编号</label>
+                            <input type="text" class="form-control" id="editElderNo">
+                        </div>
+                        <div class="form-group">
+                            <label>姓名</label>
+                            <input type="text" class="form-control" id="editName">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>性别</label>
+                            <select class="form-control" id="editGender">
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>出生日期</label>
+                            <input type="date" class="form-control" id="editBirthDate">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>身份证号</label>
+                            <input type="text" class="form-control" id="editIdCard">
+                        </div>
+                        <div class="form-group">
+                            <label>联系电话</label>
+                            <input type="text" class="form-control" id="editPhone">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>所属机构</label>
+                            <select class="form-control" id="editOrgId">
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>入住日期</label>
+                            <input type="date" class="form-control" id="editCheckinDate">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>家庭住址</label>
+                        <input type="text" class="form-control" id="editAddress">
+                    </div>
+
+                    <h4 style="margin: 20px 0 15px 0; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px;">二、健康信息</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>身高(cm)</label>
+                            <input type="number" class="form-control" id="editHeight" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>体重(kg)</label>
+                            <input type="number" class="form-control" id="editWeight" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>健康状况</label>
+                        <select class="form-control" id="editHealthStatus">
+                            <option value="良好">良好</option>
+                            <option value="一般">一般</option>
+                            <option value="较差">较差</option>
+                            <option value="失能">失能</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>慢性病情况</label>
+                        <textarea class="form-control" id="editChronicDiseases" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>用药记录</label>
+                        <textarea class="form-control" id="editMedications" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>过敏史</label>
+                        <textarea class="form-control" id="editAllergies" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>既往病史</label>
+                        <textarea class="form-control" id="editMedicalHistory" rows="2"></textarea>
+                    </div>
+
+                    <h4 style="margin: 20px 0 15px 0; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px;">三、紧急联系人</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>联系人姓名</label>
+                            <input type="text" class="form-control" id="editEmergencyContactName">
+                        </div>
+                        <div class="form-group">
+                            <label>联系电话</label>
+                            <input type="text" class="form-control" id="editEmergencyContactPhone">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>与老人关系</label>
+                        <input type="text" class="form-control" id="editEmergencyContactRelation">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>居住状态</label>
+                            <select class="form-control" id="editLivingStatus">
+                                <option value="在住">在住</option>
+                                <option value="外出">外出</option>
+                                <option value="出院">出院</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>状态</label>
+                            <select class="form-control" id="editStatus">
+                                <option value="1">启用</option>
+                                <option value="0">禁用</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeModal()">关闭</button>
+                <button class="btn btn-primary" onclick="saveData()">保存</button>
+                <button class="btn btn-info" onclick="goToHealthRecord()">查看健康档案</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('username').textContent = user.realName || user.username;
+
+        let currentPage = 0;
+        const pageSize = 10;
+        let totalPages = 0;
+        let currentElderId = null;
+
+        function logout() {
+            http.post('/auth/logout').then(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            });
+        }
+
+        function calculateAge(birthDate) {
+            if (!birthDate) return '-';
+            const birth = new Date(birthDate);
+            const today = new Date();
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        function loadData() {
+            const name = document.getElementById('filterName').value;
+            const livingStatus = document.getElementById('filterLivingStatus').value;
+
+            const params = {
+                page: currentPage,
+                size: pageSize
+            };
+            if (name) params.name = name;
+            if (livingStatus) params.livingStatus = livingStatus;
+
+            http.get('/elder/page', params).then(result => {
+                const data = result.data;
+                totalPages = data.totalPages;
+                document.getElementById('pageInfo').textContent = `第 ${currentPage + 1} / ${totalPages} 页，共 ${data.totalElements} 条`;
+
+                const tbody = document.getElementById('dataTable');
+                tbody.innerHTML = '';
+                data.content.forEach(item => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${item.elderNo}</td>
+                            <td>${item.name}</td>
+                            <td>${item.gender || '-'}</td>
+                            <td>${calculateAge(item.birthDate)}</td>
+                            <td>${item.phone || '-'}</td>
+                            <td>${item.bedId || '-'}</td>
+                            <td>${item.caregiverId || '-'}</td>
+                            <td>${item.checkinDate ? item.checkinDate.substring(0, 10) : '-'}</td>
+                            <td><span class="status-tag ${item.livingStatus === '在住' ? 'status-success' : 'status-warning'}">${item.livingStatus || '-'}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="openModal(${item.id})">编辑</button>
+                                <button class="btn btn-sm btn-info" onclick="viewHealthRecord(${item.id})">健康档案</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('prevBtn').disabled = currentPage === 0;
+                document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
+            });
+        }
+
+        function resetFilter() {
+            document.getElementById('filterName').value = '';
+            document.getElementById('filterLivingStatus').value = '';
+            currentPage = 0;
+            loadData();
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadData();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadData();
+            }
+        }
+
+        function editData(id) {
+            currentElderId = id;
+
+            http.get('/elder/' + id).then(result => {
+                const data = result.data;
+                document.getElementById('editElderNo').value = data.elderNo || '';
+                document.getElementById('editName').value = data.name || '';
+                document.getElementById('editGender').value = data.gender || '男';
+                document.getElementById('editBirthDate').value = data.birthDate ? data.birthDate.substring(0, 10) : '';
+                document.getElementById('editIdCard').value = data.idCard || '';
+                document.getElementById('editPhone').value = data.phone || '';
+                document.getElementById('editOrgId').value = data.orgId || '';
+                document.getElementById('editCheckinDate').value = data.checkinDate ? data.checkinDate.substring(0, 10) : '';
+                document.getElementById('editAddress').value = data.address || '';
+                document.getElementById('editHeight').value = data.height || '';
+                document.getElementById('editWeight').value = data.weight || '';
+                document.getElementById('editHealthStatus').value = data.healthStatus || '良好';
+                document.getElementById('editChronicDiseases').value = data.chronicDiseases || '';
+                document.getElementById('editMedications').value = data.medications || '';
+                document.getElementById('editAllergies').value = data.allergies || '';
+                document.getElementById('editMedicalHistory').value = data.medicalHistory || '';
+                document.getElementById('editEmergencyContactName').value = data.emergencyContactName || '';
+                document.getElementById('editEmergencyContactPhone').value = data.emergencyContactPhone || '';
+                document.getElementById('editEmergencyContactRelation').value = data.emergencyContactRelation || '';
+                document.getElementById('editLivingStatus').value = data.livingStatus || '在住';
+                document.getElementById('editStatus').value = data.status;
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function generateElderNo() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+            return `E${year}${month}${day}${random}`;
+        }
+
+        function openModal(id = null) {
+            document.getElementById('editModal').classList.add('active');
+            document.getElementById('editId').value = id || '';
+            document.getElementById('modalTitle').textContent = id ? '编辑长者信息' : '新增长者';
+
+            loadOrganizations();
+
+            if (id) {
+                editData(id);
+            } else {
+                document.getElementById('editForm').reset();
+                document.getElementById('editElderNo').value = generateElderNo();
+                document.getElementById('editStatus').value = '1';
+                document.getElementById('editLivingStatus').value = '在住';
+                document.getElementById('editGender').value = '男';
+                document.getElementById('editHealthStatus').value = '良好';
+                document.getElementById('editCheckinDate').value = new Date().toISOString().split('T')[0];
+            }
+        }
+
+        function loadOrganizations() {
+            http.get('/organization/list').then(result => {
+                const select = document.getElementById('editOrgId');
+                select.innerHTML = '<option value="">请选择</option>';
+                result.data.forEach(org => {
+                    select.innerHTML += `<option value="${org.id}">${org.name}</option>`;
+                });
+            });
+        }
+
+        function saveData() {
+            const id = document.getElementById('editId').value;
+            const orgIdValue = document.getElementById('editOrgId').value;
+            const data = {
+                elderNo: document.getElementById('editElderNo').value,
+                name: document.getElementById('editName').value,
+                gender: document.getElementById('editGender').value,
+                birthDate: document.getElementById('editBirthDate').value || null,
+                idCard: document.getElementById('editIdCard').value,
+                phone: document.getElementById('editPhone').value,
+                orgId: orgIdValue ? parseInt(orgIdValue) : null,
+                checkinDate: document.getElementById('editCheckinDate').value || null,
+                address: document.getElementById('editAddress').value,
+                height: document.getElementById('editHeight').value ? parseFloat(document.getElementById('editHeight').value) : null,
+                weight: document.getElementById('editWeight').value ? parseFloat(document.getElementById('editWeight').value) : null,
+                healthStatus: document.getElementById('editHealthStatus').value,
+                chronicDiseases: document.getElementById('editChronicDiseases').value,
+                medications: document.getElementById('editMedications').value,
+                allergies: document.getElementById('editAllergies').value,
+                medicalHistory: document.getElementById('editMedicalHistory').value,
+                emergencyContactName: document.getElementById('editEmergencyContactName').value,
+                emergencyContactPhone: document.getElementById('editEmergencyContactPhone').value,
+                emergencyContactRelation: document.getElementById('editEmergencyContactRelation').value,
+                livingStatus: document.getElementById('editLivingStatus').value,
+                status: parseInt(document.getElementById('editStatus').value)
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            http.post('/elder', data).then(() => {
+                alert('保存成功');
+                closeModal();
+                loadData();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function viewHealthRecord(id) {
+            window.location.href = `health-record.html?elderId=${id}`;
+        }
+
+        function goToHealthRecord() {
+            if (currentElderId) {
+                window.location.href = `health-record.html?elderId=${currentElderId}`;
+            }
+        }
+
+        function deleteData(id) {
+            if (confirm('确定要删除该长者信息吗？')) {
+                http.delete('/elder/' + id).then(() => {
+                    alert('删除成功');
+                    loadData();
+                });
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

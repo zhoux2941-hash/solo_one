@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>护理排班管理 - 康养机构管理系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sidebar-logo">康养管理系统</div>
+            <ul class="sidebar-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="organization.html">机构组织管理</a></li>
+                <li><a href="staff.html">医护人员管理</a></li>
+                <li><a href="room.html">房型床位管理</a></li>
+                <li><a href="checkin-application.html">入住申请管理</a></li>
+                <li><a href="elder-list.html">入住人员管理</a></li>
+                <li><a href="health-record.html">健康档案管理</a></li>
+                <li><a href="care-schedule.html" class="active">护理排班管理</a></li>
+                <li><a href="care-record.html">护理记录管理</a></li>
+                <li><a href="meal-plan.html">膳食计划管理</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="top-bar">
+                <span>护理排班管理</span>
+                <div class="user-info">
+                    <span id="username"></span>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>护理排班列表</h2>
+                        <div>
+                            <button class="btn btn-primary" onclick="openModal()">新增排班</button>
+                            <button class="btn btn-success" onclick="openAutoAssignModal()">自动派班</button>
+                            <button class="btn btn-info" onclick="openBatchCreateModal()">批量创建</button>
+                        </div>
+                    </div>
+                    <div class="filter-bar">
+                        <div class="filter-item">
+                            <label>长者</label>
+                            <select class="form-control" id="filterElderId">
+                                <option value="">全部</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>护理员</label>
+                            <select class="form-control" id="filterCaregiverId">
+                                <option value="">全部</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>开始日期</label>
+                            <input type="date" class="form-control" id="filterStartDate">
+                        </div>
+                        <div class="filter-item">
+                            <label>结束日期</label>
+                            <input type="date" class="form-control" id="filterEndDate">
+                        </div>
+                        <div class="filter-item">
+                            <label>状态</label>
+                            <select class="form-control" id="filterStatus">
+                                <option value="">全部</option>
+                                <option value="待执行">待执行</option>
+                                <option value="进行中">进行中</option>
+                                <option value="已完成">已完成</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadData()">查询</button>
+                        <button class="btn btn-warning" onclick="resetFilter()">重置</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>排班编号</th>
+                                <th>长者</th>
+                                <th>护理项目</th>
+                                <th>护理员</th>
+                                <th>排班日期</th>
+                                <th>排班时间</th>
+                                <th>频次</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTable"></tbody>
+                    </table>
+                    <div class="pagination">
+                        <button class="btn btn-sm" id="prevBtn" onclick="prevPage()">上一页</button>
+                        <span id="pageInfo"></span>
+                        <button class="btn btn-sm" id="nextBtn" onclick="nextPage()">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 id="modalTitle">护理排班</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <div class="form-group">
+                        <label>长者 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="editElderId">
+                            <option value="">请选择长者</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>护理项目 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="editCareItemId">
+                            <option value="">请选择护理项目</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>护理员</label>
+                        <select class="form-control" id="editCaregiverId">
+                            <option value="">请选择护理员</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>排班日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="editScheduleDate">
+                        </div>
+                        <div class="form-group">
+                            <label>排班时间</label>
+                            <input type="time" class="form-control" id="editScheduleTime" value="09:00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>频次</label>
+                        <input type="text" class="form-control" id="editFrequency" placeholder="如：每日一次">
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select class="form-control" id="editStatus">
+                            <option value="待执行">待执行</option>
+                            <option value="进行中">进行中</option>
+                            <option value="已完成">已完成</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea class="form-control" id="editRemark" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeModal()">关闭</button>
+                <button class="btn btn-primary" onclick="saveData()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="autoAssignModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>自动派班</h3>
+                <button class="modal-close" onclick="closeAutoAssignModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>排班日期 <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="autoAssignDate">
+                </div>
+                <div class="form-group">
+                    <label>护理等级</label>
+                    <select class="form-control" id="autoAssignCareLevel">
+                        <option value="">全部</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeAutoAssignModal()">关闭</button>
+                <button class="btn btn-primary" onclick="autoAssign()">开始派班</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="batchCreateModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>批量创建排班</h3>
+                <button class="modal-close" onclick="closeBatchCreateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>长者 <span class="text-danger">*</span></label>
+                    <select class="form-control" id="batchElderId">
+                        <option value="">请选择长者</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>护理项目 <span class="text-danger">*</span></label>
+                    <select class="form-control" id="batchCareItemIds" multiple style="height: 120px;">
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>开始日期 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="batchStartDate">
+                    </div>
+                    <div class="form-group">
+                        <label>结束日期 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="batchEndDate">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>护理员</label>
+                    <select class="form-control" id="batchCaregiverId">
+                        <option value="">请选择护理员</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeBatchCreateModal()">关闭</button>
+                <button class="btn btn-primary" onclick="batchCreate()">批量创建</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('username').textContent = user.realName || user.username;
+
+        let currentPage = 0;
+        const pageSize = 10;
+        let totalPages = 0;
+
+        function logout() {
+            http.post('/auth/logout').then(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            });
+        }
+
+        function loadData() {
+            const elderId = document.getElementById('filterElderId').value;
+            const caregiverId = document.getElementById('filterCaregiverId').value;
+            const startDate = document.getElementById('filterStartDate').value;
+            const endDate = document.getElementById('filterEndDate').value;
+            const status = document.getElementById('filterStatus').value;
+
+            const params = {
+                page: currentPage,
+                size: pageSize
+            };
+            if (elderId) params.elderId = elderId;
+            if (caregiverId) params.caregiverId = caregiverId;
+            if (startDate) params.startDate = startDate;
+            if (endDate) params.endDate = endDate;
+            if (status) params.status = status;
+
+            http.get('/care-schedule/page', params).then(result => {
+                const data = result.data;
+                totalPages = data.totalPages;
+                document.getElementById('pageInfo').textContent = `第 ${currentPage + 1} / ${totalPages} 页，共 ${data.totalElements} 条`;
+
+                const tbody = document.getElementById('dataTable');
+                tbody.innerHTML = '';
+                data.content.forEach(item => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${item.scheduleNo}</td>
+                            <td>${item.elderId || '-'}</td>
+                            <td>${item.careItemId || '-'}</td>
+                            <td>${item.caregiverId || '-'}</td>
+                            <td>${item.scheduleDate || '-'}</td>
+                            <td>${item.scheduleTime || '-'}</td>
+                            <td>${item.frequency || '-'}</td>
+                            <td><span class="status-tag ${getStatusClass(item.status)}">${item.status || '-'}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="openModal(${item.id})">编辑</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('prevBtn').disabled = currentPage === 0;
+                document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
+            });
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case '待执行': return 'status-info';
+                case '进行中': return 'status-warning';
+                case '已完成': return 'status-success';
+                default: return '';
+            }
+        }
+
+        function resetFilter() {
+            document.getElementById('filterElderId').value = '';
+            document.getElementById('filterCaregiverId').value = '';
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            document.getElementById('filterStatus').value = '';
+            currentPage = 0;
+            loadData();
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadData();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadData();
+            }
+        }
+
+        function openModal(id = null) {
+            document.getElementById('editModal').classList.add('active');
+            document.getElementById('editId').value = id || '';
+            document.getElementById('modalTitle').textContent = id ? '编辑排班' : '新增排班';
+
+            loadElders();
+            loadCareItems();
+            loadStaff();
+
+            if (id) {
+                http.get('/care-schedule/' + id).then(result => {
+                    const data = result.data;
+                    document.getElementById('editElderId').value = data.elderId || '';
+                    document.getElementById('editCareItemId').value = data.careItemId || '';
+                    document.getElementById('editCaregiverId').value = data.caregiverId || '';
+                    document.getElementById('editScheduleDate').value = data.scheduleDate || '';
+                    document.getElementById('editScheduleTime').value = data.scheduleTime || '';
+                    document.getElementById('editFrequency').value = data.frequency || '';
+                    document.getElementById('editStatus').value = data.status || '待执行';
+                    document.getElementById('editRemark').value = data.remark || '';
+                });
+            } else {
+                document.getElementById('editForm').reset();
+                document.getElementById('editStatus').value = '待执行';
+                document.getElementById('editScheduleDate').value = new Date().toISOString().split('T')[0];
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function saveData() {
+            const id = document.getElementById('editId').value;
+            const elderIdValue = document.getElementById('editElderId').value;
+            const careItemIdValue = document.getElementById('editCareItemId').value;
+            const scheduleDateValue = document.getElementById('editScheduleDate').value;
+
+            if (!elderIdValue) {
+                alert('请选择长者');
+                return;
+            }
+            if (!careItemIdValue) {
+                alert('请选择护理项目');
+                return;
+            }
+            if (!scheduleDateValue) {
+                alert('请选择排班日期');
+                return;
+            }
+
+            const data = {
+                elderId: parseInt(elderIdValue),
+                careItemId: parseInt(careItemIdValue),
+                caregiverId: document.getElementById('editCaregiverId').value ? parseInt(document.getElementById('editCaregiverId').value) : null,
+                scheduleDate: scheduleDateValue,
+                scheduleTime: document.getElementById('editScheduleTime').value || null,
+                frequency: document.getElementById('editFrequency').value || null,
+                status: document.getElementById('editStatus').value,
+                remark: document.getElementById('editRemark').value || null
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            http.post('/care-schedule', data).then(() => {
+                alert('保存成功');
+                closeModal();
+                loadData();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function deleteData(id) {
+            if (confirm('确定要删除该排班吗？')) {
+                http.delete('/care-schedule/' + id).then(() => {
+                    alert('删除成功');
+                    loadData();
+                });
+            }
+        }
+
+        function openAutoAssignModal() {
+            document.getElementById('autoAssignModal').classList.add('active');
+            document.getElementById('autoAssignDate').value = new Date().toISOString().split('T')[0];
+            loadCareLevels();
+        }
+
+        function closeAutoAssignModal() {
+            document.getElementById('autoAssignModal').classList.remove('active');
+        }
+
+        function autoAssign() {
+            const scheduleDate = document.getElementById('autoAssignDate').value;
+            const careLevel = document.getElementById('autoAssignCareLevel').value;
+
+            if (!scheduleDate) {
+                alert('请选择排班日期');
+                return;
+            }
+
+            http.post('/care-schedule/auto-assign', { scheduleDate, careLevel }).then(() => {
+                alert('自动派班成功');
+                closeAutoAssignModal();
+                loadData();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function openBatchCreateModal() {
+            document.getElementById('batchCreateModal').classList.add('active');
+            loadElders();
+            loadCareItems();
+            loadStaff();
+        }
+
+        function closeBatchCreateModal() {
+            document.getElementById('batchCreateModal').classList.remove('active');
+        }
+
+        function batchCreate() {
+            const elderId = document.getElementById('batchElderId').value;
+            const startDate = document.getElementById('batchStartDate').value;
+            const endDate = document.getElementById('batchEndDate').value;
+            const caregiverId = document.getElementById('batchCaregiverId').value;
+
+            const careItemSelect = document.getElementById('batchCareItemIds');
+            const careItemIds = [];
+            for (let i = 0; i < careItemSelect.options.length; i++) {
+                if (careItemSelect.options[i].selected) {
+                    careItemIds.push(parseInt(careItemSelect.options[i].value));
+                }
+            }
+
+            if (!elderId) {
+                alert('请选择长者');
+                return;
+            }
+            if (careItemIds.length === 0) {
+                alert('请至少选择一个护理项目');
+                return;
+            }
+            if (!startDate || !endDate) {
+                alert('请选择日期范围');
+                return;
+            }
+
+            http.post('/care-schedule/batch-create', { 
+                elderId: parseInt(elderId), 
+                careItemIds, 
+                startDate, 
+                endDate,
+                caregiverId: caregiverId ? parseInt(caregiverId) : null
+            }).then(() => {
+                alert('批量创建成功');
+                closeBatchCreateModal();
+                loadData();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function loadElders() {
+            http.get('/elder/list').then(result => {
+                const selects = ['filterElderId', 'editElderId', 'batchElderId'];
+                selects.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    if (select) {
+                        const currentValue = select.value;
+                        select.innerHTML = '<option value="">请选择长者</option>';
+                        result.data.forEach(elder => {
+                            select.innerHTML += `<option value="${elder.id}">${elder.name}</option>`;
+                        });
+                        select.value = currentValue;
+                    }
+                });
+            });
+        }
+
+        function loadCareItems() {
+            http.get('/care-item/list').then(result => {
+                const selects = ['editCareItemId', 'batchCareItemIds'];
+                selects.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    if (select) {
+                        const isMultiple = select.multiple;
+                        select.innerHTML = isMultiple ? '' : '<option value="">请选择护理项目</option>';
+                        result.data.forEach(item => {
+                            select.innerHTML += `<option value="${item.id}">${item.itemName}</option>`;
+                        });
+                    }
+                });
+            });
+        }
+
+        function loadStaff() {
+            http.get('/staff/list').then(result => {
+                const selects = ['filterCaregiverId', 'editCaregiverId', 'batchCaregiverId'];
+                selects.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    if (select) {
+                        const currentValue = select.value;
+                        select.innerHTML = '<option value="">请选择护理员</option>';
+                        result.data.forEach(staff => {
+                            select.innerHTML += `<option value="${staff.id}">${staff.name}</option>`;
+                        });
+                        select.value = currentValue;
+                    }
+                });
+            });
+        }
+
+        function loadCareLevels() {
+            http.get('/care-level/list').then(result => {
+                const select = document.getElementById('autoAssignCareLevel');
+                select.innerHTML = '<option value="">全部</option>';
+                result.data.forEach(level => {
+                    select.innerHTML += `<option value="${level.levelName}">${level.levelName}</option>`;
+                });
+            });
+        }
+
+        loadElders();
+        loadStaff();
+        loadData();
+    </script>
+</body>
+</html>

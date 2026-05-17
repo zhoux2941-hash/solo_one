@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人员备案 - 野外露营营地备案系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏕️ 野外露营营地备案系统</h1>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="area.html">区域划分</a></li>
+                <li><a href="facility.html">设施登记</a></li>
+                <li><a href="record.html" class="active">人员备案</a></li>
+                <li><a href="usage.html">场地使用</a></li>
+            </ul>
+        </nav>
+        
+        <div class="main-content">
+            <h2 class="section-title">👥 露营人员备案管理</h2>
+            
+            <div class="filter-bar">
+                <div class="form-group">
+                    <label>状态</label>
+                    <select id="statusFilter" onchange="loadRecords()">
+                        <option value="">全部</option>
+                        <option value="已预订">已预订</option>
+                        <option value="露营中">露营中</option>
+                        <option value="已离开">已离开</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ 新增备案</button>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>团队名称</th>
+                            <th>领队</th>
+                            <th>联系电话</th>
+                            <th>人数</th>
+                            <th>区域ID</th>
+                            <th>入住时间</th>
+                            <th>离开时间</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordTableBody">
+                        <tr>
+                            <td colspan="10" style="text-align:center;padding:30px;color:#999;">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="recordModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('recordModal')">&times;</span>
+            <h3 class="modal-title" id="modalTitle">新增备案</h3>
+            <form id="recordForm">
+                <input type="hidden" id="recordId">
+                <div class="form-group">
+                    <label>团队名称 *</label>
+                    <input type="text" id="teamName" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>领队姓名</label>
+                        <input type="text" id="teamLeader">
+                    </div>
+                    <div class="form-group">
+                        <label>联系电话</label>
+                        <input type="tel" id="leaderPhone">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>领队身份证号</label>
+                    <input type="text" id="leaderIdCard" maxlength="18">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>人数</label>
+                        <input type="number" id="peopleCount" min="1" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label>营地区域ID</label>
+                        <input type="number" id="campAreaId" min="1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>入住时间</label>
+                        <input type="datetime-local" id="checkInTime">
+                    </div>
+                    <div class="form-group">
+                        <label>离开时间</label>
+                        <input type="datetime-local" id="checkOutTime">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>状态</label>
+                    <select id="recordStatus">
+                        <option value="已预订">已预订</option>
+                        <option value="露营中">露营中</option>
+                        <option value="已离开">已离开</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>备注</label>
+                    <textarea id="notes" rows="3" placeholder="特殊需求或备注..."></textarea>
+                </div>
+                <div style="text-align:right;margin-top:20px;">
+                    <button type="button" class="btn btn-warning" onclick="closeModal('recordModal')" style="margin-right:10px;">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        let editingId = null;
+
+        async function loadRecords() {
+            try {
+                let url = '/records';
+                const statusFilter = document.getElementById('statusFilter').value;
+                
+                if (statusFilter) {
+                    url = `/records/status/${statusFilter}`;
+                }
+                
+                const records = await apiRequest(url);
+                
+                renderTable('recordTableBody', records, [
+                    { field: 'id' },
+                    { field: 'teamName' },
+                    { field: 'teamLeader' },
+                    { field: 'leaderPhone' },
+                    { field: 'peopleCount' },
+                    { field: 'campAreaId' },
+                    { render: (item) => formatDateTime(item.checkInTime) },
+                    { render: (item) => formatDateTime(item.checkOutTime) },
+                    { render: (item) => getStatusBadge(item.status) }
+                ], (item) => `
+                    <div class="action-buttons">
+                        <button class="btn btn-warning" onclick="editRecord(${item.id})">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteRecord(${item.id})">删除</button>
+                    </div>
+                `);
+            } catch (error) {
+                console.error('加载备案列表失败:', error);
+            }
+        }
+
+        function formatLocalDateTime(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        function openAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = '新增备案';
+            document.getElementById('recordForm').reset();
+            openModal('recordModal');
+        }
+
+        async function editRecord(id) {
+            try {
+                const record = await apiRequest(`/records/${id}`);
+                editingId = id;
+                document.getElementById('modalTitle').textContent = '编辑备案';
+                document.getElementById('recordId').value = record.id;
+                document.getElementById('teamName').value = record.teamName;
+                document.getElementById('teamLeader').value = record.teamLeader || '';
+                document.getElementById('leaderPhone').value = record.leaderPhone || '';
+                document.getElementById('leaderIdCard').value = record.leaderIdCard || '';
+                document.getElementById('peopleCount').value = record.peopleCount || 1;
+                document.getElementById('campAreaId').value = record.campAreaId || '';
+                document.getElementById('checkInTime').value = formatLocalDateTime(record.checkInTime);
+                document.getElementById('checkOutTime').value = formatLocalDateTime(record.checkOutTime);
+                document.getElementById('recordStatus').value = record.status;
+                document.getElementById('notes').value = record.notes || '';
+                openModal('recordModal');
+            } catch (error) {
+                console.error('加载备案详情失败:', error);
+            }
+        }
+
+        async function deleteRecord(id) {
+            if (confirm('确定要删除这个备案吗？')) {
+                try {
+                    await apiRequest(`/records/${id}`, 'DELETE');
+                    alert('删除成功');
+                    loadRecords();
+                } catch (error) {
+                    console.error('删除备案失败:', error);
+                }
+            }
+        }
+
+        document.getElementById('recordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = {
+                teamName: document.getElementById('teamName').value,
+                teamLeader: document.getElementById('teamLeader').value || null,
+                leaderPhone: document.getElementById('leaderPhone').value || null,
+                leaderIdCard: document.getElementById('leaderIdCard').value || null,
+                peopleCount: parseInt(document.getElementById('peopleCount').value) || 1,
+                campAreaId: document.getElementById('campAreaId').value ? parseInt(document.getElementById('campAreaId').value) : null,
+                checkInTime: document.getElementById('checkInTime').value ? new Date(document.getElementById('checkInTime').value).toISOString() : null,
+                checkOutTime: document.getElementById('checkOutTime').value ? new Date(document.getElementById('checkOutTime').value).toISOString() : null,
+                status: document.getElementById('recordStatus').value,
+                notes: document.getElementById('notes').value || null
+            };
+
+            try {
+                if (editingId) {
+                    await apiRequest(`/records/${editingId}`, 'PUT', data);
+                    alert('更新成功');
+                } else {
+                    await apiRequest('/records', 'POST', data);
+                    alert('添加成功');
+                }
+                closeModal('recordModal');
+                loadRecords();
+            } catch (error) {
+                console.error('保存备案失败:', error);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', loadRecords);
+    </script>
+</body>
+</html>

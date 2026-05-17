@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>控制台 - 社区驿站管理平台</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🏪 驿站管理</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item active">
+                    <span>📊 控制台</span>
+                </a>
+                <a href="users.html" class="nav-item" id="nav-users">
+                    <span>👥 用户管理</span>
+                </a>
+                <a href="stations.html" class="nav-item" id="nav-stations">
+                    <span>🏠 驿站管理</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info" id="userInfo">
+                    <span class="user-name">加载中...</span>
+                    <span class="user-role"></span>
+                </div>
+                <button class="btn btn-logout" onclick="logout()">退出登录</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="page-header">
+                <h1>控制台</h1>
+            </header>
+
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalUsers">0</div>
+                        <div class="stat-label">总用户数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🏠</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalStations">0</div>
+                        <div class="stat-label">驿站数量</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="activeUsers">0</div>
+                        <div class="stat-label">启用用户</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔒</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="disabledUsers">0</div>
+                        <div class="stat-label">禁用用户</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2>系统说明</h2>
+                <div class="info-card">
+                    <h3>📋 角色权限说明</h3>
+                    <ul>
+                        <li><strong>管理员 (ADMIN)</strong>：拥有所有权限，可管理用户和驿站</li>
+                        <li><strong>分拣员 (SORTER)</strong>：可查看和管理驿站信息</li>
+                        <li><strong>派送员 (DELIVERER)</strong>：仅可查看基础信息</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h3>💡 功能说明</h3>
+                    <ul>
+                        <li>用户账号权限管理，支持账号启停</li>
+                        <li>驿站基础信息建档与管理</li>
+                        <li>站点地址、服务范围、营业时间等信息维护</li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

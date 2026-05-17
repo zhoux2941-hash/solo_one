@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>施工区域管理 - 建筑施工现场管控系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">施工区域管理</h2>
+                <button class="btn btn-primary" onclick="openAddModal()">+ 新增区域</button>
+            </div>
+
+            <div class="search-bar">
+                <div class="search-item">
+                    <label>所属项目</label>
+                    <select id="searchProjectId" class="form-select">
+                        <option value="">全部项目</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>区域类型</label>
+                    <select id="searchAreaType" class="form-select">
+                        <option value="">全部类型</option>
+                        <option value="片区">片区</option>
+                        <option value="楼栋">楼栋</option>
+                        <option value="标段">标段</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>关键词搜索</label>
+                    <input type="text" id="searchKeyword" class="form-input" placeholder="区域名称/楼栋/负责人">
+                </div>
+                <div class="search-buttons">
+                    <button class="btn btn-primary" onclick="loadAreaList()">搜索</button>
+                    <button class="btn btn-info" onclick="resetSearch()">重置</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>所属项目</th>
+                            <th>区域名称</th>
+                            <th>区域编号</th>
+                            <th>区域类型</th>
+                            <th>楼栋单元</th>
+                            <th>施工标段</th>
+                            <th>负责人</th>
+                            <th>联系电话</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="areaTableBody"></tbody>
+                </table>
+            </div>
+            <div id="pagination"></div>
+        </div>
+    </div>
+
+    <div id="areaModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">新增区域</h3>
+                <button class="modal-close" onclick="closeModal('areaModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="areaForm">
+                    <input type="hidden" name="id">
+                    <div class="form-group">
+                        <label class="form-label">所属项目 <span style="color: #f56c6c;">*</span></label>
+                        <select name="projectId" id="projectSelect" class="form-select">
+                            <option value="">请选择项目</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">区域名称 <span style="color: #f56c6c;">*</span></label>
+                        <input type="text" name="areaName" class="form-input" placeholder="请输入区域名称">
+                    </div>
+                    <div class="form-group">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <label class="form-label">区域编号</label>
+                                <input type="text" name="areaCode" class="form-input" placeholder="请输入区域编号">
+                            </div>
+                            <div>
+                                <label class="form-label">区域类型</label>
+                                <select name="areaType" class="form-select">
+                                    <option value="">请选择类型</option>
+                                    <option value="片区">片区</option>
+                                    <option value="楼栋">楼栋</option>
+                                    <option value="标段">标段</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <label class="form-label">楼栋单元</label>
+                                <input type="text" name="buildingUnit" class="form-input" placeholder="请输入楼栋单元">
+                            </div>
+                            <div>
+                                <label class="form-label">施工标段</label>
+                                <input type="text" name="constructionSection" class="form-input" placeholder="请输入施工标段">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <label class="form-label">负责人</label>
+                                <input type="text" name="managerName" class="form-input" placeholder="请输入负责人姓名">
+                            </div>
+                            <div>
+                                <label class="form-label">联系电话</label>
+                                <input type="text" name="managerPhone" class="form-input" placeholder="请输入联系电话">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">区域描述</label>
+                        <textarea name="description" class="form-textarea" placeholder="请输入区域描述"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" onclick="closeModal('areaModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveArea()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/http.js"></script>
+    <script src="js/validator.js"></script>
+    <script src="js/layout.js"></script>
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+        let currentEditId = null;
+        let projectList = [];
+
+        const areaRules = {
+            projectId: [{ type: 'required', message: '请选择所属项目' }],
+            areaName: [{ type: 'required', message: '请输入区域名称' }],
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initPage('area');
+            loadProjectOptions();
+            loadAreaList();
+        });
+
+        async function loadProjectOptions() {
+            const result = await http.get('/api/project/active');
+            if (result.success) {
+                projectList = result.data;
+                const options = result.data.map(p => `<option value="${p.id}">${p.projectName}</option>`).join('');
+                
+                document.getElementById('searchProjectId').innerHTML = '<option value="">全部项目</option>' + options;
+                document.getElementById('projectSelect').innerHTML = '<option value="">请选择项目</option>' + options;
+            }
+        }
+
+        async function loadAreaList() {
+            const projectId = document.getElementById('searchProjectId').value;
+            const areaType = document.getElementById('searchAreaType').value;
+            const keyword = document.getElementById('searchKeyword').value;
+
+            const params = {
+                pageNum: currentPage,
+                pageSize: pageSize,
+            };
+
+            if (projectId) params.projectId = projectId;
+            if (areaType) params.areaType = areaType;
+            if (keyword) params.keyword = keyword;
+
+            const result = await http.get('/api/area/list', params);
+
+            if (result.success) {
+                renderAreaTable(result.data.list);
+                renderPagination('pagination', result.data.pageNum, result.data.pageSize, result.data.total, 'goToPage');
+            }
+        }
+
+        function renderAreaTable(areas) {
+            const tbody = document.getElementById('areaTableBody');
+
+            if (!areas || areas.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="empty-state">
+                            <div class="empty-state-icon">🏗️</div>
+                            <div class="empty-state-text">暂无数据</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = areas.map(area => `
+                <tr>
+                    <td>${area.projectName || '-'}</td>
+                    <td>${area.areaName}</td>
+                    <td>${area.areaCode || '-'}</td>
+                    <td>${area.areaType || '-'}</td>
+                    <td>${area.buildingUnit || '-'}</td>
+                    <td>${area.constructionSection || '-'}</td>
+                    <td>${area.managerName || '-'}</td>
+                    <td>${area.managerPhone || '-'}</td>
+                    <td>
+                        <span class="status-tag ${area.status === 1 ? 'status-active' : 'status-inactive'}">
+                            ${area.status === 1 ? '启用' : '停用'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="btn btn-primary btn-small" onclick="openEditModal(${area.id})">编辑</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteArea(${area.id})">删除</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            loadAreaList();
+        }
+
+        function resetSearch() {
+            document.getElementById('searchProjectId').value = '';
+            document.getElementById('searchAreaType').value = '';
+            document.getElementById('searchKeyword').value = '';
+            currentPage = 1;
+            loadAreaList();
+        }
+
+        function openAddModal() {
+            currentEditId = null;
+            document.getElementById('modalTitle').textContent = '新增区域';
+            document.getElementById('areaForm').reset();
+            Validator.clearErrors('areaForm');
+            openModal('areaModal');
+        }
+
+        async function openEditModal(id) {
+            currentEditId = id;
+            document.getElementById('modalTitle').textContent = '编辑区域';
+
+            const result = await http.get(`/api/area/${id}`);
+
+            if (result.success) {
+                const area = result.data;
+                const form = document.getElementById('areaForm');
+                form.querySelector('[name="id"]').value = area.id;
+                form.querySelector('[name="projectId"]').value = area.projectId || '';
+                form.querySelector('[name="areaName"]').value = area.areaName || '';
+                form.querySelector('[name="areaCode"]').value = area.areaCode || '';
+                form.querySelector('[name="areaType"]').value = area.areaType || '';
+                form.querySelector('[name="buildingUnit"]').value = area.buildingUnit || '';
+                form.querySelector('[name="constructionSection"]').value = area.constructionSection || '';
+                form.querySelector('[name="managerName"]').value = area.managerName || '';
+                form.querySelector('[name="managerPhone"]').value = area.managerPhone || '';
+                form.querySelector('[name="description"]').value = area.description || '';
+
+                Validator.clearErrors('areaForm');
+                openModal('areaModal');
+            }
+        }
+
+        async function saveArea() {
+            const formData = Validator.getFormData('areaForm');
+            const validation = Validator.validate(areaRules, formData);
+
+            if (!validation.isValid) {
+                Validator.showErrors('areaForm', validation.errors);
+                return;
+            }
+
+            Validator.clearErrors('areaForm');
+
+            let result;
+            if (currentEditId) {
+                result = await http.put(`/api/area/${currentEditId}`, formData);
+            } else {
+                result = await http.post('/api/area', formData);
+            }
+
+            if (result.success) {
+                showToast(currentEditId ? '更新成功' : '添加成功', 'success');
+                closeModal('areaModal');
+                loadAreaList();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+
+        async function deleteArea(id) {
+            if (!confirm('确定要删除该施工区域吗？此操作不可恢复！')) return;
+
+            const result = await http.delete(`/api/area/${id}`);
+
+            if (result.success) {
+                showToast('删除成功', 'success');
+                loadAreaList();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

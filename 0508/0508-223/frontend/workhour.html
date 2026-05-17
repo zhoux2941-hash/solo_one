@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工时汇总 - 建筑施工现场管控系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">务工工时汇总统计</h2>
+            </div>
+
+            <div class="search-bar">
+                <div class="search-item">
+                    <label>所属项目</label>
+                    <select id="searchProjectId" class="form-select" onchange="loadWorkerSelect()">
+                        <option value="">全部项目</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>工人</label>
+                    <select id="searchWorkerId" class="form-select">
+                        <option value="">选择工人</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>统计类型</label>
+                    <select id="searchStatisticsType" class="form-select">
+                        <option value="">全部</option>
+                        <option value="MONTHLY">月度</option>
+                        <option value="WEEKLY">周度</option>
+                        <option value="DAILY">每日</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>统计月份</label>
+                    <input type="month" id="searchMonth" class="form-input">
+                </div>
+                <div class="search-buttons">
+                    <button class="btn btn-success" onclick="calculateWorkHours()">统计工时</button>
+                    <button class="btn btn-primary" onclick="loadWorkHourList()">搜索</button>
+                    <button class="btn btn-info" onclick="resetSearch()">重置</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>工人ID</th>
+                            <th>统计日期</th>
+                            <th>统计类型</th>
+                            <th>出勤天数</th>
+                            <th>正常工时(小时)</th>
+                            <th>加班工时(小时)</th>
+                            <th>总工时(小时)</th>
+                            <th>统计时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workHourTableBody"></tbody>
+                </table>
+            </div>
+            <div id="pagination"></div>
+        </div>
+    </div>
+
+    <script src="js/http.js"></script>
+    <script src="js/validator.js"></script>
+    <script src="js/layout.js"></script>
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initPage('workhour');
+            loadProjectList();
+            loadWorkerSelect();
+            loadWorkHourList();
+            
+            const now = new Date();
+            const monthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            document.getElementById('searchMonth').value = monthStr;
+        });
+
+        async function loadProjectList() {
+            const result = await http.get('/api/project/active');
+            if (result.success) {
+                const options = result.data.map(p => `<option value="${p.id}">${p.projectName}</option>`).join('');
+                document.querySelector('#searchProjectId').innerHTML = '<option value="">全部项目</option>' + options;
+            }
+        }
+
+        async function loadWorkerSelect() {
+            const projectId = document.querySelector('#searchProjectId').value;
+            const params = projectId ? { projectId } : {};
+            const result = await http.get('/api/labor/worker/active', params);
+            if (result.success) {
+                const options = result.data.map(w => `<option value="${w.id}">${w.workerName}</option>`).join('');
+                document.querySelector('#searchWorkerId').innerHTML = '<option value="">选择工人</option>' + options;
+            }
+        }
+
+        async function loadWorkHourList() {
+            const projectId = document.querySelector('#searchProjectId').value;
+            const workerId = document.querySelector('#searchWorkerId').value;
+            const statisticsType = document.querySelector('#searchStatisticsType').value;
+            const monthStr = document.querySelector('#searchMonth').value;
+
+            const params = {
+                pageNum: currentPage,
+                pageSize: pageSize,
+            };
+
+            if (projectId) params.projectId = projectId;
+            if (workerId) params.workerId = workerId;
+            if (statisticsType) params.statisticsType = statisticsType;
+            if (monthStr) {
+                const [year, month] = monthStr.split('-');
+                params.startDate = `${year}-${month}-01`;
+                params.endDate = `${year}-${month}-31`;
+            }
+
+            const result = await http.get('/api/labor/attendance/workhour/list', params);
+
+            if (result.success) {
+                renderWorkHourTable(result.data.list);
+                renderPagination('pagination', result.data.pageNum, result.data.pageSize, result.data.total, 'goToPage');
+            }
+        }
+
+        function renderWorkHourTable(workHours) {
+            const tbody = document.getElementById('workHourTableBody');
+
+            if (!workHours || workHours.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <div class="empty-state-icon">⏱️</div>
+                            <div class="empty-state-text">暂无工时统计数据</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const typeMap = {
+                'MONTHLY': '月度',
+                'WEEKLY': '周度',
+                'DAILY': '每日'
+            };
+
+            tbody.innerHTML = workHours.map(wh => `
+                <tr>
+                    <td>${wh.workerId}</td>
+                    <td>${formatDate(wh.statisticsDate)}</td>
+                    <td><span class="status-tag status-active">${typeMap[wh.statisticsType] || wh.statisticsType}</span></td>
+                    <td>${wh.attendanceDays} 天</td>
+                    <td>${wh.normalHours !== null && wh.normalHours !== undefined ? wh.normalHours : '-'} h</td>
+                    <td style="color: #e6a23c;">${wh.overtimeHours !== null && wh.overtimeHours !== undefined ? wh.overtimeHours : '-'} h</td>
+                    <td style="color: #67c23a; font-weight: bold;">${wh.totalWorkHours !== null && wh.totalWorkHours !== undefined ? wh.totalWorkHours : '-'} h</td>
+                    <td>${formatDateTime(wh.createTime)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            loadWorkHourList();
+        }
+
+        function resetSearch() {
+            document.querySelector('#searchProjectId').value = '';
+            document.querySelector('#searchWorkerId').value = '';
+            document.querySelector('#searchStatisticsType').value = '';
+            const now = new Date();
+            document.getElementById('searchMonth').value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            currentPage = 1;
+            loadWorkHourList();
+        }
+
+        async function calculateWorkHours() {
+            const workerId = document.querySelector('#searchWorkerId').value;
+            const monthStr = document.querySelector('#searchMonth').value;
+
+            if (!workerId) {
+                showToast('请先选择工人', 'warning');
+                return;
+            }
+
+            if (!monthStr) {
+                showToast('请选择统计月份', 'warning');
+                return;
+            }
+
+            const [year, month] = monthStr.split('-');
+            const statisticsDate = `${year}-${month}-01`;
+
+            const result = await http.post('/api/labor/attendance/calculate', {}, {
+                workerId: workerId,
+                statisticsDate: statisticsDate,
+                statisticsType: 'MONTHLY'
+            });
+
+            if (result.success) {
+                showToast('工时统计完成', 'success');
+                loadWorkHourList();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) return '-';
+            const dt = dateTimeStr.replace('T', ' ');
+            return dt.substring(0, 16);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博物馆展柜微环境恒湿调控系统</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>博物馆展柜微环境恒湿调控系统</h1>
+            <div class="status-bar">
+                <span id="currentTime"></span>
+                <span class="status-indicator online">系统在线</span>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="devices">展柜设备管理</button>
+            <button class="tab-btn" data-tab="monitor">实时监控</button>
+            <button class="tab-btn" data-tab="reports">报表统计</button>
+        </nav>
+
+        <main>
+            <section id="devices" class="tab-content active">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>展柜设备列表</h2>
+                        <button id="addDeviceBtn" class="btn btn-primary">添加展柜</button>
+                    </div>
+                    <div class="panel-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>柜号</th>
+                                    <th>展品类型</th>
+                                    <th>目标湿度范围</th>
+                                    <th>当前湿度</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deviceTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="monitor" class="tab-content">
+                <div class="monitor-grid">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>实时湿度监控</h2>
+                            <select id="monitorDeviceSelect" class="form-control">
+                                <option value="">选择展柜</option>
+                            </select>
+                        </div>
+                        <div class="panel-body">
+                            <div class="humidity-display">
+                                <div class="humidity-value">
+                                    <span id="currentHumidity">--</span>
+                                    <span class="unit">%RH</span>
+                                </div>
+                                <div class="humidity-range">
+                                    目标范围: <span id="targetRange">--</span>
+                                </div>
+                            </div>
+                            <div class="control-status">
+                                <div class="status-item">
+                                    <span class="label">恒湿机状态:</span>
+                                    <span id="humidifierStatus" class="status-badge idle">待机</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="label">调控模式:</span>
+                                    <span id="controlMode" class="status-badge auto">自动</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel full-width">
+                        <div class="panel-header">
+                            <h2>湿度实时曲线</h2>
+                        </div>
+                        <div class="panel-body">
+                            <canvas id="realtimeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>调控日志</h2>
+                        </div>
+                        <div class="panel-body log-panel">
+                            <div id="controlLog" class="log-list">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="reports" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>湿度波动曲线</h2>
+                        <div class="report-controls">
+                            <select id="reportDeviceSelect" class="form-control">
+                                <option value="">选择展柜</option>
+                            </select>
+                            <select id="reportPeriod" class="form-control">
+                                <option value="24h">24小时</option>
+                                <option value="7d">7天</option>
+                                <option value="30d">30天</option>
+                            </select>
+                            <button id="generateReport" class="btn btn-primary">生成报表</button>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <canvas id="humidityChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>调控能耗统计</h2>
+                        <div class="report-controls">
+                            <select id="energyPeriod" class="form-control">
+                                <option value="today">今日</option>
+                                <option value="week">本周</option>
+                                <option value="month">本月</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <canvas id="energyChart"></canvas>
+                        <div class="energy-summary">
+                            <div class="summary-item">
+                                <span class="label">总能耗:</span>
+                                <span id="totalEnergy" class="value">-- kWh</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">加湿能耗:</span>
+                                <span id="humidifyEnergy" class="value">-- kWh</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">除湿能耗:</span>
+                                <span id="dehumidifyEnergy" class="value">-- kWh</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="deviceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">添加展柜</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="deviceForm">
+                    <input type="hidden" id="deviceId">
+                    <div class="form-group">
+                        <label>柜号</label>
+                        <input type="text" id="cabinetNumber" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>展品类型</label>
+                        <select id="exhibitType" class="form-control" required>
+                            <option value="ORGANIC">有机展品（木器、书画）</option>
+                            <option value="INORGANIC">无机展品</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>目标湿度最小值 (%)</label>
+                        <input type="number" id="targetHumidityMin" class="form-control" step="0.1" min="0" max="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label>目标湿度最大值 (%)</label>
+                        <input type="number" id="targetHumidityMax" class="form-control" step="0.1" min="0" max="100" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>入住申请管理 - 康养机构管理系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sidebar-logo">康养管理系统</div>
+            <ul class="sidebar-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="organization.html">机构组织管理</a></li>
+                <li><a href="staff.html">医护人员管理</a></li>
+                <li><a href="room.html">房型床位管理</a></li>
+                <li><a href="checkin-application.html" class="active">入住申请管理</a></li>
+                <li><a href="elder-list.html">入住人员管理</a></li>
+                <li><a href="health-record.html">健康档案管理</a></li>
+                <li><a href="care-schedule.html">护理排班管理</a></li>
+                <li><a href="care-record.html">护理记录管理</a></li>
+                <li><a href="meal-plan.html">膳食计划管理</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="top-bar">
+                <span>入住申请管理</span>
+                <div class="user-info">
+                    <span id="username"></span>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>入住申请列表</h2>
+                        <button class="btn btn-primary" onclick="openModal()">新增申请</button>
+                    </div>
+                    <div class="filter-bar">
+                        <div class="filter-item">
+                            <label>申请人</label>
+                            <input type="text" class="form-control" id="filterName" placeholder="请输入姓名">
+                        </div>
+                        <div class="filter-item">
+                            <label>申请状态</label>
+                            <select class="form-control" id="filterStatus">
+                                <option value="">全部</option>
+                                <option value="PENDING">待审核</option>
+                                <option value="APPROVED">已通过</option>
+                                <option value="REJECTED">已拒绝</option>
+                                <option value="CHECKED_IN">已入住</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadData()">查询</button>
+                        <button class="btn btn-warning" onclick="resetFilter()">重置</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>申请编号</th>
+                                <th>姓名</th>
+                                <th>性别</th>
+                                <th>联系电话</th>
+                                <th>申请状态</th>
+                                <th>申请时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTable"></tbody>
+                    </table>
+                    <div class="pagination">
+                        <button class="btn btn-sm" id="prevBtn" onclick="prevPage()">上一页</button>
+                        <span id="pageInfo"></span>
+                        <button class="btn btn-sm" id="nextBtn" onclick="nextPage()">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3 id="modalTitle">新增入住申请</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <h4 style="margin: 15px 0; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px;">一、基本信息</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>申请编号 *</label>
+                            <input type="text" class="form-control" id="editApplicationNo" required>
+                        </div>
+                        <div class="form-group">
+                            <label>姓名 *</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>性别</label>
+                            <select class="form-control" id="editGender">
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>出生日期</label>
+                            <input type="date" class="form-control" id="editBirthDate">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>身份证号</label>
+                            <input type="text" class="form-control" id="editIdCard">
+                        </div>
+                        <div class="form-group">
+                            <label>联系电话</label>
+                            <input type="text" class="form-control" id="editPhone">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>所属机构</label>
+                            <select class="form-control" id="editOrgId">
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>预计入住日期</label>
+                            <input type="date" class="form-control" id="editExpectedCheckinDate">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>家庭住址</label>
+                        <input type="text" class="form-control" id="editAddress">
+                    </div>
+
+                    <h4 style="margin: 20px 0 15px 0; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px;">二、健康状况</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>健康状况</label>
+                            <select class="form-control" id="editHealthStatus">
+                                <option value="良好">良好</option>
+                                <option value="一般">一般</option>
+                                <option value="较差">较差</option>
+                                <option value="失能">失能</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>失能状况</label>
+                            <input type="text" class="form-control" id="editDisabilityStatus" placeholder="如：半失能、全失能等">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>既往病史</label>
+                        <textarea class="form-control" id="editMedicalHistory" rows="2" placeholder="请描述过往病史"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>慢性病情况</label>
+                        <textarea class="form-control" id="editChronicDiseases" rows="2" placeholder="如：高血压、糖尿病等"></textarea>
+                    </div>
+
+                    <h4 style="margin: 20px 0 15px 0; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px;">三、紧急联系人</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>联系人姓名</label>
+                            <input type="text" class="form-control" id="editEmergencyContactName">
+                        </div>
+                        <div class="form-group">
+                            <label>联系电话</label>
+                            <input type="text" class="form-control" id="editEmergencyContactPhone">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>与老人关系</label>
+                        <input type="text" class="form-control" id="editEmergencyContactRelation" placeholder="如：子女、配偶等">
+                    </div>
+
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea class="form-control" id="editRemark" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveData()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="reviewModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>审核申请</h3>
+                <button class="modal-close" onclick="closeReviewModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="reviewId">
+                <div class="form-group">
+                    <label>审核意见</label>
+                    <textarea class="form-control" id="reviewOpinion" rows="3" placeholder="请输入审核意见"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeReviewModal()">取消</button>
+                <button class="btn btn-danger" onclick="rejectApplication()">拒绝</button>
+                <button class="btn btn-success" onclick="approveApplication()">通过</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="assignBedModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>分配床位与护理人员</h3>
+                <button class="modal-close" onclick="closeAssignBedModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="assignId">
+                <div class="form-group">
+                    <label>选择床位</label>
+                    <select class="form-control" id="assignBedId">
+                        <option value="">请选择床位</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>选择护理人员</label>
+                    <select class="form-control" id="assignCaregiverId">
+                        <option value="">请选择护理人员</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeAssignBedModal()">取消</button>
+                <button class="btn btn-primary" onclick="assignBed()">确认分配</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('username').textContent = user.realName || user.username;
+
+        let currentPage = 0;
+        const pageSize = 10;
+        let totalPages = 0;
+
+        function logout() {
+            http.post('/auth/logout').then(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            });
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'PENDING': '待审核',
+                'APPROVED': '已通过',
+                'REJECTED': '已拒绝',
+                'CHECKED_IN': '已入住'
+            };
+            return statusMap[status] || status;
+        }
+
+        function getStatusClass(status) {
+            const classMap = {
+                'PENDING': 'status-warning',
+                'APPROVED': 'status-success',
+                'REJECTED': 'status-danger',
+                'CHECKED_IN': 'status-info'
+            };
+            return classMap[status] || '';
+        }
+
+        function generateApplicationNo() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+            return `CA${year}${month}${day}${random}`;
+        }
+
+        function loadOrganizations() {
+            http.get('/organization/list').then(result => {
+                const select = document.getElementById('editOrgId');
+                select.innerHTML = '<option value="">请选择</option>';
+                result.data.forEach(org => {
+                    select.innerHTML += `<option value="${org.id}">${org.name}</option>`;
+                });
+            });
+        }
+
+        function loadData() {
+            const name = document.getElementById('filterName').value;
+            const applicationStatus = document.getElementById('filterStatus').value;
+
+            const params = {
+                page: currentPage,
+                size: pageSize
+            };
+            if (name) params.name = name;
+            if (applicationStatus) params.applicationStatus = applicationStatus;
+
+            http.get('/checkin/page', params).then(result => {
+                const data = result.data;
+                totalPages = data.totalPages;
+                document.getElementById('pageInfo').textContent = `第 ${currentPage + 1} / ${totalPages} 页，共 ${data.totalElements} 条`;
+
+                const tbody = document.getElementById('dataTable');
+                tbody.innerHTML = '';
+                data.content.forEach(item => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${item.applicationNo}</td>
+                            <td>${item.name}</td>
+                            <td>${item.gender || '-'}</td>
+                            <td>${item.phone || '-'}</td>
+                            <td><span class="status-tag ${getStatusClass(item.applicationStatus)}">${getStatusText(item.applicationStatus)}</span></td>
+                            <td>${item.createTime ? item.createTime.substring(0, 10) : '-'}</td>
+                            <td>
+                                ${item.applicationStatus === 'PENDING' ? `
+                                    <button class="btn btn-sm btn-success" onclick="openReviewModal(${item.id})">审核</button>
+                                ` : ''}
+                                ${item.applicationStatus === 'APPROVED' && !item.checkinCompleted ? `
+                                    <button class="btn btn-sm btn-primary" onclick="openAssignBedModal(${item.id})">分配床位</button>
+                                    ${item.assignedBedId ? `<button class="btn btn-sm btn-info" onclick="completeCheckIn(${item.id})">完成入住</button>` : ''}
+                                ` : ''}
+                                <button class="btn btn-sm btn-primary" onclick="viewApplication(${item.id})">详情</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('prevBtn').disabled = currentPage === 0;
+                document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
+            });
+        }
+
+        function resetFilter() {
+            document.getElementById('filterName').value = '';
+            document.getElementById('filterStatus').value = '';
+            currentPage = 0;
+            loadData();
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadData();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadData();
+            }
+        }
+
+        function openModal(id = null) {
+            document.getElementById('editModal').classList.add('active');
+            document.getElementById('editId').value = id || '';
+            document.getElementById('modalTitle').textContent = id ? '编辑申请' : '新增入住申请';
+
+            if (id) {
+                http.get('/checkin/' + id).then(result => {
+                    const data = result.data;
+                    document.getElementById('editApplicationNo').value = data.applicationNo || '';
+                    document.getElementById('editName').value = data.name || '';
+                    document.getElementById('editGender').value = data.gender || '男';
+                    document.getElementById('editBirthDate').value = data.birthDate ? data.birthDate.substring(0, 10) : '';
+                    document.getElementById('editIdCard').value = data.idCard || '';
+                    document.getElementById('editPhone').value = data.phone || '';
+                    document.getElementById('editOrgId').value = data.orgId || '';
+                    document.getElementById('editExpectedCheckinDate').value = data.expectedCheckinDate ? data.expectedCheckinDate.substring(0, 10) : '';
+                    document.getElementById('editAddress').value = data.address || '';
+                    document.getElementById('editHealthStatus').value = data.healthStatus || '良好';
+                    document.getElementById('editDisabilityStatus').value = data.disabilityStatus || '';
+                    document.getElementById('editMedicalHistory').value = data.medicalHistory || '';
+                    document.getElementById('editChronicDiseases').value = data.chronicDiseases || '';
+                    document.getElementById('editEmergencyContactName').value = data.emergencyContactName || '';
+                    document.getElementById('editEmergencyContactPhone').value = data.emergencyContactPhone || '';
+                    document.getElementById('editEmergencyContactRelation').value = data.emergencyContactRelation || '';
+                    document.getElementById('editRemark').value = data.remark || '';
+                });
+            } else {
+                document.getElementById('editForm').reset();
+                document.getElementById('editApplicationNo').value = generateApplicationNo();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function saveData() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                applicationNo: document.getElementById('editApplicationNo').value,
+                name: document.getElementById('editName').value,
+                gender: document.getElementById('editGender').value,
+                birthDate: document.getElementById('editBirthDate').value || null,
+                idCard: document.getElementById('editIdCard').value,
+                phone: document.getElementById('editPhone').value,
+                orgId: document.getElementById('editOrgId').value ? parseInt(document.getElementById('editOrgId').value) : null,
+                expectedCheckinDate: document.getElementById('editExpectedCheckinDate').value || null,
+                address: document.getElementById('editAddress').value,
+                healthStatus: document.getElementById('editHealthStatus').value,
+                disabilityStatus: document.getElementById('editDisabilityStatus').value,
+                medicalHistory: document.getElementById('editMedicalHistory').value,
+                chronicDiseases: document.getElementById('editChronicDiseases').value,
+                emergencyContactName: document.getElementById('editEmergencyContactName').value,
+                emergencyContactPhone: document.getElementById('editEmergencyContactPhone').value,
+                emergencyContactRelation: document.getElementById('editEmergencyContactRelation').value,
+                remark: document.getElementById('editRemark').value
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            http.post('/checkin', data).then(() => {
+                alert('保存成功');
+                closeModal();
+                loadData();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function viewApplication(id) {
+            openModal(id);
+        }
+
+        function openReviewModal(id) {
+            document.getElementById('reviewModal').classList.add('active');
+            document.getElementById('reviewId').value = id;
+            document.getElementById('reviewOpinion').value = '';
+        }
+
+        function closeReviewModal() {
+            document.getElementById('reviewModal').classList.remove('active');
+        }
+
+        function approveApplication() {
+            const id = document.getElementById('reviewId').value;
+            const opinion = document.getElementById('reviewOpinion').value;
+            http.post('/checkin/approve/' + id, {
+                reviewerId: user.id,
+                reviewOpinion: opinion
+            }).then(() => {
+                alert('审核通过');
+                closeReviewModal();
+                loadData();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function rejectApplication() {
+            const id = document.getElementById('reviewId').value;
+            const opinion = document.getElementById('reviewOpinion').value;
+            http.post('/checkin/reject/' + id, {
+                reviewerId: user.id,
+                reviewOpinion: opinion
+            }).then(() => {
+                alert('已拒绝');
+                closeReviewModal();
+                loadData();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function openAssignBedModal(id) {
+            document.getElementById('assignBedModal').classList.add('active');
+            document.getElementById('assignId').value = id;
+            loadAvailableBeds();
+            loadCaregivers();
+        }
+
+        function closeAssignBedModal() {
+            document.getElementById('assignBedModal').classList.remove('active');
+        }
+
+        function loadAvailableBeds() {
+            http.get('/bed/page', { size: 100, bedStatus: '空闲' }).then(result => {
+                const select = document.getElementById('assignBedId');
+                select.innerHTML = '<option value="">请选择床位</option>';
+                result.data.content.forEach(bed => {
+                    select.innerHTML += `<option value="${bed.id}">${bed.bedNo}</option>`;
+                });
+            });
+        }
+
+        function loadCaregivers() {
+            http.get('/staff/page', { size: 100, staffType: '护理员' }).then(result => {
+                const select = document.getElementById('assignCaregiverId');
+                select.innerHTML = '<option value="">请选择护理人员</option>';
+                result.data.content.forEach(staff => {
+                    select.innerHTML += `<option value="${staff.id}">${staff.name}</option>`;
+                });
+            });
+        }
+
+        function assignBed() {
+            const id = document.getElementById('assignId').value;
+            const bedId = document.getElementById('assignBedId').value;
+            const caregiverId = document.getElementById('assignCaregiverId').value;
+
+            if (!bedId) {
+                alert('请选择床位');
+                return;
+            }
+
+            http.post('/checkin/assign-bed/' + id, {
+                bedId: parseInt(bedId),
+                caregiverId: caregiverId ? parseInt(caregiverId) : null
+            }).then(() => {
+                alert('分配成功');
+                closeAssignBedModal();
+                loadData();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function completeCheckIn(id) {
+            if (confirm('确认完成入住手续吗？')) {
+                http.post('/checkin/complete/' + id).then(() => {
+                    alert('入住完成');
+                    loadData();
+                }).catch(error => {
+                    alert(error.message);
+                });
+            }
+        }
+
+        loadOrganizations();
+        loadData();
+    </script>
+</body>
+</html>

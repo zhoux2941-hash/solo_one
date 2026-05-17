@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>区域划分 - 野外露营营地备案系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏕️ 野外露营营地备案系统</h1>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="area.html" class="active">区域划分</a></li>
+                <li><a href="facility.html">设施登记</a></li>
+                <li><a href="record.html">人员备案</a></li>
+                <li><a href="usage.html">场地使用</a></li>
+            </ul>
+        </nav>
+        
+        <div class="main-content">
+            <h2 class="section-title">📍 营地区域管理</h2>
+            
+            <div class="filter-bar">
+                <div class="form-group">
+                    <label>区域类型</label>
+                    <select id="areaTypeFilter" onchange="loadAreas()">
+                        <option value="">全部</option>
+                        <option value="休闲区">休闲区</option>
+                        <option value="生火区">生火区</option>
+                        <option value="取水区">取水区</option>
+                        <option value="帐篷区">帐篷区</option>
+                        <option value="观景区">观景区</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>状态</label>
+                    <select id="statusFilter" onchange="loadAreas()">
+                        <option value="">全部</option>
+                        <option value="正常">正常</option>
+                        <option value="维护中">维护中</option>
+                        <option value="停用">停用</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ 新增区域</button>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>区域名称</th>
+                            <th>区域类型</th>
+                            <th>位置</th>
+                            <th>面积(m²)</th>
+                            <th>最大容量</th>
+                            <th>状态</th>
+                            <th>描述</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="areaTableBody">
+                        <tr>
+                            <td colspan="9" style="text-align:center;padding:30px;color:#999;">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="pagination" class="pagination"></div>
+        </div>
+    </div>
+
+    <div id="areaModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('areaModal')">&times;</span>
+            <h3 class="modal-title" id="modalTitle">新增区域</h3>
+            <form id="areaForm">
+                <input type="hidden" id="areaId">
+                <div class="form-group">
+                    <label>区域名称 *</label>
+                    <input type="text" id="areaName" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>区域类型 *</label>
+                        <select id="areaType" required>
+                            <option value="">请选择</option>
+                            <option value="休闲区">休闲区</option>
+                            <option value="生火区">生火区</option>
+                            <option value="取水区">取水区</option>
+                            <option value="帐篷区">帐篷区</option>
+                            <option value="观景区">观景区</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select id="areaStatus">
+                            <option value="正常">正常</option>
+                            <option value="维护中">维护中</option>
+                            <option value="停用">停用</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>位置</label>
+                    <input type="text" id="location" placeholder="例如：营地东侧">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>面积(m²)</label>
+                        <input type="number" id="areaSize" step="0.1" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>最大容量(人)</label>
+                        <input type="number" id="maxCapacity" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea id="description" rows="3" placeholder="区域详细描述..."></textarea>
+                </div>
+                <div style="text-align:right;margin-top:20px;">
+                    <button type="button" class="btn btn-warning" onclick="closeModal('areaModal')" style="margin-right:10px;">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        let editingId = null;
+        let currentPage = 0;
+        const pageSize = 20;
+
+        async function loadAreas(page = 0) {
+            try {
+                currentPage = page;
+                const typeFilter = document.getElementById('areaTypeFilter').value;
+                const statusFilter = document.getElementById('statusFilter').value;
+                
+                let url = `/areas/page?page=${page}&size=${pageSize}`;
+                if (typeFilter) {
+                    url += `&type=${encodeURIComponent(typeFilter)}`;
+                } else if (statusFilter) {
+                    url += `&status=${encodeURIComponent(statusFilter)}`;
+                }
+                
+                const pageData = await apiRequest(url);
+                
+                renderTable('areaTableBody', pageData.content, [
+                    { field: 'id' },
+                    { field: 'areaName' },
+                    { render: (item) => getAreaTypeLabel(item.areaType) },
+                    { field: 'location' },
+                    { field: 'areaSize' },
+                    { field: 'maxCapacity' },
+                    { render: (item) => getStatusBadge(item.status) },
+                    { field: 'description' }
+                ], (item) => `
+                    <div class="action-buttons">
+                        <button class="btn btn-warning" onclick="editArea(${item.id})">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteArea(${item.id})">删除</button>
+                    </div>
+                `);
+                
+                renderPagination('pagination', pageData, 'goToPage');
+            } catch (error) {
+                console.error('加载区域列表失败:', error);
+            }
+        }
+
+        function goToPage(page) {
+            loadAreas(page);
+        }
+
+        function openAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = '新增区域';
+            document.getElementById('areaForm').reset();
+            openModal('areaModal');
+        }
+
+        async function editArea(id) {
+            try {
+                const area = await apiRequest(`/areas/${id}`);
+                editingId = id;
+                document.getElementById('modalTitle').textContent = '编辑区域';
+                document.getElementById('areaId').value = area.id;
+                document.getElementById('areaName').value = area.areaName;
+                document.getElementById('areaType').value = area.areaType;
+                document.getElementById('areaStatus').value = area.status;
+                document.getElementById('location').value = area.location || '';
+                document.getElementById('areaSize').value = area.areaSize || '';
+                document.getElementById('maxCapacity').value = area.maxCapacity || '';
+                document.getElementById('description').value = area.description || '';
+                openModal('areaModal');
+            } catch (error) {
+                console.error('加载区域详情失败:', error);
+            }
+        }
+
+        async function deleteArea(id) {
+            if (confirm('确定要删除这个区域吗？')) {
+                try {
+                    await apiRequest(`/areas/${id}`, 'DELETE');
+                    alert('删除成功');
+                    loadAreas();
+                } catch (error) {
+                    console.error('删除区域失败:', error);
+                }
+            }
+        }
+
+        document.getElementById('areaForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = {
+                areaName: document.getElementById('areaName').value,
+                areaType: document.getElementById('areaType').value,
+                status: document.getElementById('areaStatus').value,
+                location: document.getElementById('location').value || null,
+                areaSize: getNumberValue(document.getElementById('areaSize').value),
+                maxCapacity: getNumberValue(document.getElementById('maxCapacity').value),
+                description: document.getElementById('description').value || null
+            };
+
+            try {
+                if (editingId) {
+                    await apiRequest(`/areas/${editingId}`, 'PUT', data);
+                    alert('更新成功');
+                } else {
+                    await apiRequest('/areas', 'POST', data);
+                    alert('添加成功');
+                }
+                closeModal('areaModal');
+                loadAreas();
+            } catch (error) {
+                console.error('保存区域失败:', error);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', loadAreas);
+    </script>
+</body>
+</html>

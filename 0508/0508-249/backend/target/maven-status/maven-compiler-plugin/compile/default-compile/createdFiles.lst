@@ -1,0 +1,15 @@
+com\zoo\monitoring\entity\MonitoringData.class
+com\zoo\monitoring\controller\BirdController.class
+com\zoo\monitoring\service\MonitoringService.class
+com\zoo\monitoring\controller\AlertController.class
+com\zoo\monitoring\repository\MonitoringDataRepository.class
+com\zoo\monitoring\service\BirdService.class
+com\zoo\monitoring\BirdFluMonitoringApplication.class
+com\zoo\monitoring\service\ReportService.class
+com\zoo\monitoring\controller\ReportController.class
+com\zoo\monitoring\entity\Bird.class
+com\zoo\monitoring\controller\MonitoringController.class
+com\zoo\monitoring\entity\Alert.class
+com\zoo\monitoring\repository\AlertRepository.class
+com\zoo\monitoring\repository\BirdRepository.class
+com\zoo\monitoring\service\AlertService.class

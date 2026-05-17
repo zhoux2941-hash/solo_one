@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>精神科病房智能门禁与行为分析系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: white;
+            padding: 20px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .nav-tab {
+            padding: 10px 20px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .nav-tab:hover {
+            background: #e5e7eb;
+        }
+        
+        .nav-tab.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        .card h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #1f2937;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 10px;
+        }
+        
+        .ward-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .ward-card {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #10b981;
+            transition: all 0.3s;
+        }
+        
+        .ward-card.locked {
+            border-left-color: #ef4444;
+        }
+        
+        .ward-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .ward-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        
+        .ward-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        
+        .status-locked {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .status-unlocked {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        .ward-info {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        
+        .ward-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .patient-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        
+        .patient-card {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .patient-avatar {
+            width: 50px;
+            height: 50px;
+            background: #0ea5e9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .patient-info h4 {
+            font-size: 15px;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+        
+        .patient-info p {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .location-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-top: 5px;
+        }
+        
+        .location-ward {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        
+        .location-corridor {
+            background: #fef3c7;
+            color: #b45309;
+        }
+        
+        .location-activity {
+            background: #d1fae5;
+            color: #047857;
+        }
+        
+        .alert-item {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .alert-item.read {
+            background: #f9fafb;
+            border-left-color: #9ca3af;
+            opacity: 0.7;
+        }
+        
+        .alert-content h4 {
+            font-size: 14px;
+            color: #dc2626;
+            margin-bottom: 5px;
+        }
+        
+        .alert-content p {
+            font-size: 13px;
+            color: #4b5563;
+        }
+        
+        .alert-time {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 8px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 450px;
+        }
+        
+        .modal-content h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #4b5563;
+            margin-bottom: 5px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            transform: rotate(180deg);
+            background: #2563eb;
+        }
+        
+        .alert-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        .tab-btn-wrapper {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>精神科病房智能门禁与行为分析系统</h1>
+        <p>精神专科医院安保科使用</p>
+    </div>
+    
+    <div class="container">
+        <div class="nav-tabs">
+            <div class="tab-btn-wrapper">
+                <button class="nav-tab active" onclick="switchTab('overview')">总览</button>
+            </div>
+            <div class="tab-btn-wrapper">
+                <button class="nav-tab" onclick="switchTab('wards')">病房门禁</button>
+            </div>
+            <div class="tab-btn-wrapper">
+                <button class="nav-tab" onclick="switchTab('patients')">患者位置</button>
+            </div>
+            <div class="tab-btn-wrapper">
+                <button class="nav-tab" onclick="switchTab('alerts')">
+                    预警中心
+                    <span class="alert-badge" id="alertBadge">0</span>
+                </button>
+            </div>
+        </div>
+        
+        <div id="overview" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalWards">0</div>
+                    <div class="stat-label">病房总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPatients">0</div>
+                    <div class="stat-label">患者总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="lockedWards">0</div>
+                    <div class="stat-label">已锁门数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="activeAlerts">0</div>
+                    <div class="stat-label">待处理预警</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>患者位置分布</h3>
+                <div class="patient-grid" id="patientGrid">
+                </div>
+            </div>
+        </div>
+        
+        <div id="wards" class="tab-content">
+            <div class="card">
+                <h3>病房门禁管理</h3>
+                <div class="ward-grid" id="wardGrid">
+                </div>
+            </div>
+        </div>
+        
+        <div id="patients" class="tab-content">
+            <div class="card">
+                <h3>患者实时位置</h3>
+                <div style="margin-bottom: 15px;">
+                    <button class="btn btn-primary" onclick="simulateLocation()">模拟位置上报</button>
+                </div>
+                <div class="patient-grid" id="patientGridFull">
+                </div>
+            </div>
+        </div>
+        
+        <div id="alerts" class="tab-content">
+            <div class="card">
+                <h3>预警信息</h3>
+                <div style="margin-bottom: 15px;">
+                    <button class="btn btn-danger" onclick="triggerAnalysis()">触发夜间行为分析</button>
+                </div>
+                <div id="alertList">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="unlockModal">
+        <div class="modal-content">
+            <h3>远程解锁病房</h3>
+            <input type="hidden" id="unlockWardNumber">
+            <div class="form-group">
+                <label>操作人姓名</label>
+                <input type="text" id="operatorName" placeholder="请输入护士姓名">
+            </div>
+            <div class="form-group">
+                <label>解锁原因</label>
+                <textarea id="unlockReason" placeholder="请输入解锁原因"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="confirmUnlock()">确认解锁</button>
+            </div>
+        </div>
+    </div>
+    
+    <button class="refresh-btn" onclick="refreshAll()" title="刷新数据">↻</button>
+
+    <script>
+        const API_BASE = 'http://localhost:8081/api';
+        
+        function switchTab(tabId) {
+            document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+        
+        async function loadWards() {
+            try {
+                const response = await fetch(`${API_BASE}/wards`);
+                const wards = await response.json();
+                renderWards(wards);
+                updateOverviewStats();
+            } catch (error) {
+                console.error('加载病房数据失败:', error);
+            }
+        }
+        
+        function renderWards(wards) {
+            const grid = document.getElementById('wardGrid');
+            grid.innerHTML = wards.map(ward => `
+                <div class="ward-card ${ward.doorLocked ? 'locked' : ''}">
+                    <div class="ward-title">🏥 病房 ${ward.wardNumber}</div>
+                    <span class="ward-status ${ward.doorLocked ? 'status-locked' : 'status-unlocked'}">
+                        ${ward.doorLocked ? '🔒 已上锁' : '🔓 已解锁'}
+                    </span>
+                    <div class="ward-info">
+                        <strong>授权人员：</strong>${ward.authorizedPersonnel ? ward.authorizedPersonnel.join('、') : '无'}
+                    </div>
+                    ${ward.currentUnlocker ? `
+                        <div class="ward-info">
+                            <strong>当前解锁人：</strong>${ward.currentUnlocker}
+                        </div>
+                        <div class="ward-info">
+                            <strong>解锁原因：</strong>${ward.unlockReason || '未记录'}
+                        </div>
+                    ` : ''}
+                    <div class="ward-actions">
+                        ${ward.doorLocked ? `
+                            <button class="btn btn-primary" onclick="openUnlockModal('${ward.wardNumber}')">远程解锁</button>
+                        ` : `
+                            <button class="btn btn-success" onclick="lockDoor('${ward.wardNumber}')">锁门</button>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function loadPatients() {
+            try {
+                const response = await fetch(`${API_BASE}/patients`);
+                const patients = await response.json();
+                renderPatients(patients, 'patientGrid');
+                renderPatients(patients, 'patientGridFull');
+                updateOverviewStats();
+            } catch (error) {
+                console.error('加载患者数据失败:', error);
+            }
+        }
+        
+        function renderPatients(patients, containerId) {
+            const grid = document.getElementById(containerId);
+            grid.innerHTML = patients.map(patient => {
+                const locationClass = getLocationClass(patient.currentLocation);
+                return `
+                    <div class="patient-card">
+                        <div class="patient-avatar">${patient.name.charAt(0)}</div>
+                        <div class="patient-info">
+                            <h4>${patient.name}</h4>
+                            <p>手环：${patient.braceletId} | 病房：${patient.wardNumber}</p>
+                            <span class="location-badge ${locationClass}">
+                                📍 ${patient.currentLocation || '未知'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function getLocationClass(location) {
+            if (location === '病房内') return 'location-ward';
+            if (location === '走廊') return 'location-corridor';
+            if (location === '活动室') return 'location-activity';
+            return 'location-ward';
+        }
+        
+        async function loadAlerts() {
+            try {
+                const response = await fetch(`${API_BASE}/alerts/unread`);
+                const alerts = await response.json();
+                renderAlerts(alerts);
+                updateAlertBadge(alerts.length);
+                updateOverviewStats();
+            } catch (error) {
+                console.error('加载预警数据失败:', error);
+            }
+        }
+        
+        function renderAlerts(alerts) {
+            const list = document.getElementById('alertList');
+            if (alerts.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 40px;">暂无预警信息</p>';
+                return;
+            }
+            list.innerHTML = alerts.map(alert => `
+                <div class="alert-item ${alert.isRead ? 'read' : ''}">
+                    <div class="alert-content">
+                        <h4>⚠️ ${alert.alertType}</h4>
+                        <p><strong>患者：</strong>${alert.patientName}（手环：${alert.braceletId}）</p>
+                        <p>${alert.message}</p>
+                        <div class="alert-time">${formatTime(alert.alertTime)}</div>
+                    </div>
+                    ${!alert.isRead ? `
+                        <button class="btn btn-secondary" onclick="markAsRead(${alert.id})">已读</button>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+        
+        function formatTime(timeStr) {
+            const date = new Date(timeStr);
+            return date.toLocaleString('zh-CN');
+        }
+        
+        function updateAlertBadge(count) {
+            document.getElementById('alertBadge').textContent = count;
+            document.getElementById('alertBadge').style.display = count > 0 ? 'inline-block' : 'none';
+        }
+        
+        async function updateOverviewStats() {
+            try {
+                const [wardsRes, patientsRes, alertsRes] = await Promise.all([
+                    fetch(`${API_BASE}/wards`),
+                    fetch(`${API_BASE}/patients`),
+                    fetch(`${API_BASE}/alerts/unread`)
+                ]);
+                const wards = await wardsRes.json();
+                const patients = await patientsRes.json();
+                const alerts = await alertsRes.json();
+                
+                document.getElementById('totalWards').textContent = wards.length;
+                document.getElementById('totalPatients').textContent = patients.length;
+                document.getElementById('lockedWards').textContent = wards.filter(w => w.doorLocked).length;
+                document.getElementById('activeAlerts').textContent = alerts.length;
+            } catch (error) {
+                console.error('更新统计数据失败:', error);
+            }
+        }
+        
+        function openUnlockModal(wardNumber) {
+            document.getElementById('unlockWardNumber').value = wardNumber;
+            document.getElementById('operatorName').value = '';
+            document.getElementById('unlockReason').value = '';
+            document.getElementById('unlockModal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('unlockModal').classList.remove('active');
+        }
+        
+        async function confirmUnlock() {
+            const wardNumber = document.getElementById('unlockWardNumber').value;
+            const operator = document.getElementById('operatorName').value;
+            const reason = document.getElementById('unlockReason').value;
+            
+            if (!operator || !reason) {
+                alert('请填写操作人姓名和解锁原因');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/wards/${wardNumber}/unlock`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ operator, reason })
+                });
+                
+                if (response.ok) {
+                    closeModal();
+                    loadWards();
+                    alert('解锁成功');
+                }
+            } catch (error) {
+                console.error('解锁失败:', error);
+                alert('解锁失败');
+            }
+        }
+        
+        async function lockDoor(wardNumber) {
+            try {
+                const response = await fetch(`${API_BASE}/wards/${wardNumber}/lock`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    loadWards();
+                    alert('锁门成功');
+                }
+            } catch (error) {
+                console.error('锁门失败:', error);
+                alert('锁门失败');
+            }
+        }
+        
+        async function markAsRead(alertId) {
+            try {
+                await fetch(`${API_BASE}/alerts/${alertId}/read`, { method: 'POST' });
+                loadAlerts();
+            } catch (error) {
+                console.error('标记已读失败:', error);
+            }
+        }
+        
+        async function triggerAnalysis() {
+            try {
+                await fetch(`${API_BASE}/alerts/analyze`, { method: 'POST' });
+                loadAlerts();
+                alert('分析完成');
+            } catch (error) {
+                console.error('触发分析失败:', error);
+                alert('触发分析失败');
+            }
+        }
+        
+        async function simulateLocation() {
+            const locations = ['病房内', '走廊', '活动室'];
+            const braceletIds = ['B001', 'B002', 'B003', 'B004'];
+            
+            const randomBracelet = braceletIds[Math.floor(Math.random() * braceletIds.length)];
+            const randomLocation = locations[Math.floor(Math.random() * locations.length)];
+            
+            try {
+                await fetch(`${API_BASE}/location-records`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ braceletId: randomBracelet, location: randomLocation })
+                });
+                loadPatients();
+            } catch (error) {
+                console.error('模拟位置失败:', error);
+            }
+        }
+        
+        function refreshAll() {
+            loadWards();
+            loadPatients();
+            loadAlerts();
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshAll();
+            setInterval(refreshAll, 30000);
+        });
+    </script>
+</body>
+</html>

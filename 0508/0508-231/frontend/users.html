@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理 - 智慧供水运维调度平台</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-title">智慧供水平台</div>
+            <ul class="sidebar-menu" id="menu">
+            </ul>
+        </div>
+        <div class="content">
+            <div class="header">
+                <h1>用户管理</h1>
+                <div class="user-info">
+                    <span id="userName"></span>
+                    <button class="btn btn-small btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div></div>
+                <button class="btn btn-small btn-success" onclick="openModal()">新增用户</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>真实姓名</th>
+                            <th>手机号</th>
+                            <th>角色</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTable">
+                        <tr><td colspan="6" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="pagination">
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">新增用户</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="userForm">
+                <input type="hidden" id="userId" name="id">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" placeholder="请输入用户名">
+                </div>
+                <div class="form-group" id="passwordGroup">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" placeholder="请输入密码">
+                </div>
+                <div class="form-group">
+                    <label for="realName">真实姓名</label>
+                    <input type="text" id="realName" name="realName" placeholder="请输入真实姓名">
+                </div>
+                <div class="form-group">
+                    <label for="phone">手机号</label>
+                    <input type="text" id="phone" name="phone" placeholder="请输入手机号">
+                </div>
+                <div class="form-group">
+                    <label for="role">角色</label>
+                    <select id="role" name="role">
+                        <option value="ADMIN">管理员</option>
+                        <option value="INSPECTOR">巡检员</option>
+                        <option value="STAFF">普通员工</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-small" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-small btn-success">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="passwordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>重置密码</h2>
+                <button class="modal-close" onclick="closePasswordModal()">&times;</button>
+            </div>
+            <form id="passwordForm">
+                <input type="hidden" id="resetUserId">
+                <div class="form-group">
+                    <label for="newPassword">新密码</label>
+                    <input type="password" id="newPassword" placeholder="请输入新密码">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-small" onclick="closePasswordModal()">取消</button>
+                    <button type="submit" class="btn btn-small btn-success">确定</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script src="js/validator.js"></script>
+    <script>
+        if (!auth.checkAuth()) {
+            throw new Error('未登录');
+        }
+
+        const user = auth.getUser();
+        if (user.role !== 'ADMIN') {
+            alert('无权限访问');
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('userName').textContent = `欢迎，${user.realName}`;
+
+        const menuItems = [
+            { id: 'users', label: '用户管理', url: 'users.html', active: true },
+            { id: 'stations', label: '站点管理', url: 'stations.html' }
+        ];
+
+        const menu = document.getElementById('menu');
+        menuItems.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `<a href="${item.url}" class="${item.active ? 'active' : ''}">${item.label}</a>`;
+            menu.appendChild(li);
+        });
+
+        let currentPage = 0;
+        const pageSize = 10;
+
+        function loadUsers() {
+            request.get('/users', { page: currentPage, size: pageSize })
+                .then(result => {
+                    if (result.success) {
+                        renderUsers(result.data);
+                        renderPagination(result.totalPages);
+                    } else {
+                        showToast(result.message || '加载失败', 'error');
+                    }
+                })
+                .catch(() => {
+                    showToast('加载失败，请检查网络连接', 'error');
+                });
+        }
+
+        function renderUsers(users) {
+            const tbody = document.getElementById('userTable');
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="loading">暂无数据</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(u => `
+                <tr>
+                    <td>${u.username}</td>
+                    <td>${u.realName}</td>
+                    <td>${u.phone}</td>
+                    <td><span class="role-badge role-${u.role.toLowerCase()}">${getRoleText(u.role)}</span></td>
+                    <td><span class="status-badge ${u.enabled ? 'status-active' : 'status-inactive'}">${u.enabled ? '启用' : '禁用'}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-edit" onclick="editUser(${u.id})">编辑</button>
+                            <button class="btn-toggle" onclick="toggleUser(${u.id})">${u.enabled ? '禁用' : '启用'}</button>
+                            <button class="btn-reset" onclick="openPasswordModal(${u.id})">重置密码</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getRoleText(role) {
+            const roleMap = { 'ADMIN': '管理员', 'INSPECTOR': '巡检员', 'STAFF': '普通员工' };
+            return roleMap[role] || role;
+        }
+
+        function renderPagination(totalPages) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = `
+                <button onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>上一页</button>
+                <span>第 ${currentPage + 1} / ${totalPages} 页</span>
+                <button onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>下一页</button>
+            `;
+        }
+
+        function goToPage(page) {
+            if (page >= 0) {
+                currentPage = page;
+                loadUsers();
+            }
+        }
+
+        function openModal(userId = null) {
+            document.getElementById('userModal').classList.add('active');
+            document.getElementById('modalTitle').textContent = userId ? '编辑用户' : '新增用户';
+            document.getElementById('passwordGroup').style.display = userId ? 'none' : 'block';
+            validator.clearErrors('userForm');
+            document.getElementById('userForm').reset();
+            document.getElementById('userId').value = '';
+
+            if (userId) {
+                request.get(`/users/${userId}`)
+                    .then(result => {
+                        if (result.success) {
+                            const u = result.data;
+                            document.getElementById('userId').value = u.id;
+                            document.getElementById('username').value = u.username;
+                            document.getElementById('realName').value = u.realName;
+                            document.getElementById('phone').value = u.phone;
+                            document.getElementById('role').value = u.role;
+                        }
+                    });
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('userModal').classList.remove('active');
+        }
+
+        function editUser(id) {
+            openModal(id);
+        }
+
+        function toggleUser(id) {
+            if (!confirm('确定要切换用户状态吗？')) return;
+            request.put(`/users/${id}/toggle`)
+                .then(result => {
+                    if (result.success) {
+                        showToast('操作成功', 'success');
+                        loadUsers();
+                    } else {
+                        showToast(result.message || '操作失败', 'error');
+                    }
+                });
+        }
+
+        function openPasswordModal(userId) {
+            document.getElementById('passwordModal').classList.add('active');
+            document.getElementById('resetUserId').value = userId;
+            document.getElementById('newPassword').value = '';
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+        }
+
+        document.getElementById('userForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const userId = document.getElementById('userId').value;
+            const formData = {
+                username: document.getElementById('username').value,
+                realName: document.getElementById('realName').value,
+                phone: document.getElementById('phone').value,
+                role: document.getElementById('role').value,
+                enabled: true
+            };
+
+            if (!userId) {
+                formData.password = document.getElementById('password').value;
+            }
+
+            const rules = {
+                username: [
+                    { type: 'required', message: '请输入用户名' },
+                    { type: 'maxLength', max: 20, message: '用户名不能超过20个字符' }
+                ],
+                realName: [
+                    { type: 'required', message: '请输入真实姓名' },
+                    { type: 'maxLength', max: 50, message: '真实姓名不能超过50个字符' }
+                ],
+                phone: [
+                    { type: 'required', message: '请输入手机号' },
+                    { type: 'phone', message: '请输入有效的手机号' }
+                ]
+            };
+
+            if (!userId) {
+                rules.password = [
+                    { type: 'required', message: '请输入密码' },
+                    { type: 'minLength', min: 6, message: '密码至少6位' },
+                    { type: 'maxLength', max: 50, message: '密码不能超过50个字符' }
+                ];
+            }
+
+            const { isValid, errors } = validator.validate(formData, rules);
+            validator.showErrors(errors, 'userForm');
+
+            if (!isValid) return;
+
+            const promise = userId 
+                ? request.put(`/users/${userId}`, formData)
+                : request.post('/users', formData);
+
+            promise.then(result => {
+                if (result.success) {
+                    showToast(userId ? '更新成功' : '创建成功', 'success');
+                    closeModal();
+                    loadUsers();
+                } else {
+                    showToast(result.message || '操作失败', 'error');
+                }
+            });
+        });
+
+        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const userId = document.getElementById('resetUserId').value;
+            const newPassword = document.getElementById('newPassword').value;
+
+            if (!newPassword || newPassword.length < 6) {
+                showToast('密码至少6位', 'error');
+                return;
+            }
+
+            request.put(`/users/${userId}/reset-password`, { password: newPassword })
+                .then(result => {
+                    if (result.success) {
+                        showToast('密码重置成功', 'success');
+                        closePasswordModal();
+                    } else {
+                        showToast(result.message || '操作失败', 'error');
+                    }
+                });
+        });
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function logout() {
+            auth.logout();
+            window.location.href = 'login.html';
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>

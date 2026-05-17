@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>居民管理 - 社区驿站管理平台</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🏪 驿站管理</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <span>📊 控制台</span>
+                </a>
+                <a href="users.html" class="nav-item">
+                    <span>👥 用户管理</span>
+                </a>
+                <a href="stations.html" class="nav-item">
+                    <span>🏠 驿站管理</span>
+                </a>
+                <a href="courier-companies.html" class="nav-item">
+                    <span>📦 快递品牌</span>
+                </a>
+                <a href="residents.html" class="nav-item active">
+                    <span>👨‍👩‍👧‍👦 居民管理</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info" id="userInfo">
+                    <span class="user-name">加载中...</span>
+                    <span class="user-role"></span>
+                </div>
+                <button class="btn btn-logout" onclick="logout()">退出登录</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="page-header">
+                <h1>居民管理</h1>
+                <button class="btn btn-primary" onclick="openResidentModal()">+ 添加居民</button>
+            </header>
+
+            <div class="content-section">
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>姓名</th>
+                                <th>手机号</th>
+                                <th>备用电话</th>
+                                <th>楼栋号</th>
+                                <th>房间号</th>
+                                <th>取件方式</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="residentTableBody">
+                        </tbody>
+                    </table>
+                    <div id="residentPagination" class="pagination-container">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="residentModal" class="modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">添加居民</h3>
+                <span class="close" onclick="closeResidentModal()">&times;</span>
+            </div>
+            <form id="residentForm">
+                <input type="hidden" id="residentId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>姓名 *</label>
+                        <input type="text" id="formRealName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>手机号</label>
+                        <input type="text" id="formPhone">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>备用电话</label>
+                        <input type="text" id="formBackupPhone">
+                    </div>
+                    <div class="form-group">
+                        <label>楼栋号</label>
+                        <input type="text" id="formBuildingNumber">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>房间号</label>
+                        <input type="text" id="formRoomNumber">
+                    </div>
+                    <div class="form-group">
+                        <label>详细地址</label>
+                        <input type="text" id="formFullAddress">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>常用取件方式</label>
+                        <select id="formPickupMethod">
+                            <option value="">请选择</option>
+                            <option value="驿站自提">驿站自提</option>
+                            <option value="送货上门">送货上门</option>
+                            <option value="丰巢柜">丰巢柜</option>
+                            <option value="菜鸟驿站">菜鸟驿站</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>取件地址</label>
+                        <input type="text" id="formPickupAddress">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>派送备注</label>
+                    <textarea id="formDeliveryNotes" rows="2"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select id="formEnabled">
+                            <option value="true">启用</option>
+                            <option value="false">禁用</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <input type="text" id="formRemark">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeResidentModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script src="js/residents.js"></script>
+</body>
+</html>

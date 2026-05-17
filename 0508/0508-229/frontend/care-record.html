@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>护理记录管理 - 康养机构管理系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sidebar-logo">康养管理系统</div>
+            <ul class="sidebar-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="organization.html">机构组织管理</a></li>
+                <li><a href="staff.html">医护人员管理</a></li>
+                <li><a href="room.html">房型床位管理</a></li>
+                <li><a href="checkin-application.html">入住申请管理</a></li>
+                <li><a href="elder-list.html">入住人员管理</a></li>
+                <li><a href="health-record.html">健康档案管理</a></li>
+                <li><a href="care-schedule.html">护理排班管理</a></li>
+                <li><a href="care-record.html" class="active">护理记录管理</a></li>
+                <li><a href="meal-plan.html">膳食计划管理</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="top-bar">
+                <span>护理记录管理</span>
+                <div class="user-info">
+                    <span id="username"></span>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>护理记录列表</h2>
+                        <button class="btn btn-primary" onclick="openModal()">新增记录</button>
+                    </div>
+                    <div class="filter-bar">
+                        <div class="filter-item">
+                            <label>长者</label>
+                            <select class="form-control" id="filterElderId">
+                                <option value="">全部</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>护理员</label>
+                            <select class="form-control" id="filterCaregiverId">
+                                <option value="">全部</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>开始时间</label>
+                            <input type="datetime-local" class="form-control" id="filterStartTime">
+                        </div>
+                        <div class="filter-item">
+                            <label>结束时间</label>
+                            <input type="datetime-local" class="form-control" id="filterEndTime">
+                        </div>
+                        <button class="btn btn-primary" onclick="loadData()">查询</button>
+                        <button class="btn btn-warning" onclick="resetFilter()">重置</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>记录编号</th>
+                                <th>长者</th>
+                                <th>护理项目</th>
+                                <th>护理员</th>
+                                <th>开始时间</th>
+                                <th>结束时间</th>
+                                <th>时长(分钟)</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTable"></tbody>
+                    </table>
+                    <div class="pagination">
+                        <button class="btn btn-sm" id="prevBtn" onclick="prevPage()">上一页</button>
+                        <span id="pageInfo"></span>
+                        <button class="btn btn-sm" id="nextBtn" onclick="nextPage()">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 id="modalTitle">护理记录</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>长者 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="editElderId">
+                                <option value="">请选择长者</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>护理项目 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="editCareItemId">
+                                <option value="">请选择护理项目</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>护理员 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="editCaregiverId">
+                                <option value="">请选择护理员</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>关联排班</label>
+                            <select class="form-control" id="editScheduleId">
+                                <option value="">请选择排班</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>实际开始时间 <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" id="editActualStartTime">
+                        </div>
+                        <div class="form-group">
+                            <label>实际结束时间</label>
+                            <input type="datetime-local" class="form-control" id="editActualEndTime">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>服务时长(分钟)</label>
+                        <input type="number" class="form-control" id="editDurationMinutes" placeholder="自动计算或手动输入">
+                    </div>
+                    <div class="form-group">
+                        <label>服务内容 <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="editServiceContent" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>长者反馈</label>
+                        <textarea class="form-control" id="editElderFeedback" rows="2"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>状态</label>
+                            <select class="form-control" id="editStatus">
+                                <option value="已完成">已完成</option>
+                                <option value="进行中">进行中</option>
+                                <option value="异常">异常</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea class="form-control" id="editRemark" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeModal()">关闭</button>
+                <button class="btn btn-primary" onclick="saveData()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('username').textContent = user.realName || user.username;
+
+        let currentPage = 0;
+        const pageSize = 10;
+        let totalPages = 0;
+
+        function logout() {
+            http.post('/auth/logout').then(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            });
+        }
+
+        function loadData() {
+            const elderId = document.getElementById('filterElderId').value;
+            const caregiverId = document.getElementById('filterCaregiverId').value;
+            const startTime = document.getElementById('filterStartTime').value;
+            const endTime = document.getElementById('filterEndTime').value;
+
+            const params = {
+                page: currentPage,
+                size: pageSize
+            };
+            if (elderId) params.elderId = elderId;
+            if (caregiverId) params.caregiverId = caregiverId;
+            if (startTime) params.startTime = startTime;
+            if (endTime) params.endTime = endTime;
+
+            http.get('/care-record/page', params).then(result => {
+                const data = result.data;
+                totalPages = data.totalPages;
+                document.getElementById('pageInfo').textContent = `第 ${currentPage + 1} / ${totalPages} 页，共 ${data.totalElements} 条`;
+
+                const tbody = document.getElementById('dataTable');
+                tbody.innerHTML = '';
+                data.content.forEach(item => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${item.recordNo}</td>
+                            <td>${item.elderId || '-'}</td>
+                            <td>${item.careItemId || '-'}</td>
+                            <td>${item.caregiverId || '-'}</td>
+                            <td>${item.actualStartTime ? item.actualStartTime.substring(0, 16).replace('T', ' ') : '-'}</td>
+                            <td>${item.actualEndTime ? item.actualEndTime.substring(0, 16).replace('T', ' ') : '-'}</td>
+                            <td>${item.durationMinutes || '-'}</td>
+                            <td><span class="status-tag ${getStatusClass(item.status)}">${item.status || '-'}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="openModal(${item.id})">编辑</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('prevBtn').disabled = currentPage === 0;
+                document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
+            });
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case '已完成': return 'status-success';
+                case '进行中': return 'status-warning';
+                case '异常': return 'status-danger';
+                default: return '';
+            }
+        }
+
+        function resetFilter() {
+            document.getElementById('filterElderId').value = '';
+            document.getElementById('filterCaregiverId').value = '';
+            document.getElementById('filterStartTime').value = '';
+            document.getElementById('filterEndTime').value = '';
+            currentPage = 0;
+            loadData();
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadData();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadData();
+            }
+        }
+
+        function openModal(id = null) {
+            document.getElementById('editModal').classList.add('active');
+            document.getElementById('editId').value = id || '';
+            document.getElementById('modalTitle').textContent = id ? '编辑护理记录' : '新增护理记录';
+
+            loadElders();
+            loadCareItems();
+            loadStaff();
+            loadSchedules();
+
+            if (id) {
+                http.get('/care-record/' + id).then(result => {
+                    const data = result.data;
+                    document.getElementById('editElderId').value = data.elderId || '';
+                    document.getElementById('editCareItemId').value = data.careItemId || '';
+                    document.getElementById('editCaregiverId').value = data.caregiverId || '';
+                    document.getElementById('editScheduleId').value = data.scheduleId || '';
+                    document.getElementById('editActualStartTime').value = data.actualStartTime ? data.actualStartTime.substring(0, 16) : '';
+                    document.getElementById('editActualEndTime').value = data.actualEndTime ? data.actualEndTime.substring(0, 16) : '';
+                    document.getElementById('editDurationMinutes').value = data.durationMinutes || '';
+                    document.getElementById('editServiceContent').value = data.serviceContent || '';
+                    document.getElementById('editElderFeedback').value = data.elderFeedback || '';
+                    document.getElementById('editStatus').value = data.status || '已完成';
+                    document.getElementById('editRemark').value = data.remark || '';
+                });
+            } else {
+                document.getElementById('editForm').reset();
+                document.getElementById('editStatus').value = '已完成';
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('editActualStartTime').value = now.toISOString().slice(0, 16);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function calculateDuration() {
+            const startTime = document.getElementById('editActualStartTime').value;
+            const endTime = document.getElementById('editActualEndTime').value;
+            
+            if (startTime && endTime) {
+                const start = new Date(startTime);
+                const end = new Date(endTime);
+                const duration = Math.round((end - start) / (1000 * 60));
+                if (duration > 0) {
+                    document.getElementById('editDurationMinutes').value = duration;
+                }
+            }
+        }
+
+        document.getElementById('editActualEndTime')?.addEventListener('change', calculateDuration);
+
+        function saveData() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                elderId: parseInt(document.getElementById('editElderId').value),
+                careItemId: parseInt(document.getElementById('editCareItemId').value),
+                caregiverId: parseInt(document.getElementById('editCaregiverId').value),
+                scheduleId: document.getElementById('editScheduleId').value ? parseInt(document.getElementById('editScheduleId').value) : null,
+                actualStartTime: document.getElementById('editActualStartTime').value,
+                actualEndTime: document.getElementById('editActualEndTime').value || null,
+                durationMinutes: document.getElementById('editDurationMinutes').value ? parseInt(document.getElementById('editDurationMinutes').value) : null,
+                serviceContent: document.getElementById('editServiceContent').value,
+                elderFeedback: document.getElementById('editElderFeedback').value,
+                status: document.getElementById('editStatus').value,
+                remark: document.getElementById('editRemark').value
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            http.post('/care-record', data).then(() => {
+                alert('保存成功');
+                closeModal();
+                loadData();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function deleteData(id) {
+            if (confirm('确定要删除该护理记录吗？')) {
+                http.delete('/care-record/' + id).then(() => {
+                    alert('删除成功');
+                    loadData();
+                });
+            }
+        }
+
+        function loadElders() {
+            http.get('/elder/list').then(result => {
+                const selects = ['filterElderId', 'editElderId'];
+                selects.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    if (select) {
+                        const currentValue = select.value;
+                        select.innerHTML = '<option value="">请选择长者</option>';
+                        result.data.forEach(elder => {
+                            select.innerHTML += `<option value="${elder.id}">${elder.name}</option>`;
+                        });
+                        select.value = currentValue;
+                    }
+                });
+            });
+        }
+
+        function loadCareItems() {
+            http.get('/care-item/list').then(result => {
+                const select = document.getElementById('editCareItemId');
+                if (select) {
+                    select.innerHTML = '<option value="">请选择护理项目</option>';
+                    result.data.forEach(item => {
+                        select.innerHTML += `<option value="${item.id}">${item.itemName}</option>`;
+                    });
+                }
+            });
+        }
+
+        function loadStaff() {
+            http.get('/staff/list').then(result => {
+                const selects = ['filterCaregiverId', 'editCaregiverId'];
+                selects.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    if (select) {
+                        const currentValue = select.value;
+                        select.innerHTML = '<option value="">请选择护理员</option>';
+                        result.data.forEach(staff => {
+                            select.innerHTML += `<option value="${staff.id}">${staff.name}</option>`;
+                        });
+                        select.value = currentValue;
+                    }
+                });
+            });
+        }
+
+        function loadSchedules() {
+            http.get('/care-schedule/page', { page: 0, size: 100, status: '待执行' }).then(result => {
+                const select = document.getElementById('editScheduleId');
+                if (select) {
+                    select.innerHTML = '<option value="">请选择排班</option>';
+                    result.data.content.forEach(schedule => {
+                        select.innerHTML += `<option value="${schedule.id}">${schedule.scheduleNo} - ${schedule.scheduleDate}</option>`;
+                    });
+                }
+            });
+        }
+
+        loadElders();
+        loadStaff();
+        loadData();
+    </script>
+</body>
+</html>

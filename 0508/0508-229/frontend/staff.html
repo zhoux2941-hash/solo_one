@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医护人员管理 - 康养机构管理系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sidebar-logo">康养管理系统</div>
+            <ul class="sidebar-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="organization.html">机构组织管理</a></li>
+                <li><a href="staff.html" class="active">医护人员管理</a></li>
+                <li><a href="room.html">房型床位管理</a></li>
+                <li><a href="checkin-application.html">入住申请管理</a></li>
+                <li><a href="elder-list.html">入住人员管理</a></li>
+                <li><a href="health-record.html">健康档案管理</a></li>
+                <li><a href="care-schedule.html">护理排班管理</a></li>
+                <li><a href="care-record.html">护理记录管理</a></li>
+                <li><a href="meal-plan.html">膳食计划管理</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="top-bar">
+                <span>医护人员管理</span>
+                <div class="user-info">
+                    <span id="username"></span>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>医护人员列表</h2>
+                        <button class="btn btn-primary" onclick="openModal()">新增人员</button>
+                    </div>
+                    <div class="filter-bar">
+                        <div class="filter-item">
+                            <label>姓名</label>
+                            <input type="text" class="form-control" id="filterName" placeholder="请输入姓名">
+                        </div>
+                        <div class="filter-item">
+                            <label>人员类型</label>
+                            <select class="form-control" id="filterStaffType">
+                                <option value="">全部</option>
+                                <option value="护理员">护理员</option>
+                                <option value="医生">医生</option>
+                                <option value="护士">护士</option>
+                                <option value="后勤">后勤</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>部门</label>
+                            <input type="text" class="form-control" id="filterDepartment" placeholder="请输入部门">
+                        </div>
+                        <div class="filter-item">
+                            <label>在岗状态</label>
+                            <select class="form-control" id="filterWorkStatus">
+                                <option value="">全部</option>
+                                <option value="在岗">在岗</option>
+                                <option value="休假">休假</option>
+                                <option value="离职">离职</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadData()">查询</button>
+                        <button class="btn btn-warning" onclick="resetFilter()">重置</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>工号</th>
+                                <th>姓名</th>
+                                <th>性别</th>
+                                <th>类型</th>
+                                <th>岗位</th>
+                                <th>部门</th>
+                                <th>值班组别</th>
+                                <th>在岗状态</th>
+                                <th>联系电话</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTable"></tbody>
+                    </table>
+                    <div class="pagination">
+                        <button class="btn btn-sm" id="prevBtn" onclick="prevPage()">上一页</button>
+                        <span id="pageInfo"></span>
+                        <button class="btn btn-sm" id="nextBtn" onclick="nextPage()">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">新增人员</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>工号 *</label>
+                            <input type="text" class="form-control" id="editStaffNo" required>
+                        </div>
+                        <div class="form-group">
+                            <label>姓名 *</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>性别</label>
+                            <select class="form-control" id="editGender">
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>人员类型</label>
+                            <select class="form-control" id="editStaffType">
+                                <option value="护理员">护理员</option>
+                                <option value="医生">医生</option>
+                                <option value="护士">护士</option>
+                                <option value="后勤">后勤</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>岗位</label>
+                            <input type="text" class="form-control" id="editPosition">
+                        </div>
+                        <div class="form-group">
+                            <label>部门</label>
+                            <input type="text" class="form-control" id="editDepartment">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>值班组别</label>
+                            <select class="form-control" id="editDutyGroup">
+                                <option value="">无</option>
+                                <option value="A组">A组</option>
+                                <option value="B组">B组</option>
+                                <option value="C组">C组</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>在岗状态</label>
+                            <select class="form-control" id="editWorkStatus">
+                                <option value="在岗">在岗</option>
+                                <option value="休假">休假</option>
+                                <option value="离职">离职</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>联系电话</label>
+                            <input type="text" class="form-control" id="editPhone">
+                        </div>
+                        <div class="form-group">
+                            <label>身份证号</label>
+                            <input type="text" class="form-control" id="editIdCard">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>所属机构</label>
+                            <select class="form-control" id="editOrgId">
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>入职日期</label>
+                            <input type="date" class="form-control" id="editHireDate">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>住址</label>
+                        <input type="text" class="form-control" id="editAddress">
+                    </div>
+                    <div class="form-group">
+                        <label>专业技能</label>
+                        <textarea class="form-control" id="editSkills" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea class="form-control" id="editRemark" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select class="form-control" id="editStatus">
+                            <option value="1">启用</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveData()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('username').textContent = user.realName || user.username;
+
+        let currentPage = 0;
+        const pageSize = 10;
+        let totalPages = 0;
+
+        function logout() {
+            http.post('/auth/logout').then(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            });
+        }
+
+        function loadOrganizations() {
+            http.get('/organization/list').then(result => {
+                const select = document.getElementById('editOrgId');
+                select.innerHTML = '<option value="">请选择</option>';
+                result.data.forEach(org => {
+                    select.innerHTML += `<option value="${org.id}">${org.name}</option>`;
+                });
+            });
+        }
+
+        function loadData() {
+            const name = document.getElementById('filterName').value;
+            const staffType = document.getElementById('filterStaffType').value;
+            const department = document.getElementById('filterDepartment').value;
+            const workStatus = document.getElementById('filterWorkStatus').value;
+            
+            const params = {
+                page: currentPage,
+                size: pageSize
+            };
+            if (name) params.name = name;
+            if (staffType) params.staffType = staffType;
+            if (department) params.department = department;
+            if (workStatus) params.workStatus = workStatus;
+
+            http.get('/staff/page', params).then(result => {
+                const data = result.data;
+                totalPages = data.totalPages;
+                document.getElementById('pageInfo').textContent = `第 ${currentPage + 1} / ${totalPages} 页，共 ${data.totalElements} 条`;
+                
+                const tbody = document.getElementById('dataTable');
+                tbody.innerHTML = '';
+                data.content.forEach(item => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${item.staffNo}</td>
+                            <td>${item.name}</td>
+                            <td>${item.gender || '-'}</td>
+                            <td>${item.staffType || '-'}</td>
+                            <td>${item.position || '-'}</td>
+                            <td>${item.department || '-'}</td>
+                            <td>${item.dutyGroup || '-'}</td>
+                            <td>${item.workStatus || '-'}</td>
+                            <td>${item.phone || '-'}</td>
+                            <td><span class="status-tag ${item.status === 1 ? 'status-active' : 'status-inactive'}">${item.status === 1 ? '启用' : '禁用'}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editData(${item.id})">编辑</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('prevBtn').disabled = currentPage === 0;
+                document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
+            });
+        }
+
+        function resetFilter() {
+            document.getElementById('filterName').value = '';
+            document.getElementById('filterStaffType').value = '';
+            document.getElementById('filterDepartment').value = '';
+            document.getElementById('filterWorkStatus').value = '';
+            currentPage = 0;
+            loadData();
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadData();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadData();
+            }
+        }
+
+        function openModal(id = null) {
+            document.getElementById('editModal').classList.add('active');
+            document.getElementById('editId').value = id || '';
+            document.getElementById('modalTitle').textContent = id ? '编辑人员' : '新增人员';
+            
+            if (id) {
+                http.get('/staff/' + id).then(result => {
+                    const data = result.data;
+                    document.getElementById('editStaffNo').value = data.staffNo || '';
+                    document.getElementById('editName').value = data.name || '';
+                    document.getElementById('editGender').value = data.gender || '男';
+                    document.getElementById('editStaffType').value = data.staffType || '';
+                    document.getElementById('editPosition').value = data.position || '';
+                    document.getElementById('editDepartment').value = data.department || '';
+                    document.getElementById('editDutyGroup').value = data.dutyGroup || '';
+                    document.getElementById('editWorkStatus').value = data.workStatus || '在岗';
+                    document.getElementById('editPhone').value = data.phone || '';
+                    document.getElementById('editIdCard').value = data.idCard || '';
+                    document.getElementById('editOrgId').value = data.orgId || '';
+                    document.getElementById('editHireDate').value = data.hireDate ? data.hireDate.substring(0, 10) : '';
+                    document.getElementById('editAddress').value = data.address || '';
+                    document.getElementById('editSkills').value = data.skills || '';
+                    document.getElementById('editRemark').value = data.remark || '';
+                    document.getElementById('editStatus').value = data.status;
+                });
+            } else {
+                document.getElementById('editForm').reset();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function editData(id) {
+            openModal(id);
+        }
+
+        function saveData() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                staffNo: document.getElementById('editStaffNo').value,
+                name: document.getElementById('editName').value,
+                gender: document.getElementById('editGender').value,
+                staffType: document.getElementById('editStaffType').value,
+                position: document.getElementById('editPosition').value,
+                department: document.getElementById('editDepartment').value,
+                dutyGroup: document.getElementById('editDutyGroup').value,
+                workStatus: document.getElementById('editWorkStatus').value,
+                phone: document.getElementById('editPhone').value,
+                idCard: document.getElementById('editIdCard').value,
+                orgId: document.getElementById('editOrgId').value || null,
+                hireDate: document.getElementById('editHireDate').value || null,
+                address: document.getElementById('editAddress').value,
+                skills: document.getElementById('editSkills').value,
+                remark: document.getElementById('editRemark').value,
+                status: parseInt(document.getElementById('editStatus').value)
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            http.post('/staff', data).then(() => {
+                alert('保存成功');
+                closeModal();
+                loadData();
+            }).catch(error => {
+                alert(error.message);
+            });
+        }
+
+        function deleteData(id) {
+            if (confirm('确定要删除吗？')) {
+                http.delete('/staff/' + id).then(() => {
+                    alert('删除成功');
+                    loadData();
+                });
+            }
+        }
+
+        loadOrganizations();
+        loadData();
+    </script>
+</body>
+</html>

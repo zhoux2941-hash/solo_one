@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公交公司司机疲劳驾驶预警系统 - 调度中心</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e94560;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #e94560;
+        }
+
+        .header .time {
+            font-size: 18px;
+            color: #4fc3f7;
+        }
+
+        .nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav a {
+            color: #fff;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        .nav a:hover, .nav a.active {
+            background: #e94560;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            padding: 20px;
+            height: calc(100vh - 80px);
+        }
+
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4fc3f7;
+        }
+
+        .stat-card.warning {
+            border-left-color: #e94560;
+        }
+
+        .stat-card.success {
+            border-left-color: #4caf50;
+        }
+
+        .stat-card.info {
+            border-left-color: #ff9800;
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .panel {
+            background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+            border-radius: 10px;
+            padding: 20px;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #4fc3f7;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .alert-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .alert-item {
+            background: rgba(233, 69, 96, 0.1);
+            border: 1px solid #e94560;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .alert-item.handled {
+            background: rgba(76, 175, 80, 0.1);
+            border-color: #4caf50;
+            animation: none;
+            opacity: 0.7;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(233, 69, 96, 0); }
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .alert-type {
+            background: #e94560;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .alert-time {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .alert-info {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .alert-info span {
+            margin-right: 20px;
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-warning {
+            background: #e94560;
+            color: #fff;
+        }
+
+        .btn-warning:hover {
+            background: #ff6b81;
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #66bb6a;
+        }
+
+        .btn-primary {
+            background: #4fc3f7;
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            background: #81d4fa;
+        }
+
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .driver-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .driver-item {
+            background: rgba(79, 195, 247, 0.1);
+            border: 1px solid #4fc3f7;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .driver-item.online {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .driver-name {
+            font-weight: bold;
+        }
+
+        .driver-status {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .driver-status.online {
+            background: #4caf50;
+        }
+
+        .driver-status.offline {
+            background: #666;
+        }
+
+        .chart-container {
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            padding: 10px 0;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, #e94560, #ff6b81);
+            border-radius: 4px 4px 0 0;
+            transition: height 0.5s;
+            position: relative;
+        }
+
+        .chart-bar:hover::after {
+            content: attr(data-count);
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            color: #1a1a2e;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .chart-labels {
+            display: flex;
+            gap: 4px;
+            font-size: 10px;
+            color: #aaa;
+        }
+
+        .chart-label {
+            flex: 1;
+            text-align: center;
+        }
+
+        .voice-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .voice-modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #e94560;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #e94560;
+        }
+
+        .voice-animation {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin: 20px 0;
+        }
+
+        .voice-bar {
+            width: 8px;
+            height: 30px;
+            background: #4fc3f7;
+            border-radius: 4px;
+            animation: voiceWave 0.5s infinite ease-in-out alternate;
+        }
+
+        .voice-bar:nth-child(2) { animation-delay: 0.1s; }
+        .voice-bar:nth-child(3) { animation-delay: 0.2s; }
+        .voice-bar:nth-child(4) { animation-delay: 0.3s; }
+        .voice-bar:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes voiceWave {
+            from { height: 10px; }
+            to { height: 40px; }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4fc3f7;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚌 公交公司司机疲劳驾驶预警系统 - 调度中心</h1>
+        <div class="nav">
+            <a href="dashboard.html" class="active">监控中心</a>
+            <a href="device-simulator.html">车载模拟</a>
+            <a href="reports.html">报表统计</a>
+        </div>
+        <div class="time" id="currentTime"></div>
+    </div>
+
+    <div class="container">
+        <div class="main-panel">
+            <div class="stats-row">
+                <div class="stat-card">
+                    <h3>在线司机</h3>
+                    <div class="value" id="onlineDrivers">0</div>
+                </div>
+                <div class="stat-card warning">
+                    <h3>待处理告警</h3>
+                    <div class="value" id="pendingAlerts">0</div>
+                </div>
+                <div class="stat-card success">
+                    <h3>今日告警总数</h3>
+                    <div class="value" id="todayAlerts">0</div>
+                </div>
+                <div class="stat-card info">
+                    <h3>已处理告警</h3>
+                    <div class="value" id="handledAlerts">0</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>🔔 实时告警列表（最新20条）</h2>
+                <div class="alert-list" id="alertList">
+                    <div style="text-align: center; color: #aaa; padding: 50px;">
+                        暂无告警信息
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <div class="panel">
+                <h2>👥 司机状态</h2>
+                <div class="driver-list" id="driverList">
+                    加载中...
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>📊 24小时告警分布</h2>
+                <div class="chart-container" id="hourChart"></div>
+                <div class="chart-labels" id="hourLabels"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="voice-modal" id="voiceModal">
+        <div class="modal-content">
+            <h3>📢 正在向司机发送语音提醒</h3>
+            <p id="voiceMessage">正在提醒司机注意休息...</p>
+            <div class="voice-animation">
+                <div class="voice-bar"></div>
+                <div class="voice-bar"></div>
+                <div class="voice-bar"></div>
+                <div class="voice-bar"></div>
+                <div class="voice-bar"></div>
+            </div>
+            <button class="btn btn-primary" onclick="closeVoiceModal()">确认</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let ws = null;
+        let alerts = [];
+        let handledCount = 0;
+        let driversData = [];
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleString('zh-CN');
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        function connectWebSocket() {
+            ws = new WebSocket('ws://localhost:8080/ws/alerts');
+            
+            ws.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                if (message.type === 'alert') {
+                    addAlert(message.data);
+                    playAlertSound();
+                    refreshHourStats();
+                } else if (message.type === 'deviceData') {
+                    updateDriverStatusFromData(message.data);
+                } else if (message.type === 'driverStatus') {
+                    updateSingleDriverStatus(message.data);
+                }
+            };
+
+            ws.onclose = function() {
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        function updateDriverStatusFromData(deviceData) {
+            const driver = driversData.find(d => d.driverNo === deviceData.driverNo);
+            if (driver) {
+                driver.online = true;
+                renderDriverList();
+            }
+        }
+
+        function updateSingleDriverStatus(driver) {
+            const existingIndex = driversData.findIndex(d => d.driverNo === driver.driverNo);
+            if (existingIndex >= 0) {
+                driversData[existingIndex] = driver;
+            } else {
+                driversData.push(driver);
+            }
+            renderDriverList();
+        }
+
+        async function refreshHourStats() {
+            try {
+                const response = await fetch(`${API_BASE}/reports/by-hour`);
+                const stats = await response.json();
+                
+                const maxCount = Math.max(...Object.values(stats), 1);
+                const chartContainer = document.getElementById('hourChart');
+                const labelsContainer = document.getElementById('hourLabels');
+
+                chartContainer.innerHTML = Object.entries(stats).map(([hour, count]) => {
+                    const height = (count / maxCount) * 100;
+                    return `<div class="chart-bar" style="height: ${Math.max(height, 5)}%" data-count="${count}"></div>`;
+                }).join('');
+
+                labelsContainer.innerHTML = Object.keys(stats).map(hour => 
+                    `<div class="chart-label">${hour}</div>`
+                ).join('');
+            } catch (error) {
+                console.error('刷新时段统计失败:', error);
+            }
+        }
+
+        function renderDriverList() {
+            const container = document.getElementById('driverList');
+            container.innerHTML = driversData.map(driver => `
+                <div class="driver-item ${driver.online ? 'online' : ''}">
+                    <div>
+                        <div class="driver-name">${driver.name}</div>
+                        <div style="font-size: 12px; color: #aaa;">${driver.driverNo} | ${driver.busNo}</div>
+                    </div>
+                    <span class="driver-status ${driver.online ? 'online' : 'offline'}">
+                        ${driver.online ? '在线' : '离线'}
+                    </span>
+                </div>
+            `).join('');
+
+            document.getElementById('onlineDrivers').textContent = driversData.filter(d => d.online).length;
+        }
+
+        function playAlertSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            gainNode.gain.value = 0.3;
+            
+            oscillator.start();
+            setTimeout(() => {
+                oscillator.stop();
+            }, 500);
+        }
+
+        function addAlert(alert) {
+            const existingIndex = alerts.findIndex(a => a.id === alert.id);
+            if (existingIndex >= 0) {
+                alerts.splice(existingIndex, 1);
+            }
+            alerts.unshift(alert);
+            if (alerts.length > 20) {
+                alerts = alerts.slice(0, 20);
+            }
+            updateAlertList();
+            updateStats();
+        }
+
+        function updateAlertList() {
+            const container = document.getElementById('alertList');
+            if (alerts.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #aaa; padding: 50px;">暂无告警信息</div>';
+                return;
+            }
+
+            container.innerHTML = alerts.map((alert, index) => `
+                <div class="alert-item ${alert.handled ? 'handled' : ''}" data-id="${alert.id}">
+                    <div class="alert-header">
+                        <span class="alert-type">${alert.alertType}</span>
+                        <span class="alert-time">${formatTime(alert.alertTime)}</span>
+                    </div>
+                    <div class="alert-info">
+                        <span>👤 ${alert.driverName || alert.driverNo}</span>
+                        <span>🚌 ${alert.busNo || '未知'}</span>
+                        <span>📊 ${alert.count}次</span>
+                    </div>
+                    <div style="font-size: 13px; color: #ddd; margin-bottom: 10px;">${alert.message}</div>
+                    ${!alert.handled ? `
+                        <div class="alert-actions">
+                            <button class="btn btn-warning" onclick="sendVoiceAlert('${alert.driverNo}', '${alert.driverName}', ${alert.id})">
+                                📢 语音提醒
+                            </button>
+                            <button class="btn btn-success" onclick="handleAlert(${alert.id})">
+                                ✓ 标记已处理
+                            </button>
+                        </div>
+                    ` : `
+                        <div style="font-size: 12px; color: #4caf50;">
+                            ✓ 已由 ${alert.handledBy || '调度员'} 处理
+                        </div>
+                    `}
+                </div>
+            `).join('');
+        }
+
+        function formatTime(timeStr) {
+            if (!timeStr) return '';
+            const date = new Date(timeStr);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function sendVoiceAlert(driverNo, driverName, alertId) {
+            document.getElementById('voiceMessage').textContent = 
+                `正在向司机 ${driverName || driverNo} 发送语音提醒：请注意休息，保持清醒！`;
+            document.getElementById('voiceModal').classList.add('show');
+            
+            setTimeout(() => {
+                handleAlert(alertId);
+                closeVoiceModal();
+            }, 3000);
+        }
+
+        function closeVoiceModal() {
+            document.getElementById('voiceModal').classList.remove('show');
+        }
+
+        async function handleAlert(alertId) {
+            try {
+                const response = await fetch(`${API_BASE}/alerts/${alertId}/handle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ handledBy: '调度员' })
+                });
+                
+                if (response.ok) {
+                    const alert = alerts.find(a => a.id === alertId);
+                    if (alert) {
+                        alert.handled = true;
+                        alert.handledBy = '调度员';
+                        handledCount++;
+                    }
+                    updateAlertList();
+                    updateStats();
+                }
+            } catch (error) {
+                console.error('处理告警失败:', error);
+            }
+        }
+
+        async function loadDrivers() {
+            try {
+                const response = await fetch(`${API_BASE}/drivers`);
+                driversData = await response.json();
+                renderDriverList();
+            } catch (error) {
+                console.error('加载司机列表失败:', error);
+            }
+        }
+
+        async function loadUnhandledAlerts() {
+            try {
+                const response = await fetch(`${API_BASE}/alerts/unhandled`);
+                const unhandledAlerts = await response.json();
+                
+                const existingIds = new Set(alerts.map(a => a.id));
+                const newAlerts = unhandledAlerts.filter(a => !existingIds.has(a.id));
+                alerts = [...newAlerts, ...alerts];
+                
+                alerts.sort((a, b) => new Date(b.alertTime) - new Date(a.alertTime));
+                
+                if (alerts.length > 20) {
+                    alerts = alerts.slice(0, 20);
+                }
+                
+                updateAlertList();
+                updateStats();
+            } catch (error) {
+                console.error('加载未处理告警失败:', error);
+            }
+        }
+
+        async function loadHourStats() {
+            try {
+                const response = await fetch(`${API_BASE}/reports/by-hour`);
+                const stats = await response.json();
+                
+                const maxCount = Math.max(...Object.values(stats), 1);
+                const chartContainer = document.getElementById('hourChart');
+                const labelsContainer = document.getElementById('hourLabels');
+
+                chartContainer.innerHTML = Object.entries(stats).map(([hour, count]) => {
+                    const height = (count / maxCount) * 100;
+                    return `<div class="chart-bar" style="height: ${Math.max(height, 5)}%" data-count="${count}"></div>`;
+                }).join('');
+
+                labelsContainer.innerHTML = Object.keys(stats).map(hour => 
+                    `<div class="chart-label">${hour}</div>`
+                ).join('');
+            } catch (error) {
+                console.error('加载时段统计失败:', error);
+            }
+        }
+
+        function updateStats() {
+            const pending = alerts.filter(a => !a.handled).length;
+            document.getElementById('pendingAlerts').textContent = pending;
+            document.getElementById('handledAlerts').textContent = handledCount;
+            document.getElementById('todayAlerts').textContent = alerts.length;
+        }
+
+        function init() {
+            connectWebSocket();
+            loadDrivers();
+            loadUnhandledAlerts();
+            loadHourStats();
+            
+            setInterval(loadDrivers, 3000);
+            setInterval(loadHourStats, 10000);
+            setInterval(loadUnhandledAlerts, 5000);
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏房间匹配系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 游戏房间匹配系统</h1>
+            <div class="stats">
+                <span id="onlinePlayers">在线玩家: 0</span>
+                <span id="waitingRooms">等待房间: 0</span>
+            </div>
+        </header>
+
+        <div id="loginSection" class="section">
+            <h2>玩家登录</h2>
+            <div class="form-group">
+                <label>用户名:</label>
+                <input type="text" id="username" placeholder="输入用户名 (如: player1)">
+            </div>
+            <button onclick="login()" class="btn btn-primary">登录</button>
+            <button onclick="showRegister()" class="btn btn-secondary">注册新玩家</button>
+        </div>
+
+        <div id="registerSection" class="section" style="display: none;">
+            <h2>玩家注册</h2>
+            <div class="form-group">
+                <label>用户名:</label>
+                <input type="text" id="regUsername" placeholder="输入用户名">
+            </div>
+            <div class="form-group">
+                <label>昵称:</label>
+                <input type="text" id="regNickname" placeholder="输入昵称">
+            </div>
+            <div class="form-group">
+                <label>段位:</label>
+                <select id="regRank"></select>
+            </div>
+            <button onclick="register()" class="btn btn-primary">注册</button>
+            <button onclick="showLogin()" class="btn btn-secondary">返回登录</button>
+        </div>
+
+        <div id="mainSection" class="section" style="display: none;">
+            <div class="user-info">
+                <span id="currentUser">欢迎, </span>
+                <button onclick="logout()" class="btn btn-small btn-danger">退出登录</button>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('rooms')">房间列表</button>
+                <button class="tab-btn" onclick="showTab('create')">创建房间</button>
+                <button class="tab-btn" onclick="showTab('myRoom')">我的房间</button>
+                <button class="tab-btn" onclick="showTab('logs')">操作日志</button>
+            </div>
+
+            <div id="roomsTab" class="tab-content">
+                <h3>公开房间列表</h3>
+                <button onclick="refreshRooms()" class="btn btn-small">刷新列表</button>
+                <div id="roomsList" class="room-list"></div>
+            </div>
+
+            <div id="createTab" class="tab-content" style="display: none;">
+                <h3>创建新房间</h3>
+                <div class="form-group">
+                    <label>房间名称:</label>
+                    <input type="text" id="roomName" placeholder="输入房间名称">
+                </div>
+                <div class="form-group">
+                    <label>房间类型:</label>
+                    <select id="roomType">
+                        <option value="PUBLIC">公开匹配</option>
+                        <option value="PRIVATE">私密房间</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>游戏模式:</label>
+                    <select id="gameMode"></select>
+                </div>
+                <div class="form-group">
+                    <label>最低段位:</label>
+                    <select id="minRank"></select>
+                </div>
+                <div class="form-group">
+                    <label>最高段位:</label>
+                    <select id="maxRank"></select>
+                </div>
+                <div id="passwordGroup" class="form-group" style="display: none;">
+                    <label>房间密码:</label>
+                    <input type="text" id="roomPassword" placeholder="私密房间密码">
+                </div>
+                <button onclick="createRoom()" class="btn btn-primary">创建房间</button>
+            </div>
+
+            <div id="myRoomTab" class="tab-content" style="display: none;">
+                <h3>我的房间</h3>
+                <div id="myRoomInfo"></div>
+            </div>
+
+            <div id="logsTab" class="tab-content" style="display: none;">
+                <h3>最近操作日志</h3>
+                <div id="logsList" class="log-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

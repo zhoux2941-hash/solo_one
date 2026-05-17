@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物料管理 - 建筑施工现场管控系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">物料管理</h2>
+                <div>
+                    <button class="btn btn-primary" onclick="openAddMaterialModal()">+ 新增物料</button>
+                    <button class="btn btn-success" onclick="openInOutModal('IN')">采购入库</button>
+                    <button class="btn btn-warning" onclick="openInOutModal('OUT')">领用出库</button>
+                    <button class="btn btn-info" onclick="openInOutModal('RETURN')">剩余退库</button>
+                </div>
+            </div>
+
+            <div class="search-bar">
+                <div class="search-item">
+                    <label>所属项目</label>
+                    <select id="searchProjectId" class="form-select" onchange="loadMaterialList()">
+                        <option value="">全部项目</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>物料类型</label>
+                    <select id="searchMaterialType" class="form-select" onchange="loadMaterialList()">
+                        <option value="">全部类型</option>
+                        <option value="钢筋">钢筋</option>
+                        <option value="水泥">水泥</option>
+                        <option value="砂石">砂石</option>
+                        <option value="管材">管材</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>关键词搜索</label>
+                    <input type="text" id="searchKeyword" class="form-input" placeholder="物料名称/编号">
+                </div>
+                <div class="search-buttons">
+                    <button class="btn btn-primary" onclick="loadMaterialList()">搜索</button>
+                    <button class="btn btn-info" onclick="resetSearch()">重置</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>物料名称</th>
+                            <th>物料编号</th>
+                            <th>物料类型</th>
+                            <th>规格型号</th>
+                            <th>单位</th>
+                            <th>当前库存</th>
+                            <th>供应商</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="materialTableBody"></tbody>
+                </table>
+            </div>
+            <div id="pagination"></div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h3 class="card-title">库存预警</h3>
+            </div>
+            <div id="lowStockWarning" style="padding: 15px;">
+                <p>暂无库存预警</p>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h3 class="card-title">出入库记录</h3>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>单据编号</th>
+                            <th>单据类型</th>
+                            <th>物料名称</th>
+                            <th>数量</th>
+                            <th>经办人</th>
+                            <th>创建时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inOutTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="materialModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="materialModalTitle">新增物料</h3>
+                <button class="modal-close" onclick="closeModal('materialModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="materialForm">
+                    <input type="hidden" name="id">
+                    <div class="form-group">
+                        <label class="form-label">所属项目 <span style="color: #f56c6c;">*</span></label>
+                        <select name="projectId" class="form-select">
+                            <option value="">请选择项目</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">物料名称 <span style="color: #f56c6c;">*</span></label>
+                        <input type="text" name="materialName" class="form-input" placeholder="请输入物料名称">
+                    </div>
+                    <div class="form-group">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <label class="form-label">物料编号</label>
+                                <input type="text" name="materialCode" class="form-input" placeholder="请输入物料编号">
+                            </div>
+                            <div>
+                                <label class="form-label">物料类型 <span style="color: #f56c6c;">*</span></label>
+                                <select name="materialType" class="form-select">
+                                    <option value="钢筋">钢筋</option>
+                                    <option value="水泥">水泥</option>
+                                    <option value="砂石">砂石</option>
+                                    <option value="管材">管材</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <label class="form-label">规格型号</label>
+                                <input type="text" name="specification" class="form-input" placeholder="请输入规格型号">
+                            </div>
+                            <div>
+                                <label class="form-label">计量单位 <span style="color: #f56c6c;">*</span></label>
+                                <select name="unit" class="form-select">
+                                    <option value="吨">吨</option>
+                                    <option value="立方米">立方米</option>
+                                    <option value="根">根</option>
+                                    <option value="米">米</option>
+                                    <option value="袋">袋</option>
+                                    <option value="件">件</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <label class="form-label">单价</label>
+                                <input type="number" name="unitPrice" class="form-input" placeholder="请输入单价" step="0.01">
+                            </div>
+                            <div>
+                                <label class="form-label">最低库存预警</label>
+                                <input type="number" name="minStockQuantity" class="form-input" placeholder="请输入最低库存量" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">供应商</label>
+                        <input type="text" name="supplier" class="form-input" placeholder="请输入供应商名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">备注说明</label>
+                        <textarea name="description" class="form-textarea" placeholder="请输入备注说明"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" onclick="closeModal('materialModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveMaterial()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="inOutModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="inOutModalTitle">出入库操作</h3>
+                <button class="modal-close" onclick="closeModal('inOutModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="inOutForm">
+                    <input type="hidden" name="billType">
+                    <div class="form-group">
+                        <label class="form-label">所属项目 <span style="color: #f56c6c;">*</span></label>
+                        <select name="projectId" class="form-select" onchange="loadMaterialsByProject(this.value)">
+                            <option value="">请选择项目</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">物料名称 <span style="color: #f56c6c;">*</span></label>
+                        <select name="materialId" class="form-select" id="inOutMaterialSelect">
+                            <option value="">请先选择项目</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <label class="form-label">数量 <span style="color: #f56c6c;">*</span></label>
+                                <input type="number" name="quantity" class="form-input" placeholder="请输入数量" step="0.01">
+                            </div>
+                            <div>
+                                <label class="form-label">单价</label>
+                                <input type="number" name="unitPrice" class="form-input" placeholder="请输入单价" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">经办人</label>
+                        <input type="text" name="handler" class="form-input" placeholder="请输入经办人姓名">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">供应商/领用区域</label>
+                        <input type="text" name="supplier" class="form-input" placeholder="入库填供应商，出库填领用区域">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">备注说明</label>
+                        <textarea name="remark" class="form-textarea" placeholder="请输入备注说明"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" onclick="closeModal('inOutModal')">取消</button>
+                <button class="btn btn-primary" onclick="submitInOut()">提交</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/http.js"></script>
+    <script src="js/validator.js"></script>
+    <script src="js/layout.js"></script>
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+        let currentEditMaterialId = null;
+        let currentBillType = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initPage('material');
+            loadProjects();
+            loadMaterialList();
+            loadInOutList();
+            loadLowStockWarning();
+        });
+
+        async function loadProjects() {
+            const result = await http.get('/api/project/active');
+            if (result.success) {
+                const options = result.data.map(p => `<option value="${p.id}">${p.projectName}</option>`).join('');
+                document.querySelectorAll('select[name="projectId"]').forEach(select => {
+                    const currentValue = select.value;
+                    select.innerHTML = '<option value="">请选择项目</option>' + options;
+                    select.value = currentValue;
+                });
+            }
+        }
+
+        async function loadMaterialsByProject(projectId) {
+            const select = document.getElementById('inOutMaterialSelect');
+            if (!projectId) {
+                select.innerHTML = '<option value="">请先选择项目</option>';
+                return;
+            }
+
+            const result = await http.get(`/api/material/project/${projectId}`);
+            if (result.success) {
+                select.innerHTML = '<option value="">请选择物料</option>' + 
+                    result.data.map(m => `<option value="${m.id}">${m.materialName} (${m.materialType})</option>`).join('');
+            }
+        }
+
+        async function loadMaterialList() {
+            const keyword = document.getElementById('searchKeyword').value;
+            const materialType = document.getElementById('searchMaterialType').value;
+            const projectId = document.getElementById('searchProjectId').value;
+
+            const params = {
+                pageNum: currentPage,
+                pageSize: pageSize,
+            };
+
+            if (keyword) params.keyword = keyword;
+            if (materialType) params.materialType = materialType;
+            if (projectId) params.projectId = projectId;
+
+            const result = await http.get('/api/material/list', params);
+
+            if (result.success) {
+                renderMaterialTable(result.data.list);
+                renderPagination('pagination', result.data.pageNum, result.data.pageSize, result.data.total, 'goToPage');
+            }
+        }
+
+        async function renderMaterialTable(materials) {
+            const tbody = document.getElementById('materialTableBody');
+
+            if (!materials || materials.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <div class="empty-state-icon">📦</div>
+                            <div class="empty-state-text">暂无物料数据</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const inventoryPromises = materials.map(m => http.get(`/api/material-inout/inventory/${m.id}`));
+            const inventoryResults = await Promise.all(inventoryPromises);
+
+            tbody.innerHTML = materials.map((material, index) => {
+                const inventory = inventoryResults[index].success ? inventoryResults[index].data : { currentQuantity: 0 };
+                const isLowStock = material.minStockQuantity && inventory.currentQuantity <= material.minStockQuantity;
+                
+                return `
+                    <tr>
+                        <td>${material.materialName}</td>
+                        <td>${material.materialCode || '-'}</td>
+                        <td><span class="badge">${material.materialType}</span></td>
+                        <td>${material.specification || '-'}</td>
+                        <td>${material.unit}</td>
+                        <td><span class="${isLowStock ? 'text-danger' : ''}">${inventory.currentQuantity || 0}</span></td>
+                        <td>${material.supplier || '-'}</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="btn btn-primary btn-small" onclick="openEditMaterialModal(${material.id})">编辑</button>
+                                <button class="btn btn-danger btn-small" onclick="deleteMaterial(${material.id})">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function loadInOutList() {
+            const result = await http.get('/api/material-inout/list', { pageNum: 1, pageSize: 10 });
+            if (result.success) {
+                renderInOutTable(result.data.list);
+            }
+        }
+
+        async function renderInOutTable(inOutList) {
+            const tbody = document.getElementById('inOutTableBody');
+
+            if (!inOutList || inOutList.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <div class="empty-state-text">暂无出入库记录</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const materialPromises = inOutList.map(io => http.get(`/api/material/${io.materialId}`));
+            const materialResults = await Promise.all(materialPromises);
+
+            const billTypeText = { 'IN': '入库', 'OUT': '出库', 'RETURN': '退库' };
+            const billTypeClass = { 'IN': 'success', 'OUT': 'warning', 'RETURN': 'info' };
+
+            tbody.innerHTML = inOutList.map((io, index) => {
+                const material = materialResults[index].success ? materialResults[index].data : { materialName: '未知' };
+                return `
+                    <tr>
+                        <td>${io.billNo}</td>
+                        <td><span class="badge badge-${billTypeClass[io.billType]}">${billTypeText[io.billType]}</span></td>
+                        <td>${material.materialName}</td>
+                        <td>${io.quantity}</td>
+                        <td>${io.handler || '-'}</td>
+                        <td>${formatDate(io.createTime)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function loadLowStockWarning() {
+            const projectId = document.getElementById('searchProjectId').value;
+            if (!projectId) {
+                document.getElementById('lowStockWarning').innerHTML = '<p>请先选择项目查看库存预警</p>';
+                return;
+            }
+
+            const result = await http.get('/api/material-inout/inventory', { projectId, lowStockOnly: true });
+            const warningDiv = document.getElementById('lowStockWarning');
+
+            if (result.success && result.data.length > 0) {
+                warningDiv.innerHTML = '<div style="color: #f56c6c;"><strong>⚠️ 以下物料库存不足：</strong></div>' +
+                    result.data.map(async inv => {
+                        const matResult = await http.get(`/api/material/${inv.materialId}`);
+                        const material = matResult.data;
+                        return `<div style="padding: 8px 0; border-bottom: 1px solid #eee;">${material.materialName} - 当前库存: ${inv.currentQuantity}, 最低库存: ${material.minStockQuantity}</div>`;
+                    }).join('');
+            } else {
+                warningDiv.innerHTML = '<p style="color: #67c23a;">✅ 所有物料库存充足</p>';
+            }
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            loadMaterialList();
+        }
+
+        function resetSearch() {
+            document.getElementById('searchKeyword').value = '';
+            document.getElementById('searchMaterialType').value = '';
+            currentPage = 1;
+            loadMaterialList();
+        }
+
+        function openAddMaterialModal() {
+            currentEditMaterialId = null;
+            document.getElementById('materialModalTitle').textContent = '新增物料';
+            document.getElementById('materialForm').reset();
+            Validator.clearErrors('materialForm');
+            openModal('materialModal');
+        }
+
+        async function openEditMaterialModal(id) {
+            currentEditMaterialId = id;
+            document.getElementById('materialModalTitle').textContent = '编辑物料';
+
+            const result = await http.get(`/api/material/${id}`);
+
+            if (result.success) {
+                const material = result.data;
+                const form = document.getElementById('materialForm');
+                form.querySelector('[name="id"]').value = material.id;
+                form.querySelector('[name="projectId"]').value = material.projectId;
+                form.querySelector('[name="materialName"]').value = material.materialName || '';
+                form.querySelector('[name="materialCode"]').value = material.materialCode || '';
+                form.querySelector('[name="materialType"]').value = material.materialType || '';
+                form.querySelector('[name="specification"]').value = material.specification || '';
+                form.querySelector('[name="unit"]').value = material.unit || '';
+                form.querySelector('[name="unitPrice"]').value = material.unitPrice || '';
+                form.querySelector('[name="minStockQuantity"]').value = material.minStockQuantity || '';
+                form.querySelector('[name="supplier"]').value = material.supplier || '';
+                form.querySelector('[name="description"]').value = material.description || '';
+
+                Validator.clearErrors('materialForm');
+                openModal('materialModal');
+            }
+        }
+
+        async function saveMaterial() {
+            const formData = Validator.getFormData('materialForm');
+
+            let result;
+            if (currentEditMaterialId) {
+                result = await http.put(`/api/material/${currentEditMaterialId}`, formData);
+            } else {
+                result = await http.post('/api/material', formData);
+            }
+
+            if (result.success) {
+                showToast(currentEditMaterialId ? '更新成功' : '添加成功', 'success');
+                closeModal('materialModal');
+                loadMaterialList();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+
+        async function deleteMaterial(id) {
+            if (!confirm('确定要删除该物料吗？此操作不可恢复！')) return;
+
+            const result = await http.delete(`/api/material/${id}`);
+
+            if (result.success) {
+                showToast('删除成功', 'success');
+                loadMaterialList();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+
+        function openInOutModal(billType) {
+            currentBillType = billType;
+            const titles = { 'IN': '采购入库', 'OUT': '领用出库', 'RETURN': '剩余退库' };
+            document.getElementById('inOutModalTitle').textContent = titles[billType];
+            document.getElementById('inOutForm').reset();
+            document.querySelector('#inOutForm [name="billType"]').value = billType;
+            document.getElementById('inOutMaterialSelect').innerHTML = '<option value="">请先选择项目</option>';
+            Validator.clearErrors('inOutForm');
+            openModal('inOutModal');
+        }
+
+        async function submitInOut() {
+            const formData = Validator.getFormData('inOutForm');
+
+            const result = await http.post('/api/material-inout', formData);
+
+            if (result.success) {
+                showToast('操作成功', 'success');
+                closeModal('inOutModal');
+                loadMaterialList();
+                loadInOutList();
+                loadLowStockWarning();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

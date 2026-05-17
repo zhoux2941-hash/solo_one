@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>站点管理 - 智慧供水运维调度平台</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-title">智慧供水平台</div>
+            <ul class="sidebar-menu" id="menu">
+            </ul>
+        </div>
+        <div class="content">
+            <div class="header">
+                <h1>站点管理</h1>
+                <div class="user-info">
+                    <span id="userName"></span>
+                    <button class="btn btn-small btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="search-box">
+                    <select id="regionFilter">
+                        <option value="">全部区域</option>
+                        <option value="东城区">东城区</option>
+                        <option value="西城区">西城区</option>
+                        <option value="朝阳区">朝阳区</option>
+                        <option value="海淀区">海淀区</option>
+                        <option value="丰台区">丰台区</option>
+                    </select>
+                    <button class="btn btn-small" onclick="loadStations()">查询</button>
+                </div>
+                <button class="btn btn-small btn-success" id="addStationBtn" onclick="openModal()">新增站点</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>站点名称</th>
+                            <th>类型</th>
+                            <th>区域</th>
+                            <th>详细地址</th>
+                            <th>负责人</th>
+                            <th>联系电话</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stationTable">
+                        <tr><td colspan="8" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="pagination">
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="stationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">新增站点</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="stationForm">
+                <input type="hidden" id="stationId" name="id">
+                <div class="form-group">
+                    <label for="name">站点名称</label>
+                    <input type="text" id="name" name="name" placeholder="请输入站点名称">
+                </div>
+                <div class="form-group">
+                    <label for="type">站点类型</label>
+                    <select id="type" name="type">
+                        <option value="取水站">取水站</option>
+                        <option value="净水站">净水站</option>
+                        <option value="二次加压站">二次加压站</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="region">所属区域</label>
+                    <select id="region" name="region">
+                        <option value="东城区">东城区</option>
+                        <option value="西城区">西城区</option>
+                        <option value="朝阳区">朝阳区</option>
+                        <option value="海淀区">海淀区</option>
+                        <option value="丰台区">丰台区</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="address">详细地址</label>
+                    <input type="text" id="address" name="address" placeholder="请输入详细地址">
+                </div>
+                <div class="form-group">
+                    <label for="manager">负责人</label>
+                    <input type="text" id="manager" name="manager" placeholder="请输入负责人">
+                </div>
+                <div class="form-group">
+                    <label for="phone">联系电话</label>
+                    <input type="text" id="phone" name="phone" placeholder="请输入联系电话">
+                </div>
+                <div class="form-group">
+                    <label for="buildDate">建成时间</label>
+                    <input type="date" id="buildDate" name="buildDate">
+                </div>
+                <div class="form-group">
+                    <label for="equipmentScale">设备规模</label>
+                    <input type="text" id="equipmentScale" name="equipmentScale" placeholder="请输入设备规模">
+                </div>
+                <div class="form-group">
+                    <label for="status">运行状态</label>
+                    <select id="status" name="status">
+                        <option value="正常">正常</option>
+                        <option value="维护中">维护中</option>
+                        <option value="停运">停运</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-small" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-small btn-success">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script src="js/validator.js"></script>
+    <script>
+        if (!auth.checkAuth()) {
+            throw new Error('未登录');
+        }
+
+        const user = auth.getUser();
+        document.getElementById('userName').textContent = `欢迎，${user.realName}`;
+
+        const menuItems = [];
+        if (user.role === 'ADMIN') {
+            menuItems.push({ id: 'users', label: '用户管理', url: 'users.html' });
+        }
+        menuItems.push({ id: 'stations', label: '站点管理', url: 'stations.html', active: true });
+        menuItems.push({ id: 'pipe-networks', label: '管网管理', url: 'pipe-networks.html' });
+        menuItems.push({ id: 'water-districts', label: '片区管理', url: 'water-districts.html' });
+
+        const menu = document.getElementById('menu');
+        menuItems.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `<a href="${item.url}" class="${item.active ? 'active' : ''}">${item.label}</a>`;
+            menu.appendChild(li);
+        });
+
+        if (user.role === 'STAFF') {
+            document.getElementById('addStationBtn').style.display = 'none';
+        }
+
+        let currentPage = 0;
+        const pageSize = 10;
+
+        function loadStations() {
+            const region = document.getElementById('regionFilter').value;
+            const params = { page: currentPage, size: pageSize };
+            if (region) params.region = region;
+
+            request.get('/stations', params)
+                .then(result => {
+                    if (result.success) {
+                        renderStations(result.data);
+                        renderPagination(result.totalPages);
+                    } else {
+                        showToast(result.message || '加载失败', 'error');
+                    }
+                })
+                .catch(() => {
+                    showToast('加载失败，请检查网络连接', 'error');
+                });
+        }
+
+        function renderStations(stations) {
+            const tbody = document.getElementById('stationTable');
+            if (stations.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="loading">暂无数据</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = stations.map(s => `
+                <tr>
+                    <td>${s.name}</td>
+                    <td>${s.type}</td>
+                    <td>${s.region || '-'}</td>
+                    <td>${s.address}</td>
+                    <td>${s.manager || '-'}</td>
+                    <td>${s.phone || '-'}</td>
+                    <td><span class="status-badge ${s.active ? 'status-active' : 'status-inactive'}">${s.status || '-'}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            ${user.role !== 'STAFF' ? `<button class="btn-edit" onclick="editStation(${s.id})">编辑</button>` : ''}
+                            ${user.role === 'ADMIN' ? `<button class="btn-toggle" onclick="toggleStation(${s.id})">${s.active ? '停用' : '启用'}</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPagination(totalPages) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = `
+                <button onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>上一页</button>
+                <span>第 ${currentPage + 1} / ${totalPages} 页</span>
+                <button onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>下一页</button>
+            `;
+        }
+
+        function goToPage(page) {
+            if (page >= 0) {
+                currentPage = page;
+                loadStations();
+            }
+        }
+
+        function openModal(stationId = null) {
+            document.getElementById('stationModal').classList.add('active');
+            document.getElementById('modalTitle').textContent = stationId ? '编辑站点' : '新增站点';
+            validator.clearErrors('stationForm');
+            document.getElementById('stationForm').reset();
+            document.getElementById('stationId').value = '';
+
+            if (stationId) {
+                request.get(`/stations/${stationId}`)
+                    .then(result => {
+                        if (result.success) {
+                            const s = result.data;
+                            document.getElementById('stationId').value = s.id;
+                            document.getElementById('name').value = s.name;
+                            document.getElementById('type').value = s.type;
+                            document.getElementById('region').value = s.region || '';
+                            document.getElementById('address').value = s.address;
+                            document.getElementById('manager').value = s.manager || '';
+                            document.getElementById('phone').value = s.phone || '';
+                            document.getElementById('buildDate').value = s.buildDate || '';
+                            document.getElementById('equipmentScale').value = s.equipmentScale || '';
+                            document.getElementById('status').value = s.status || '正常';
+                        }
+                    });
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('stationModal').classList.remove('active');
+        }
+
+        function editStation(id) {
+            openModal(id);
+        }
+
+        function toggleStation(id) {
+            if (!confirm('确定要切换站点状态吗？')) return;
+            request.put(`/stations/${id}/toggle`)
+                .then(result => {
+                    if (result.success) {
+                        showToast('操作成功', 'success');
+                        loadStations();
+                    } else {
+                        showToast(result.message || '操作失败', 'error');
+                    }
+                });
+        }
+
+        document.getElementById('stationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const stationId = document.getElementById('stationId').value;
+            const formData = {
+                name: document.getElementById('name').value,
+                type: document.getElementById('type').value,
+                region: document.getElementById('region').value,
+                address: document.getElementById('address').value,
+                manager: document.getElementById('manager').value,
+                phone: document.getElementById('phone').value,
+                buildDate: document.getElementById('buildDate').value,
+                equipmentScale: document.getElementById('equipmentScale').value,
+                status: document.getElementById('status').value,
+                active: true
+            };
+
+            const rules = {
+                name: [
+                    { type: 'required', message: '请输入站点名称' },
+                    { type: 'maxLength', max: 50, message: '站点名称不能超过50个字符' }
+                ],
+                address: [
+                    { type: 'required', message: '请输入详细地址' },
+                    { type: 'maxLength', max: 200, message: '详细地址不能超过200个字符' }
+                ],
+                manager: [
+                    { type: 'maxLength', max: 50, message: '负责人姓名不能超过50个字符' }
+                ],
+                phone: [
+                    { type: 'maxLength', max: 20, message: '联系电话不能超过20个字符' }
+                ],
+                equipmentScale: [
+                    { type: 'maxLength', max: 100, message: '设备规模不能超过100个字符' }
+                ]
+            };
+
+            const { isValid, errors } = validator.validate(formData, rules);
+            validator.showErrors(errors, 'stationForm');
+
+            if (!isValid) return;
+
+            const promise = stationId 
+                ? request.put(`/stations/${stationId}`, formData)
+                : request.post('/stations', formData);
+
+            promise.then(result => {
+                if (result.success) {
+                    showToast(stationId ? '更新成功' : '创建成功', 'success');
+                    closeModal();
+                    loadStations();
+                } else {
+                    showToast(result.message || '操作失败', 'error');
+                }
+            });
+        });
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function logout() {
+            auth.logout();
+            window.location.href = 'login.html';
+        }
+
+        loadStations();
+    </script>
+</body>
+</html>

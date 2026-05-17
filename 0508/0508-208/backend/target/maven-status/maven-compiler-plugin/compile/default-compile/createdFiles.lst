@@ -1,0 +1,15 @@
+com\airport\lostfound\controller\ClaimAppointmentController.class
+com\airport\lostfound\service\MatchingService.class
+com\airport\lostfound\repository\FoundItemRepository.class
+com\airport\lostfound\LostFoundApplication.class
+com\airport\lostfound\model\FoundItem.class
+com\airport\lostfound\model\ClaimAppointment.class
+com\airport\lostfound\controller\FoundItemController.class
+com\airport\lostfound\controller\LostClaimController.class
+com\airport\lostfound\model\MatchResult.class
+com\airport\lostfound\repository\ClaimAppointmentRepository.class
+com\airport\lostfound\service\ClaimAppointmentService.class
+com\airport\lostfound\model\LostClaim.class
+com\airport\lostfound\repository\LostClaimRepository.class
+com\airport\lostfound\service\LostClaimService.class
+com\airport\lostfound\service\FoundItemService.class

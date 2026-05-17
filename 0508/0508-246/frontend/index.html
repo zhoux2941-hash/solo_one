@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>屠宰场检疫系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏭 屠宰场检疫管理系统</h1>
+            <p class="subtitle">生猪入场 · 检疫记录 · 屠宰追溯 · 无害化处理</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="entry">入场登记</button>
+            <button class="tab-btn" data-tab="quarantine">检疫记录</button>
+            <button class="tab-btn" data-tab="slaughter">屠宰追溯</button>
+            <button class="tab-btn" data-tab="disposal">不合格处理</button>
+            <button class="tab-btn" data-tab="query">查询统计</button>
+        </nav>
+
+        <main class="content">
+            <section id="entry" class="tab-content active">
+                <h2>📋 生猪入场登记</h2>
+                <div class="form-group">
+                    <label>RFID耳标扫描</label>
+                    <div class="scan-input">
+                        <input type="text" id="rfidTag" placeholder="扫描或输入耳标编号">
+                        <button class="btn-scan" onclick="simulateScan()">模拟扫描</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>产地</label>
+                    <input type="text" id="origin" placeholder="请输入产地">
+                </div>
+                <div class="form-group">
+                    <label>免疫记录</label>
+                    <textarea id="immuneRecord" placeholder="请输入免疫记录信息"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>运输车辆牌号 <span class="form-hint">（如：京A12345、沪AD12345）</span></label>
+                    <input type="text" id="transportVehicle" placeholder="请输入运输车辆牌号" maxlength="8">
+                    <span id="plateValidationTip" class="validation-tip"></span>
+                </div>
+                <button class="btn-primary" onclick="registerPig()">确认登记</button>
+            </section>
+
+            <section id="quarantine" class="tab-content">
+                <h2>🔬 检疫记录</h2>
+                <div class="pending-quarantine-section">
+                    <div class="section-header">
+                        <h3>📋 待检疫生猪列表</h3>
+                        <button class="btn-secondary btn-small" onclick="loadPendingQuarantine()">刷新</button>
+                    </div>
+                    <div id="pendingQuarantineList" class="pending-list"></div>
+                </div>
+                <hr style="margin: 25px 0; border: none; border-top: 1px solid #e9ecef;">
+                <div class="form-group">
+                    <label>搜索生猪（RFID耳标）</label>
+                    <input type="text" id="searchRfid" placeholder="输入耳标编号搜索">
+                    <button class="btn-secondary" onclick="searchPigForQuarantine()">搜索</button>
+                </div>
+                <div id="quarantinePigInfo" class="pig-info-card"></div>
+                <div class="quarantine-form" id="quarantineForm" style="display: none;">
+                    <div class="form-group">
+                        <label>检疫结果</label>
+                        <select id="quarantineResult">
+                            <option value="合格">合格</option>
+                            <option value="不合格">不合格</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>检疫员</label>
+                        <input type="text" id="quarantineOfficer" placeholder="输入检疫员姓名">
+                    </div>
+                    <button class="btn-primary" onclick="submitQuarantine()">提交检疫结果</button>
+                </div>
+            </section>
+
+            <section id="slaughter" class="tab-content">
+                <h2>🥩 屠宰线胴体关联</h2>
+                <div class="form-group">
+                    <label>RFID耳标扫描</label>
+                    <div class="scan-input">
+                        <input type="text" id="slaughterRfid" placeholder="扫描耳标编号">
+                        <button class="btn-scan" onclick="simulateSlaughterScan()">自动线扫描</button>
+                    </div>
+                </div>
+                <div id="slaughterPigInfo" class="pig-info-card"></div>
+                <div class="slaughter-form" id="slaughterForm" style="display: none;">
+                    <div class="form-group">
+                        <label>胴体编号</label>
+                        <input type="text" id="carcassId" placeholder="输入胴体编号">
+                    </div>
+                    <button class="btn-primary" onclick="associateCarcass()">确认关联</button>
+                </div>
+            </section>
+
+            <section id="disposal" class="tab-content">
+                <h2>⚠️ 不合格生猪处理</h2>
+                <div class="stats-card">
+                    <h3>待处理不合格生猪</h3>
+                    <div id="pendingDisposalList"></div>
+                </div>
+                <div class="disposal-form">
+                    <div class="form-group">
+                        <label>选择处理生猪ID</label>
+                        <input type="number" id="disposalPigId" placeholder="输入生猪ID">
+                    </div>
+                    <div class="form-group">
+                        <label>无害化处理方式</label>
+                        <textarea id="disposalInfo" placeholder="请输入无害化处理详情，如：高温焚烧、深埋等"></textarea>
+                    </div>
+                    <button class="btn-danger" onclick="submitDisposal()">确认处理并上报</button>
+                </div>
+            </section>
+
+            <section id="query" class="tab-content">
+                <h2>📊 查询统计</h2>
+                <div class="query-section">
+                    <div class="form-group">
+                        <label>按状态查询</label>
+                        <select id="queryStatus" onchange="queryByStatus()">
+                            <option value="">全部</option>
+                            <option value="入场登记">入场登记</option>
+                            <option value="待宰圈">待宰圈</option>
+                            <option value="屠宰完成">屠宰完成</option>
+                            <option value="不合格-待处理">不合格-待处理</option>
+                            <option value="已无害化处理">已无害化处理</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="queryResults" class="query-results"></div>
+            </section>
+        </main>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

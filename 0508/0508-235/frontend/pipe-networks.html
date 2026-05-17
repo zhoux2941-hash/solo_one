@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>供水管网管理 - 智慧供水运维调度平台</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-title">智慧供水平台</div>
+            <ul class="sidebar-menu" id="menu">
+            </ul>
+        </div>
+        <div class="content">
+            <div class="header">
+                <h1>供水管网管理</h1>
+                <div class="user-info">
+                    <span id="userName"></span>
+                    <button class="btn btn-small btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="search-box">
+                    <select id="stationFilter">
+                        <option value="">全部站点</option>
+                    </select>
+                    <button class="btn btn-small" onclick="loadPipeNetworks()">查询</button>
+                </div>
+                <button class="btn btn-small btn-success" id="addPipeNetworkBtn" onclick="openModal()">新增管网</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>所属站点</th>
+                            <th>铺设路段</th>
+                            <th>管径大小</th>
+                            <th>铺设年份</th>
+                            <th>埋地深度</th>
+                            <th>管材类型</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pipeNetworkTable">
+                        <tr><td colspan="8" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="pagination">
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="pipeNetworkModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">新增管网</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="pipeNetworkForm">
+                <input type="hidden" id="pipeNetworkId" name="id">
+                <div class="form-group">
+                    <label for="stationId">所属站点</label>
+                    <select id="stationId" name="stationId">
+                        <option value="">请选择站点</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="roadSection">铺设路段</label>
+                    <input type="text" id="roadSection" name="roadSection" placeholder="请输入铺设路段">
+                </div>
+                <div class="form-group">
+                    <label for="pipeDiameter">管径大小</label>
+                    <input type="text" id="pipeDiameter" name="pipeDiameter" placeholder="如: DN100">
+                </div>
+                <div class="form-group">
+                    <label for="layYear">铺设年份</label>
+                    <input type="number" id="layYear" name="layYear" placeholder="请输入铺设年份">
+                </div>
+                <div class="form-group">
+                    <label for="buryDepth">埋地深度(米)</label>
+                    <input type="number" step="0.01" id="buryDepth" name="buryDepth" placeholder="请输入埋地深度">
+                </div>
+                <div class="form-group">
+                    <label for="pipeMaterial">管材类型</label>
+                    <select id="pipeMaterial" name="pipeMaterial">
+                        <option value="">请选择管材</option>
+                        <option value="PE管">PE管</option>
+                        <option value="PVC管">PVC管</option>
+                        <option value="钢管">钢管</option>
+                        <option value="铸铁管">铸铁管</option>
+                        <option value="球墨铸铁管">球墨铸铁管</option>
+                        <option value="不锈钢管">不锈钢管</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="remark">备注</label>
+                    <textarea id="remark" name="remark" rows="3" placeholder="请输入备注信息"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-small" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-small btn-success">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script src="js/validator.js"></script>
+    <script>
+        if (!auth.checkAuth()) {
+            throw new Error('未登录');
+        }
+
+        const user = auth.getUser();
+        document.getElementById('userName').textContent = `欢迎，${user.realName}`;
+
+        const menuItems = [];
+        if (user.role === 'ADMIN') {
+            menuItems.push({ id: 'users', label: '用户管理', url: 'users.html' });
+        }
+        menuItems.push({ id: 'stations', label: '站点管理', url: 'stations.html' });
+        menuItems.push({ id: 'pipe-networks', label: '管网管理', url: 'pipe-networks.html', active: true });
+        menuItems.push({ id: 'water-districts', label: '片区管理', url: 'water-districts.html' });
+
+        const menu = document.getElementById('menu');
+        menuItems.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `<a href="${item.url}" class="${item.active ? 'active' : ''}">${item.label}</a>`;
+            menu.appendChild(li);
+        });
+
+        if (user.role === 'STAFF') {
+            document.getElementById('addPipeNetworkBtn').style.display = 'none';
+        }
+
+        let currentPage = 0;
+        const pageSize = 10;
+        let stations = [];
+
+        function loadStations() {
+            request.get('/stations', { page: 0, size: 100 })
+                .then(result => {
+                    if (result.success) {
+                        stations = result.data;
+                        const stationFilter = document.getElementById('stationFilter');
+                        const stationSelect = document.getElementById('stationId');
+                        
+                        stations.forEach(s => {
+                            const option1 = document.createElement('option');
+                            option1.value = s.id;
+                            option1.textContent = s.name;
+                            stationFilter.appendChild(option1);
+
+                            const option2 = document.createElement('option');
+                            option2.value = s.id;
+                            option2.textContent = s.name;
+                            stationSelect.appendChild(option2);
+                        });
+                    }
+                });
+        }
+
+        function loadPipeNetworks() {
+            const stationId = document.getElementById('stationFilter').value || null;
+            const params = { page: currentPage, size: pageSize };
+            if (stationId) params.stationId = stationId;
+
+            request.get('/pipe-networks', params)
+                .then(result => {
+                    if (result.success) {
+                        renderPipeNetworks(result.data);
+                        renderPagination(result.totalPages);
+                    } else {
+                        showToast(result.message || '加载失败', 'error');
+                    }
+                })
+                .catch(() => {
+                    showToast('加载失败，请检查网络连接', 'error');
+                });
+        }
+
+        function renderPipeNetworks(pipeNetworks) {
+            const tbody = document.getElementById('pipeNetworkTable');
+            if (pipeNetworks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="loading">暂无数据</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = pipeNetworks.map(p => `
+                <tr>
+                    <td>${p.station ? p.station.name : '-'}</td>
+                    <td>${p.roadSection}</td>
+                    <td>${p.pipeDiameter}</td>
+                    <td>${p.layYear || '-'}</td>
+                    <td>${p.buryDepth ? p.buryDepth + 'm' : '-'}</td>
+                    <td>${p.pipeMaterial || '-'}</td>
+                    <td><span class="status-badge ${p.active ? 'status-active' : 'status-inactive'}">${p.active ? '正常' : '废弃'}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            ${user.role !== 'STAFF' ? `<button class="btn-edit" onclick="editPipeNetwork(${p.id})">编辑</button>` : ''}
+                            ${user.role === 'ADMIN' ? `<button class="btn-toggle" onclick="togglePipeNetwork(${p.id})">${p.active ? '标记废弃' : '恢复'}</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPagination(totalPages) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = `
+                <button onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>上一页</button>
+                <span>第 ${currentPage + 1} / ${totalPages} 页</span>
+                <button onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>下一页</button>
+            `;
+        }
+
+        function goToPage(page) {
+            if (page >= 0) {
+                currentPage = page;
+                loadPipeNetworks();
+            }
+        }
+
+        function openModal(pipeNetworkId = null) {
+            document.getElementById('pipeNetworkModal').classList.add('active');
+            document.getElementById('modalTitle').textContent = pipeNetworkId ? '编辑管网' : '新增管网';
+            validator.clearErrors('pipeNetworkForm');
+            document.getElementById('pipeNetworkForm').reset();
+            document.getElementById('pipeNetworkId').value = '';
+
+            if (pipeNetworkId) {
+                request.get(`/pipe-networks/${pipeNetworkId}`)
+                    .then(result => {
+                        if (result.success) {
+                            const p = result.data;
+                            document.getElementById('pipeNetworkId').value = p.id;
+                            document.getElementById('stationId').value = p.station ? p.station.id : '';
+                            document.getElementById('roadSection').value = p.roadSection;
+                            document.getElementById('pipeDiameter').value = p.pipeDiameter;
+                            document.getElementById('layYear').value = p.layYear || '';
+                            document.getElementById('buryDepth').value = p.buryDepth || '';
+                            document.getElementById('pipeMaterial').value = p.pipeMaterial || '';
+                            document.getElementById('remark').value = p.remark || '';
+                        }
+                    });
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('pipeNetworkModal').classList.remove('active');
+        }
+
+        function editPipeNetwork(id) {
+            openModal(id);
+        }
+
+        function togglePipeNetwork(id) {
+            if (!confirm('确定要操作此管网吗？')) return;
+            request.put(`/pipe-networks/${id}/toggle`)
+                .then(result => {
+                    if (result.success) {
+                        showToast('操作成功', 'success');
+                        loadPipeNetworks();
+                    } else {
+                        showToast(result.message || '操作失败', 'error');
+                    }
+                });
+        }
+
+        document.getElementById('pipeNetworkForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const pipeNetworkId = document.getElementById('pipeNetworkId').value;
+            const stationIdVal = document.getElementById('stationId').value;
+            const layYearVal = document.getElementById('layYear').value;
+            const buryDepthVal = document.getElementById('buryDepth').value;
+            const formData = {
+                stationId: stationIdVal ? parseInt(stationIdVal) : null,
+                roadSection: document.getElementById('roadSection').value,
+                pipeDiameter: document.getElementById('pipeDiameter').value,
+                layYear: layYearVal ? parseInt(layYearVal) : null,
+                buryDepth: buryDepthVal ? parseFloat(buryDepthVal) : null,
+                pipeMaterial: document.getElementById('pipeMaterial').value,
+                remark: document.getElementById('remark').value
+            };
+
+            const rules = {
+                roadSection: [
+                    { type: 'required', message: '请输入铺设路段' },
+                    { type: 'maxLength', max: 200, message: '铺设路段不能超过200个字符' }
+                ],
+                pipeDiameter: [
+                    { type: 'required', message: '请输入管径大小' },
+                    { type: 'maxLength', max: 50, message: '管径大小不能超过50个字符' }
+                ]
+            };
+
+            const { isValid, errors } = validator.validate(formData, rules);
+            validator.showErrors(errors, 'pipeNetworkForm');
+
+            if (!isValid) return;
+
+            const promise = pipeNetworkId 
+                ? request.put(`/pipe-networks/${pipeNetworkId}`, formData)
+                : request.post('/pipe-networks', formData);
+
+            promise.then(result => {
+                if (result.success) {
+                    showToast(pipeNetworkId ? '更新成功' : '创建成功', 'success');
+                    closeModal();
+                    loadPipeNetworks();
+                } else {
+                    showToast(result.message || '操作失败', 'error');
+                }
+            });
+        });
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function logout() {
+            auth.logout();
+            window.location.href = 'login.html';
+        }
+
+        loadStations();
+        loadPipeNetworks();
+    </script>
+</body>
+</html>

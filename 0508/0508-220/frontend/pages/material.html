@@ -1,0 +1,269 @@
+<div class="page-header">
+    <h1 class="page-title">物料档案管理</h1>
+    <button class="btn btn-primary" onclick="openMaterialModal()">新增物料</button>
+</div>
+
+<div class="card">
+    <div class="search-bar">
+        <div class="search-item">
+            <label class="form-label">物料名称</label>
+            <input type="text" class="form-input" id="searchKeyword" placeholder="请输入物料名称">
+        </div>
+        <div class="search-item">
+            <label class="form-label">物料类型</label>
+            <select class="form-select" id="searchType">
+                <option value="">全部</option>
+                <option value="原材料">原材料</option>
+                <option value="半成品">半成品</option>
+                <option value="辅料">辅料</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="searchMaterial()">搜索</button>
+        <button class="btn btn-default" onclick="resetSearch()">重置</button>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>物料编码</th>
+                <th>物料名称</th>
+                <th>物料类型</th>
+                <th>规格型号</th>
+                <th>材质</th>
+                <th>单位</th>
+                <th>存放库区</th>
+                <th>安全库存</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="materialTableBody">
+        </tbody>
+    </table>
+
+    <div class="pagination" id="pagination">
+    </div>
+</div>
+
+<div id="materialModal" class="modal-overlay hidden">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title" id="modalTitle">新增物料</span>
+            <button class="modal-close" onclick="closeMaterialModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="materialForm">
+                <input type="hidden" id="materialId">
+                <div class="form-group">
+                    <label class="form-label">物料编码 <span style="color: red;">*</span></label>
+                    <input type="text" class="form-input" id="materialCode" placeholder="请输入物料编码">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">物料名称 <span style="color: red;">*</span></label>
+                    <input type="text" class="form-input" id="materialName" placeholder="请输入物料名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">物料类型</label>
+                    <select class="form-select" id="materialType">
+                        <option value="">请选择</option>
+                        <option value="原材料">原材料</option>
+                        <option value="半成品">半成品</option>
+                        <option value="辅料">辅料</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">规格型号</label>
+                    <input type="text" class="form-input" id="specification" placeholder="请输入规格型号">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">材质</label>
+                    <input type="text" class="form-input" id="material" placeholder="请输入材质">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">单位</label>
+                    <input type="text" class="form-input" id="unit" placeholder="请输入单位">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">存放库区</label>
+                    <input type="text" class="form-input" id="warehouse" placeholder="请输入存放库区">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">安全库存</label>
+                    <input type="number" class="form-input" id="safetyStock" placeholder="请输入安全库存">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">描述</label>
+                    <textarea class="form-input" id="materialDescription" rows="3" placeholder="请输入描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">状态</label>
+                    <select class="form-select" id="materialStatus">
+                        <option value="1">启用</option>
+                        <option value="0">禁用</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-default" onclick="closeMaterialModal()">取消</button>
+            <button class="btn btn-primary" onclick="saveMaterial()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPage = 0;
+    const pageSize = 10;
+
+    function initmaterialPage() {
+        loadMaterialData();
+    }
+
+    async function loadMaterialData() {
+        try {
+            const keyword = document.getElementById('searchKeyword')?.value || '';
+            const type = document.getElementById('searchType')?.value || '';
+            const result = await get('/material/page', { page: currentPage, size: pageSize, keyword, type });
+            
+            const tbody = document.getElementById('materialTableBody');
+            tbody.innerHTML = '';
+            
+            result.data.content.forEach(material => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${material.materialCode}</td>
+                    <td>${material.materialName}</td>
+                    <td>${material.materialType || '-'}</td>
+                    <td>${material.specification || '-'}</td>
+                    <td>${material.material || '-'}</td>
+                    <td>${material.unit || '-'}</td>
+                    <td>${material.warehouse || '-'}</td>
+                    <td>${material.safetyStock || '-'}</td>
+                    <td><span class="status-tag ${material.status === 1 ? 'status-active' : 'status-inactive'}">${material.status === 1 ? '启用' : '禁用'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-default" onclick="editMaterial(${material.id})">编辑</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteMaterial(${material.id})">删除</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            renderPagination(result.data.totalPages, result.data.totalElements);
+        } catch (error) {
+            console.error('加载物料数据失败', error);
+        }
+    }
+
+    function renderPagination(totalPages, totalElements) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = `
+            <span class="pagination-info">共 ${totalElements} 条记录，第 ${currentPage + 1}/${totalPages} 页</span>
+            <button class="btn btn-sm btn-default" onclick="goToPage(0)" ${currentPage === 0 ? 'disabled' : ''}>首页</button>
+            <button class="btn btn-sm btn-default" onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>上一页</button>
+            <button class="btn btn-sm btn-default" onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>下一页</button>
+            <button class="btn btn-sm btn-default" onclick="goToPage(${totalPages - 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>末页</button>
+        `;
+    }
+
+    function goToPage(page) {
+        if (page >= 0) {
+            currentPage = page;
+            loadMaterialData();
+        }
+    }
+
+    function searchMaterial() {
+        currentPage = 0;
+        loadMaterialData();
+    }
+
+    function resetSearch() {
+        document.getElementById('searchKeyword').value = '';
+        document.getElementById('searchType').value = '';
+        currentPage = 0;
+        loadMaterialData();
+    }
+
+    function openMaterialModal() {
+        document.getElementById('modalTitle').textContent = '新增物料';
+        document.getElementById('materialForm').reset();
+        document.getElementById('materialId').value = '';
+        document.getElementById('materialModal').classList.remove('hidden');
+    }
+
+    function closeMaterialModal() {
+        document.getElementById('materialModal').classList.add('hidden');
+    }
+
+    async function editMaterial(id) {
+        try {
+            const result = await get(`/material/${id}`);
+            const material = result.data;
+            
+            document.getElementById('modalTitle').textContent = '编辑物料';
+            document.getElementById('materialId').value = material.id;
+            document.getElementById('materialCode').value = material.materialCode;
+            document.getElementById('materialName').value = material.materialName;
+            document.getElementById('materialType').value = material.materialType || '';
+            document.getElementById('specification').value = material.specification || '';
+            document.getElementById('material').value = material.material || '';
+            document.getElementById('unit').value = material.unit || '';
+            document.getElementById('warehouse').value = material.warehouse || '';
+            document.getElementById('safetyStock').value = material.safetyStock || '';
+            document.getElementById('materialDescription').value = material.description || '';
+            document.getElementById('materialStatus').value = material.status;
+            
+            document.getElementById('materialModal').classList.remove('hidden');
+        } catch (error) {
+            console.error('加载物料详情失败', error);
+        }
+    }
+
+    async function saveMaterial() {
+        const id = document.getElementById('materialId').value;
+        const data = {
+            materialCode: document.getElementById('materialCode').value,
+            materialName: document.getElementById('materialName').value,
+            materialType: document.getElementById('materialType').value,
+            specification: document.getElementById('specification').value,
+            material: document.getElementById('material').value,
+            unit: document.getElementById('unit').value,
+            warehouse: document.getElementById('warehouse').value,
+            safetyStock: document.getElementById('safetyStock').value ? parseFloat(document.getElementById('safetyStock').value) : null,
+            description: document.getElementById('materialDescription').value,
+            status: parseInt(document.getElementById('materialStatus').value)
+        };
+
+        const codeError = Validator.required(data.materialCode, '请输入物料编码');
+        const nameError = Validator.required(data.materialName, '请输入物料名称');
+
+        if (codeError) { showMessage(codeError, 'error'); return; }
+        if (nameError) { showMessage(nameError, 'error'); return; }
+
+        try {
+            if (id) {
+                await put(`/material/${id}`, data);
+                showMessage('更新成功', 'success');
+            } else {
+                await post('/material', data);
+                showMessage('创建成功', 'success');
+            }
+            closeMaterialModal();
+            loadMaterialData();
+        } catch (error) {
+            console.error('保存失败', error);
+        }
+    }
+
+    async function deleteMaterial(id) {
+        if (confirm('确定要删除该物料吗？')) {
+            try {
+                await del(`/material/${id}`);
+                showMessage('删除成功', 'success');
+                loadMaterialData();
+            } catch (error) {
+                console.error('删除失败', error);
+            }
+        }
+    }
+</script>

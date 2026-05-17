@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 建筑施工现场管控系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <h1 class="login-title">建筑施工现场管控系统</h1>
+            <p class="login-subtitle">Construction Site Management System</p>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input type="text" name="username" class="form-input" placeholder="请输入用户名" value="admin">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input type="password" name="password" class="form-input" placeholder="请输入密码" value="123456">
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary login-btn">登 录</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/http.js"></script>
+    <script src="js/validator.js"></script>
+    <script>
+        const loginRules = {
+            username: [{ type: 'required', message: '请输入用户名' }],
+            password: [{ type: 'required', message: '请输入密码' }],
+        };
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = Validator.getFormData('loginForm');
+            const validation = Validator.validate(loginRules, formData);
+
+            if (!validation.isValid) {
+                Validator.showErrors('loginForm', validation.errors);
+                return;
+            }
+
+            Validator.clearErrors('loginForm');
+
+            const result = await http.post('/api/auth/login', formData);
+
+            if (result.success) {
+                localStorage.setItem('user', JSON.stringify(result.data));
+                showToast('登录成功', 'success');
+                setTimeout(() => {
+                    window.location.href = 'project.html';
+                }, 1000);
+            } else {
+                showToast(result.message, 'error');
+            }
+        });
+
+        if (localStorage.getItem('user')) {
+            window.location.href = 'project.html';
+        }
+    </script>
+</body>
+</html>

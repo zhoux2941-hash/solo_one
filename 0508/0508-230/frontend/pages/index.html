@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>景区运营管理平台</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sidebar-header">🏞️ 景区运营平台</div>
+            <ul class="sidebar-menu">
+                <li class="menu-item active" data-page="dashboard">
+                    <span>📊</span> 数据概览
+                </li>
+                <li class="menu-item" data-page="department">
+                    <span>🏢</span> 部门管理
+                </li>
+                <li class="menu-item" data-page="position">
+                    <span>👔</span> 岗位管理
+                </li>
+                <li class="menu-item" data-page="employee">
+                    <span>👥</span> 员工管理
+                </li>
+                <li class="menu-item" data-page="category">
+                    <span>📁</span> 业态分类
+                </li>
+                <li class="menu-item" data-page="resource">
+                    <span>🎢</span> 业态资源
+                </li>
+                <li class="menu-item" data-page="ticket-type">
+                    <span>🎫</span> 票种管理
+                </li>
+                <li class="menu-item" data-page="ticket-sale">
+                    <span>💳</span> 售票管理
+                </li>
+                <li class="menu-item" data-page="ticket-verify">
+                    <span>✅</span> 入园核销
+                </li>
+                <li class="menu-item" data-page="venue">
+                    <span>🏢</span> 场地管理
+                </li>
+                <li class="menu-item" data-page="venue-booking">
+                    <span>📅</span> 场地预约
+                </li>
+                <li class="menu-item" data-page="material-category">
+                    <span>📦</span> 物资类别
+                </li>
+                <li class="menu-item" data-page="material">
+                    <span>📋</span> 物资库存
+                </li>
+                <li class="menu-item" data-page="material-record">
+                    <span>📝</span> 出入库管理
+                </li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="header">
+                <div style="font-size: 16px; font-weight: 500;" id="pageTitle">数据概览</div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <span>👤</span>
+                        <span id="username">管理员</span>
+                    </div>
+                    <button class="btn btn-default btn-small" onclick="doLogout()">退出登录</button>
+                </div>
+            </div>
+            <div class="content" id="content">
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth/auth.js"></script>
+    <script src="../js/utils/request.js"></script>
+    <script src="../js/utils/validator.js"></script>
+    <script src="../js/utils/common.js"></script>
+    <!-- 预先加载所有组件脚本 -->
+    <script src="../js/components/department.js"></script>
+    <script src="../js/components/position.js"></script>
+    <script src="../js/components/employee.js"></script>
+    <script src="../js/components/category.js"></script>
+    <script src="../js/components/resource.js"></script>
+    <script src="../js/components/ticketType.js"></script>
+    <script src="../js/components/ticketSale.js"></script>
+    <script src="../js/components/ticketVerify.js"></script>
+    <script src="../js/components/venue.js"></script>
+    <script src="../js/components/venueBooking.js"></script>
+    <script src="../js/components/materialCategory.js"></script>
+    <script src="../js/components/material.js"></script>
+    <script src="../js/components/materialRecord.js"></script>
+    <script>
+        // 认证检查
+        if (!Auth.isAuthenticated()) {
+            window.location.href = 'login.html';
+        }
+
+        // 显示用户名
+        const user = Auth.getUser();
+        if (user && user.empName) {
+            document.getElementById('username').textContent = user.empName;
+        } else if (user && user.username) {
+            document.getElementById('username').textContent = user.username;
+        }
+
+        // 退出登录
+        function doLogout() {
+            Common.showConfirm('确定要退出登录吗？', () => {
+                Auth.logout().then(() => {
+                    Common.showToast('退出成功');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 500);
+                });
+            });
+        }
+
+        // 菜单点击事件
+        const menuItems = document.querySelectorAll('.menu-item');
+        menuItems.forEach(item => {
+            item.addEventListener('click', function() {
+                menuItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                const page = this.dataset.page;
+                document.getElementById('pageTitle').textContent = this.textContent.trim();
+                
+                switch(page) {
+                    case 'dashboard':
+                        loadDashboard();
+                        break;
+                    case 'department':
+                        loadDepartmentPage();
+                        break;
+                    case 'position':
+                        loadPositionPage();
+                        break;
+                    case 'employee':
+                        loadEmployeePage();
+                        break;
+                    case 'category':
+                        loadCategoryPage();
+                        break;
+                    case 'resource':
+                        loadResourcePage();
+                        break;
+                    case 'ticket-type':
+                        loadTicketTypePage();
+                        break;
+                    case 'ticket-sale':
+                        loadTicketSalePage();
+                        break;
+                    case 'ticket-verify':
+                        loadTicketVerifyPage();
+                        break;
+                    case 'venue':
+                        loadVenuePage();
+                        break;
+                    case 'venue-booking':
+                        loadVenueBookingPage();
+                        break;
+                    case 'material-category':
+                        loadMaterialCategoryPage();
+                        break;
+                    case 'material':
+                        loadMaterialPage();
+                        break;
+                    case 'material-record':
+                        loadMaterialRecordPage();
+                        break;
+                    default:
+                        loadDashboard();
+                }
+            });
+        });
+
+        // 加载数据概览页面
+        function loadDashboard() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;">
+                    <div class="card" style="margin-bottom: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff;">
+                        <div style="font-size: 32px; font-weight: 600;" id="deptCount">0</div>
+                        <div style="opacity: 0.9;">部门总数</div>
+                    </div>
+                    <div class="card" style="margin-bottom: 0; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: #fff;">
+                        <div style="font-size: 32px; font-weight: 600;" id="positionCount">0</div>
+                        <div style="opacity: 0.9;">岗位总数</div>
+                    </div>
+                    <div class="card" style="margin-bottom: 0; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #fff;">
+                        <div style="font-size: 32px; font-weight: 600;" id="employeeCount">0</div>
+                        <div style="opacity: 0.9;">员工总数</div>
+                    </div>
+                    <div class="card" style="margin-bottom: 0; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: #fff;">
+                        <div style="font-size: 32px; font-weight: 600;" id="resourceCount">0</div>
+                        <div style="opacity: 0.9;">业态资源</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">欢迎使用景区运营管理平台</div>
+                    </div>
+                    <div style="padding: 20px; color: #606266; line-height: 1.8;">
+                        <p>本平台提供景区组织架构管理、全员岗位权限管理、业态资源建档管理等功能。</p>
+                        <p style="margin-top: 10px;">功能特点：</p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>部门管理：景区管理部门的增删改查</li>
+                            <li>岗位管理：运营班组及岗位配置</li>
+                            <li>员工管理：一线服务人员信息管理</li>
+                            <li>业态分类：自然景点、游乐项目、民俗体验馆、休闲商业区等分类</li>
+                            <li>业态资源：各业态资源建档管理，包含开放时段、容纳上限、收费标准、运维负责人等信息</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            // 加载统计数据
+            loadDashboardData();
+        }
+
+        function loadDashboardData() {
+            Promise.all([
+                Request.get('/api/department/list'),
+                Request.get('/api/position/list'),
+                Request.get('/api/employee/list'),
+                Request.get('/api/resource/list')
+            ]).then(results => {
+                document.getElementById('deptCount').textContent = results[0].data.length;
+                document.getElementById('positionCount').textContent = results[1].data.length;
+                document.getElementById('employeeCount').textContent = results[2].data.length;
+                document.getElementById('resourceCount').textContent = results[3].data.length;
+            }).catch(err => {
+                console.error('Failed to load dashboard data:', err);
+            });
+        }
+
+        // 默认加载数据概览页面
+        loadDashboard();
+    </script>
+</body>
+</html>

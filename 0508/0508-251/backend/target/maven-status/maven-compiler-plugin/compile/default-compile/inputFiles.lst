@@ -1,0 +1,10 @@
+E:\trae-project\0508-251\backend\src\main\java\com\ballistic\trajectory\TrajectoryCompensationApplication.java
+E:\trae-project\0508-251\backend\src\main\java\com\ballistic\trajectory\dto\CalculationResult.java
+E:\trae-project\0508-251\backend\src\main\java\com\ballistic\trajectory\dto\SlopeCalculationRequest.java
+E:\trae-project\0508-251\backend\src\main\java\com\ballistic\trajectory\repository\TrajectoryRecordRepository.java
+E:\trae-project\0508-251\backend\src\main\java\com\ballistic\trajectory\controller\BallisticController.java
+E:\trae-project\0508-251\backend\src\main\java\com\ballistic\trajectory\model\TrajectoryRecord.java
+E:\trae-project\0508-251\backend\src\main\java\com\ballistic\trajectory\dto\BallisticCalculationRequest.java
+E:\trae-project\0508-251\backend\src\main\java\com\ballistic\trajectory\service\DataService.java
+E:\trae-project\0508-251\backend\src\main\java\com\ballistic\trajectory\config\WebConfig.java
+E:\trae-project\0508-251\backend\src\main\java\com\ballistic\trajectory\service\BallisticCalculationService.java

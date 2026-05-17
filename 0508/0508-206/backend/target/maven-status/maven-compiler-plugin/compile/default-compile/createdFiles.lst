@@ -1,0 +1,10 @@
+com\lawfirm\caseManagement\CaseManagementApplication.class
+com\lawfirm\caseManagement\repository\CaseRepository.class
+com\lawfirm\caseManagement\repository\JudgmentRepository.class
+com\lawfirm\caseManagement\repository\HearingRepository.class
+com\lawfirm\caseManagement\entity\Case.class
+com\lawfirm\caseManagement\entity\Hearing.class
+com\lawfirm\caseManagement\entity\Judgment.class
+com\lawfirm\caseManagement\service\CaseService.class
+com\lawfirm\caseManagement\controller\CaseController.class
+com\lawfirm\caseManagement\exception\GlobalExceptionHandler.class

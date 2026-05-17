@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>野外露营营地备案系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏕️ 野外露营营地备案系统</h1>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="index.html" class="active">首页</a></li>
+                <li><a href="area.html">区域划分</a></li>
+                <li><a href="facility.html">设施登记</a></li>
+                <li><a href="record.html">人员备案</a></li>
+                <li><a href="usage.html">场地使用</a></li>
+            </ul>
+        </nav>
+        
+        <div class="main-content">
+            <h2 class="section-title">📊 数据概览</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="areaCount">-</div>
+                    <div class="stat-label">营地区域</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="facilityCount">-</div>
+                    <div class="stat-label">配套设施</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="recordCount">-</div>
+                    <div class="stat-label">露营团队</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="usageCount">-</div>
+                    <div class="stat-label">使用记录</div>
+                </div>
+            </div>
+            
+            <h2 class="section-title">📋 快速操作</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <button class="btn btn-primary" onclick="location.href='area.html'">
+                    管理营地区域
+                </button>
+                <button class="btn btn-success" onclick="location.href='facility.html'">
+                    登记配套设施
+                </button>
+                <button class="btn btn-warning" onclick="location.href='record.html'">
+                    备案露营人员
+                </button>
+                <button class="btn btn-danger" onclick="location.href='usage.html'">
+                    记录场地使用
+                </button>
+            </div>
+            
+            <h2 class="section-title" style="margin-top: 30px;">🟢 当前露营中的团队</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>团队名称</th>
+                            <th>领队</th>
+                            <th>联系电话</th>
+                            <th>人数</th>
+                            <th>入住时间</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activeRecords">
+                        <tr>
+                            <td colspan="6" style="text-align:center;padding:30px;color:#999;">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        async function loadStats() {
+            try {
+                const [areas, facilities, records, usages] = await Promise.all([
+                    apiRequest('/areas'),
+                    apiRequest('/facilities'),
+                    apiRequest('/records'),
+                    apiRequest('/usage')
+                ]);
+                
+                document.getElementById('areaCount').textContent = areas.length;
+                document.getElementById('facilityCount').textContent = facilities.length;
+                document.getElementById('recordCount').textContent = records.length;
+                document.getElementById('usageCount').textContent = usages.length;
+                
+                const activeRecords = records.filter(r => r.status === '露营中');
+                renderTable('activeRecords', activeRecords, [
+                    { field: 'teamName' },
+                    { field: 'teamLeader' },
+                    { field: 'leaderPhone' },
+                    { field: 'peopleCount' },
+                    { render: (item) => formatDateTime(item.checkInTime) }
+                ], null);
+            } catch (error) {
+                console.error('加载数据失败:', error);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadStats);
+    </script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>考勤管理 - 建筑施工现场管控系统</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">施工现场日常考勤</h2>
+                <div style="display: flex; gap: 10px;">
+                    <select id="quickWorkerId" class="form-select" style="width: 200px;">
+                        <option value="">选择工人进行打卡</option>
+                    </select>
+                    <button class="btn btn-success" onclick="checkIn()">上班打卡</button>
+                    <button class="btn btn-warning" onclick="checkOut()">下班打卡</button>
+                </div>
+            </div>
+
+            <div class="search-bar">
+                <div class="search-item">
+                    <label>所属项目</label>
+                    <select id="searchProjectId" class="form-select" onchange="loadWorkerSelect()">
+                        <option value="">全部项目</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>工人</label>
+                    <select id="searchWorkerId" class="form-select">
+                        <option value="">全部工人</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>开始日期</label>
+                    <input type="date" id="searchStartDate" class="form-input">
+                </div>
+                <div class="search-item">
+                    <label>结束日期</label>
+                    <input type="date" id="searchEndDate" class="form-input">
+                </div>
+                <div class="search-buttons">
+                    <button class="btn btn-primary" onclick="loadAttendanceList()">搜索</button>
+                    <button class="btn btn-info" onclick="resetSearch()">重置</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>工人姓名</th>
+                            <th>考勤日期</th>
+                            <th>上班时间</th>
+                            <th>下班时间</th>
+                            <th>工作时长(小时)</th>
+                            <th>考勤类型</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTableBody"></tbody>
+                </table>
+            </div>
+            <div id="pagination"></div>
+        </div>
+    </div>
+
+    <div id="attendanceModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">编辑考勤</h3>
+                <button class="modal-close" onclick="closeModal('attendanceModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="attendanceForm">
+                    <input type="hidden" name="id">
+                    <div class="form-group">
+                        <label class="form-label">考勤日期</label>
+                        <input type="date" name="attendanceDate" class="form-input">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label class="form-label">上班时间</label>
+                            <input type="datetime-local" name="checkInTime" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">下班时间</label>
+                            <input type="datetime-local" name="checkOutTime" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">工作时长(小时)</label>
+                        <input type="number" step="0.01" name="workHours" class="form-input" placeholder="自动计算或手动输入">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">考勤类型</label>
+                        <select name="attendanceType" class="form-select">
+                            <option value="正常">正常</option>
+                            <option value="加班">加班</option>
+                            <option value="请假">请假</option>
+                            <option value="旷工">旷工</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">地点</label>
+                        <input type="text" name="location" class="form-input" placeholder="打卡地点">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">备注</label>
+                        <textarea name="remark" class="form-textarea" placeholder="备注信息"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" onclick="closeModal('attendanceModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveAttendance()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/http.js"></script>
+    <script src="js/validator.js"></script>
+    <script src="js/layout.js"></script>
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+        let currentEditId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initPage('attendance');
+            loadProjectList();
+            loadWorkerSelect();
+            loadAttendanceList();
+        });
+
+        async function loadProjectList() {
+            const result = await http.get('/api/project/active');
+            if (result.success) {
+                const options = result.data.map(p => `<option value="${p.id}">${p.projectName}</option>`).join('');
+                document.querySelector('#searchProjectId').innerHTML = '<option value="">全部项目</option>' + options;
+            }
+        }
+
+        async function loadWorkerSelect() {
+            const projectId = document.querySelector('#searchProjectId').value;
+            const params = projectId ? { projectId } : {};
+            const result = await http.get('/api/labor/worker/active', params);
+            if (result.success) {
+                const options = result.data.map(w => `<option value="${w.id}">${w.workerName}</option>`).join('');
+                document.querySelector('#searchWorkerId').innerHTML = '<option value="">全部工人</option>' + options;
+                document.querySelector('#quickWorkerId').innerHTML = '<option value="">选择工人进行打卡</option>' + options;
+            }
+        }
+
+        async function loadAttendanceList() {
+            const projectId = document.querySelector('#searchProjectId').value;
+            const workerId = document.querySelector('#searchWorkerId').value;
+            const startDate = document.querySelector('#searchStartDate').value;
+            const endDate = document.querySelector('#searchEndDate').value;
+
+            const params = {
+                pageNum: currentPage,
+                pageSize: pageSize,
+            };
+
+            if (projectId) params.projectId = projectId;
+            if (workerId) params.workerId = workerId;
+            if (startDate) params.startDate = startDate;
+            if (endDate) params.endDate = endDate;
+
+            const result = await http.get('/api/labor/attendance/list', params);
+
+            if (result.success) {
+                renderAttendanceTable(result.data.list);
+                renderPagination('pagination', result.data.pageNum, result.data.pageSize, result.data.total, 'goToPage');
+            }
+        }
+
+        function renderAttendanceTable(attendances) {
+            const tbody = document.getElementById('attendanceTableBody');
+
+            if (!attendances || attendances.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <div class="empty-state-icon">📅</div>
+                            <div class="empty-state-text">暂无考勤数据</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = attendances.map(att => `
+                <tr>
+                    <td>${att.workerId ? '工人' + att.workerId : '-'}</td>
+                    <td>${formatDate(att.attendanceDate)}</td>
+                    <td>${formatDateTime(att.checkInTime)}</td>
+                    <td>${formatDateTime(att.checkOutTime)}</td>
+                    <td>${att.workHours !== null && att.workHours !== undefined ? att.workHours : '-'}</td>
+                    <td>
+                        <span class="status-tag ${att.attendanceType === '正常' ? 'status-active' : (att.attendanceType === '加班' ? 'status-warning' : 'status-inactive')}">
+                            ${att.attendanceType || '-'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="btn btn-primary btn-small" onclick="openEditModal(${att.id})">编辑</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteAttendance(${att.id})">删除</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            loadAttendanceList();
+        }
+
+        function resetSearch() {
+            document.querySelector('#searchProjectId').value = '';
+            document.querySelector('#searchWorkerId').value = '';
+            document.querySelector('#searchStartDate').value = '';
+            document.querySelector('#searchEndDate').value = '';
+            currentPage = 1;
+            loadAttendanceList();
+        }
+
+        async function checkIn() {
+            const workerId = document.querySelector('#quickWorkerId').value;
+            if (!workerId) {
+                showToast('请先选择工人', 'warning');
+                return;
+            }
+
+            const result = await http.post(`/api/labor/attendance/check-in/${workerId}`);
+            if (result.success) {
+                showToast('上班打卡成功', 'success');
+                loadAttendanceList();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+
+        async function checkOut() {
+            const workerId = document.querySelector('#quickWorkerId').value;
+            if (!workerId) {
+                showToast('请先选择工人', 'warning');
+                return;
+            }
+
+            const result = await http.post(`/api/labor/attendance/check-out/${workerId}`);
+            if (result.success) {
+                showToast('下班打卡成功', 'success');
+                loadAttendanceList();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+
+        async function openEditModal(id) {
+            currentEditId = id;
+            document.getElementById('modalTitle').textContent = '编辑考勤';
+
+            const result = await http.get(`/api/labor/attendance/${id}`);
+
+            if (result.success) {
+                const att = result.data;
+                const form = document.getElementById('attendanceForm');
+                form.querySelector('[name="id"]').value = att.id || '';
+                form.querySelector('[name="attendanceDate"]').value = att.attendanceDate ? att.attendanceDate.split('T')[0] : '';
+                form.querySelector('[name="checkInTime"]').value = att.checkInTime ? att.checkInTime.replace('T', ' ').substring(0, 16).replace(' ', 'T') : '';
+                form.querySelector('[name="checkOutTime"]').value = att.checkOutTime ? att.checkOutTime.replace('T', ' ').substring(0, 16).replace(' ', 'T') : '';
+                form.querySelector('[name="workHours"]').value = att.workHours || '';
+                form.querySelector('[name="attendanceType"]').value = att.attendanceType || '正常';
+                form.querySelector('[name="location"]').value = att.location || '';
+                form.querySelector('[name="remark"]').value = att.remark || '';
+
+                openModal('attendanceModal');
+            }
+        }
+
+        async function saveAttendance() {
+            const formData = Validator.getFormData('attendanceForm');
+            
+            let result;
+            if (currentEditId) {
+                result = await http.put(`/api/labor/attendance/${currentEditId}`, formData);
+            } else {
+                result = await http.post('/api/labor/attendance', formData);
+            }
+
+            if (result.success) {
+                showToast('保存成功', 'success');
+                closeModal('attendanceModal');
+                loadAttendanceList();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+
+        async function deleteAttendance(id) {
+            if (!confirm('确定要删除该考勤记录吗？此操作不可恢复！')) return;
+
+            const result = await http.delete(`/api/labor/attendance/${id}`);
+
+            if (result.success) {
+                showToast('删除成功', 'success');
+                loadAttendanceList();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) return '-';
+            const dt = dateTimeStr.replace('T', ' ');
+            return dt.substring(0, 16);
+        }
+    </script>
+</body>
+</html>

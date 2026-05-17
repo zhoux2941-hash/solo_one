@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧供水运维调度平台</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-title">智慧供水平台</div>
+            <ul class="sidebar-menu" id="menu">
+            </ul>
+        </div>
+        <div class="content">
+            <div class="header">
+                <h1>欢迎使用智慧供水运维调度平台</h1>
+                <div class="user-info">
+                    <span id="userName"></span>
+                    <button class="btn btn-small btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div style="text-align: center; padding: 100px;">
+                <h2>城市智慧供水运维调度平台</h2>
+                <p style="margin-top: 20px; color: #666;">请从左侧菜单选择功能模块</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script>
+        if (!auth.checkAuth()) {
+            throw new Error('未登录');
+        }
+
+        const user = auth.getUser();
+        document.getElementById('userName').textContent = `欢迎，${user.realName}`;
+
+        const menuItems = [
+            { id: 'stations', label: '站点管理', url: 'stations.html', roles: ['ADMIN', 'INSPECTOR', 'STAFF'] },
+            { id: 'pipe-networks', label: '管网管理', url: 'pipe-networks.html', roles: ['ADMIN', 'INSPECTOR', 'STAFF'] },
+            { id: 'water-districts', label: '片区管理', url: 'water-districts.html', roles: ['ADMIN', 'INSPECTOR', 'STAFF'] }
+        ];
+
+        if (user.role === 'ADMIN') {
+            menuItems.unshift({ id: 'users', label: '用户管理', url: 'users.html', roles: ['ADMIN'] });
+        }
+
+        const menu = document.getElementById('menu');
+        menuItems.forEach(item => {
+            if (item.roles.includes(user.role)) {
+                const li = document.createElement('li');
+                li.innerHTML = `<a href="${item.url}">${item.label}</a>`;
+                menu.appendChild(li);
+            }
+        });
+
+        function logout() {
+            auth.logout();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

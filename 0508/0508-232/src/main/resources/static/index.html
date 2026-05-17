@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物流园区管理平台 - 首页</title>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>物流园区货物中转调度管理平台</h1>
+            <div class="user-info">
+                <div class="menu">
+                    <a href="index.html" class="active">首页</a>
+                    <a href="user.html" id="userMenu">用户管理</a>
+                    <a href="warehouse.html">仓库管理</a>
+                </div>
+                <div>
+                    <span id="currentUser">正在加载...</span>
+                    <button class="btn btn-sm btn-warning" onclick="logout()" style="margin-left: 10px;">退出登录</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="number" id="userCount">-</div>
+                <div class="label">用户总数</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="warehouseCount">-</div>
+                <div class="label">仓库总数</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="areaCount">-</div>
+                <div class="label">库区总数</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="availableCount">-</div>
+                <div class="label">可用仓库</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>欢迎使用物流园区货物中转调度管理平台</h2>
+            <p style="line-height: 1.8; color: #666;">
+                本平台提供园区工作人员账号角色权限管理、仓库库区档案管理等功能。
+                根据不同角色权限，用户可以进行相应的操作：
+            </p>
+            <ul style="margin-top: 15px; line-height: 2; color: #666; padding-left: 20px;">
+                <li><strong>管理员</strong>：拥有所有权限，可管理用户、仓库和库区</li>
+                <li><strong>调度员</strong>：可查看仓库信息，进行调度作业</li>
+                <li><strong>仓管员</strong>：可管理仓库和库区信息</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        let currentUser = null;
+
+        checkLogin().then(user => {
+            currentUser = user;
+            document.getElementById('currentUser').textContent = 
+                `${user.name}（${getRoleText(user.role)}）`;
+            
+            if (user.role !== 'ADMIN') {
+                document.getElementById('userMenu').style.display = 'none';
+            }
+            
+            loadStats();
+        });
+
+        function loadStats() {
+            Promise.all([
+                request(`${API_BASE}/user/page?size=100`),
+                request(`${API_BASE}/warehouse/page?size=100`),
+                request(`${API_BASE}/warehouse/area/page?size=100`)
+            ]).then(([userData, warehouseData, areaData]) => {
+                document.getElementById('userCount').textContent = userData.data.totalElements;
+                document.getElementById('warehouseCount').textContent = warehouseData.data.totalElements;
+                document.getElementById('areaCount').textContent = areaData.data.totalElements;
+                
+                const availableCount = warehouseData.data.content.filter(w => w.status === 'AVAILABLE').length;
+                document.getElementById('availableCount').textContent = availableCount;
+            });
+        }
+    </script>
+</body>
+</html>

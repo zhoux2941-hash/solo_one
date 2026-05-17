@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用水片区管理 - 智慧供水运维调度平台</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-title">智慧供水平台</div>
+            <ul class="sidebar-menu" id="menu">
+            </ul>
+        </div>
+        <div class="content">
+            <div class="header">
+                <h1>用水片区管理</h1>
+                <div class="user-info">
+                    <span id="userName"></span>
+                    <button class="btn btn-small btn-danger" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="search-box">
+                    <select id="stationFilter">
+                        <option value="">全部站点</option>
+                    </select>
+                    <button class="btn btn-small" onclick="loadWaterDistricts()">查询</button>
+                </div>
+                <button class="btn btn-small btn-success" id="addWaterDistrictBtn" onclick="openModal()">新增片区</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>片区名称</th>
+                            <th>街道</th>
+                            <th>社区</th>
+                            <th>小区</th>
+                            <th>总户数</th>
+                            <th>常住人数</th>
+                            <th>所属站点</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="waterDistrictTable">
+                        <tr><td colspan="9" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="pagination">
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="waterDistrictModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">新增片区</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="waterDistrictForm">
+                <input type="hidden" id="waterDistrictId" name="id">
+                <div class="form-group">
+                    <label for="name">片区名称</label>
+                    <input type="text" id="name" name="name" placeholder="请输入片区名称">
+                </div>
+                <div class="form-group">
+                    <label for="street">所属街道</label>
+                    <input type="text" id="street" name="street" placeholder="请输入街道名称">
+                </div>
+                <div class="form-group">
+                    <label for="community">所属社区</label>
+                    <input type="text" id="community" name="community" placeholder="请输入社区名称">
+                </div>
+                <div class="form-group">
+                    <label for="residentialArea">所属小区</label>
+                    <input type="text" id="residentialArea" name="residentialArea" placeholder="请输入小区名称">
+                </div>
+                <div class="form-group">
+                    <label for="totalHouseholds">总户数</label>
+                    <input type="number" id="totalHouseholds" name="totalHouseholds" placeholder="请输入总户数">
+                </div>
+                <div class="form-group">
+                    <label for="residentPopulation">常住用水人数</label>
+                    <input type="number" id="residentPopulation" name="residentPopulation" placeholder="请输入常住人数">
+                </div>
+                <div class="form-group">
+                    <label for="stationId">所属供水站点</label>
+                    <select id="stationId" name="stationId">
+                        <option value="">请选择站点</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="mainPipeId">主管网</label>
+                    <select id="mainPipeId" name="mainPipeId">
+                        <option value="">请选择主管网</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="remark">备注</label>
+                    <textarea id="remark" name="remark" rows="3" placeholder="请输入备注信息"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-small" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-small btn-success">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="changeStationModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>变更归属站点</h2>
+                <button class="modal-close" onclick="closeChangeStationModal()">&times;</button>
+            </div>
+            <form id="changeStationForm">
+                <input type="hidden" id="changeDistrictId">
+                <div class="form-group">
+                    <label for="newStationId">选择新站点</label>
+                    <select id="newStationId" name="newStationId">
+                        <option value="">请选择站点</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-small" onclick="closeChangeStationModal()">取消</button>
+                    <button type="submit" class="btn btn-small btn-success">确认变更</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/request.js"></script>
+    <script src="js/validator.js"></script>
+    <script>
+        if (!auth.checkAuth()) {
+            throw new Error('未登录');
+        }
+
+        const user = auth.getUser();
+        document.getElementById('userName').textContent = `欢迎，${user.realName}`;
+
+        const menuItems = [];
+        if (user.role === 'ADMIN') {
+            menuItems.push({ id: 'users', label: '用户管理', url: 'users.html' });
+        }
+        menuItems.push({ id: 'stations', label: '站点管理', url: 'stations.html' });
+        menuItems.push({ id: 'pipe-networks', label: '管网管理', url: 'pipe-networks.html' });
+        menuItems.push({ id: 'water-districts', label: '片区管理', url: 'water-districts.html', active: true });
+
+        const menu = document.getElementById('menu');
+        menuItems.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `<a href="${item.url}" class="${item.active ? 'active' : ''}">${item.label}</a>`;
+            menu.appendChild(li);
+        });
+
+        if (user.role === 'STAFF') {
+            document.getElementById('addWaterDistrictBtn').style.display = 'none';
+        }
+
+        let currentPage = 0;
+        const pageSize = 10;
+        let stations = [];
+        let pipeNetworks = [];
+
+        function loadStations() {
+            request.get('/stations', { page: 0, size: 100 })
+                .then(result => {
+                    if (result.success) {
+                        stations = result.data;
+                        const stationFilter = document.getElementById('stationFilter');
+                        const stationSelect = document.getElementById('stationId');
+                        const newStationSelect = document.getElementById('newStationId');
+                        
+                        stations.forEach(s => {
+                            const option1 = document.createElement('option');
+                            option1.value = s.id;
+                            option1.textContent = s.name;
+                            stationFilter.appendChild(option1);
+
+                            const option2 = document.createElement('option');
+                            option2.value = s.id;
+                            option2.textContent = s.name;
+                            stationSelect.appendChild(option2);
+
+                            const option3 = document.createElement('option');
+                            option3.value = s.id;
+                            option3.textContent = s.name;
+                            newStationSelect.appendChild(option3);
+                        });
+                    }
+                });
+        }
+
+        function loadPipeNetworks(stationId = null) {
+            const params = { page: 0, size: 100 };
+            if (stationId) params.stationId = stationId;
+            
+            request.get('/pipe-networks', params)
+                .then(result => {
+                    if (result.success) {
+                        pipeNetworks = result.data;
+                        const mainPipeSelect = document.getElementById('mainPipeId');
+                        mainPipeSelect.innerHTML = stationId 
+                            ? '<option value="">请选择主管网（仅显示所选站点管网）</option>'
+                            : '<option value="">请先选择站点</option>';
+                        
+                        pipeNetworks.forEach(p => {
+                            if (p.active) {
+                                const option = document.createElement('option');
+                                option.value = p.id;
+                                option.textContent = `${p.roadSection} (${p.pipeDiameter})`;
+                                mainPipeSelect.appendChild(option);
+                            }
+                        });
+                    }
+                });
+        }
+
+        function loadWaterDistricts() {
+            const stationId = document.getElementById('stationFilter').value || null;
+            const params = { page: currentPage, size: pageSize };
+            if (stationId) params.stationId = stationId;
+
+            request.get('/water-districts', params)
+                .then(result => {
+                    if (result.success) {
+                        renderWaterDistricts(result.data);
+                        renderPagination(result.totalPages);
+                    } else {
+                        showToast(result.message || '加载失败', 'error');
+                    }
+                })
+                .catch(() => {
+                    showToast('加载失败，请检查网络连接', 'error');
+                });
+        }
+
+        function renderWaterDistricts(waterDistricts) {
+            const tbody = document.getElementById('waterDistrictTable');
+            if (waterDistricts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="loading">暂无数据</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = waterDistricts.map(w => `
+                <tr>
+                    <td>${w.name}</td>
+                    <td>${w.street || '-'}</td>
+                    <td>${w.community || '-'}</td>
+                    <td>${w.residentialArea || '-'}</td>
+                    <td>${w.totalHouseholds || '-'}</td>
+                    <td>${w.residentPopulation || '-'}</td>
+                    <td>${w.station ? w.station.name : '-'}</td>
+                    <td><span class="status-badge ${w.active ? 'status-active' : 'status-inactive'}">${w.active ? '正常' : '停用'}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            ${user.role !== 'STAFF' ? `<button class="btn-edit" onclick="editWaterDistrict(${w.id})">编辑</button>` : ''}
+                            ${user.role === 'ADMIN' ? `<button class="btn-toggle" onclick="openChangeStationModal(${w.id})">变更站点</button>` : ''}
+                            ${user.role === 'ADMIN' ? `<button class="btn-toggle" onclick="toggleWaterDistrict(${w.id})">${w.active ? '停用' : '启用'}</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPagination(totalPages) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = `
+                <button onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>上一页</button>
+                <span>第 ${currentPage + 1} / ${totalPages} 页</span>
+                <button onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>下一页</button>
+            `;
+        }
+
+        function goToPage(page) {
+            if (page >= 0) {
+                currentPage = page;
+                loadWaterDistricts();
+            }
+        }
+
+        function openModal(waterDistrictId = null) {
+            document.getElementById('waterDistrictModal').classList.add('active');
+            document.getElementById('modalTitle').textContent = waterDistrictId ? '编辑片区' : '新增片区';
+            validator.clearErrors('waterDistrictForm');
+            document.getElementById('waterDistrictForm').reset();
+            document.getElementById('waterDistrictId').value = '';
+            
+            loadPipeNetworks(null);
+
+            if (waterDistrictId) {
+                request.get(`/water-districts/${waterDistrictId}`)
+                    .then(result => {
+                        if (result.success) {
+                            const w = result.data;
+                            document.getElementById('waterDistrictId').value = w.id;
+                            document.getElementById('name').value = w.name;
+                            document.getElementById('street').value = w.street || '';
+                            document.getElementById('community').value = w.community || '';
+                            document.getElementById('residentialArea').value = w.residentialArea || '';
+                            document.getElementById('totalHouseholds').value = w.totalHouseholds || '';
+                            document.getElementById('residentPopulation').value = w.residentPopulation || '';
+                            document.getElementById('remark').value = w.remark || '';
+                            
+                            if (w.station) {
+                                document.getElementById('stationId').value = w.station.id;
+                                loadPipeNetworks(w.station.id);
+                                if (w.mainPipe) {
+                                    setTimeout(() => {
+                                        document.getElementById('mainPipeId').value = w.mainPipe.id;
+                                    }, 200);
+                                }
+                            }
+                        }
+                    });
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('waterDistrictModal').classList.remove('active');
+        }
+
+        function editWaterDistrict(id) {
+            openModal(id);
+        }
+
+        function toggleWaterDistrict(id) {
+            if (!confirm('确定要操作此片区吗？')) return;
+            request.put(`/water-districts/${id}/toggle`)
+                .then(result => {
+                    if (result.success) {
+                        showToast('操作成功', 'success');
+                        loadWaterDistricts();
+                    } else {
+                        showToast(result.message || '操作失败', 'error');
+                    }
+                });
+        }
+
+        function openChangeStationModal(districtId) {
+            document.getElementById('changeStationModal').classList.add('active');
+            document.getElementById('changeDistrictId').value = districtId;
+            document.getElementById('newStationId').value = '';
+        }
+
+        function closeChangeStationModal() {
+            document.getElementById('changeStationModal').classList.remove('active');
+        }
+
+        document.getElementById('waterDistrictForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const waterDistrictId = document.getElementById('waterDistrictId').value;
+            const totalHouseholdsVal = document.getElementById('totalHouseholds').value;
+            const residentPopulationVal = document.getElementById('residentPopulation').value;
+            const stationIdVal = document.getElementById('stationId').value;
+            const mainPipeIdVal = document.getElementById('mainPipeId').value;
+            const formData = {
+                name: document.getElementById('name').value,
+                street: document.getElementById('street').value,
+                community: document.getElementById('community').value,
+                residentialArea: document.getElementById('residentialArea').value,
+                totalHouseholds: totalHouseholdsVal ? parseInt(totalHouseholdsVal) : null,
+                residentPopulation: residentPopulationVal ? parseInt(residentPopulationVal) : null,
+                stationId: stationIdVal ? parseInt(stationIdVal) : null,
+                mainPipeId: mainPipeIdVal ? parseInt(mainPipeIdVal) : null,
+                remark: document.getElementById('remark').value
+            };
+
+            const rules = {
+                name: [
+                    { type: 'required', message: '请输入片区名称' },
+                    { type: 'maxLength', max: 100, message: '片区名称不能超过100个字符' }
+                ]
+            };
+
+            const { isValid, errors } = validator.validate(formData, rules);
+            validator.showErrors(errors, 'waterDistrictForm');
+
+            if (!isValid) return;
+
+            const promise = waterDistrictId 
+                ? request.put(`/water-districts/${waterDistrictId}`, formData)
+                : request.post('/water-districts', formData);
+
+            promise.then(result => {
+                if (result.success) {
+                    showToast(waterDistrictId ? '更新成功' : '创建成功', 'success');
+                    closeModal();
+                    loadWaterDistricts();
+                } else {
+                    showToast(result.message || '操作失败', 'error');
+                }
+            });
+        });
+
+        document.getElementById('changeStationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const districtId = document.getElementById('changeDistrictId').value;
+            const stationId = document.getElementById('newStationId').value;
+
+            if (!stationId) {
+                showToast('请选择新站点', 'error');
+                return;
+            }
+
+            request.put(`/water-districts/${districtId}/change-station`, { stationId: parseInt(stationId) })
+                .then(result => {
+                    if (result.success) {
+                        showToast('变更成功', 'success');
+                        closeChangeStationModal();
+                        loadWaterDistricts();
+                    } else {
+                        showToast(result.message || '操作失败', 'error');
+                    }
+                });
+        });
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function logout() {
+            auth.logout();
+            window.location.href = 'login.html';
+        }
+
+        loadStations();
+        loadPipeNetworks(null);
+        loadWaterDistricts();
+        
+        document.getElementById('stationId').addEventListener('change', function() {
+            const stationId = this.value;
+            loadPipeNetworks(stationId || null);
+        });
+    </script>
+</body>
+</html>

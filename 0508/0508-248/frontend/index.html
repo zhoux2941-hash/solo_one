@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地铁轨道探伤车检测报告智能分析系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h1>🚇 地铁轨道探伤车检测报告智能分析系统</h1>
+        <p>地铁工务段 - 钢轨伤损检测与维修管理</p>
+    </div>
+
+    <div class="nav-tabs">
+        <div class="nav-tab active" data-tab="data-entry">数据录入</div>
+        <div class="nav-tab" data-tab="inspection-list">检测列表</div>
+        <div class="nav-tab" data-tab="work-orders">维修工单</div>
+        <div class="nav-tab" data-tab="reports">统计报表</div>
+    </div>
+
+    <div class="container">
+        <div id="alert-container"></div>
+
+        <div id="tab-data-entry" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">探伤检测数据录入</h2>
+                <form id="inspection-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>线路区间</label>
+                            <select id="section" required>
+                                <option value="">请选择区间</option>
+                                <option value="1号线-区间A">1号线-区间A</option>
+                                <option value="1号线-区间B">1号线-区间B</option>
+                                <option value="1号线-区间C">1号线-区间C</option>
+                                <option value="2号线-区间A">2号线-区间A</option>
+                                <option value="2号线-区间B">2号线-区间B</option>
+                                <option value="2号线-区间C">2号线-区间C</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>里程桩号</label>
+                            <input type="text" id="mileage" placeholder="例如：K12+345" required>
+                        </div>
+                        <div class="form-group">
+                            <label>钢轨位置</label>
+                            <select id="railPosition" required>
+                                <option value="">请选择</option>
+                                <option value="左轨">左轨</option>
+                                <option value="右轨">右轨</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>伤损类型</label>
+                            <select id="damageType" required>
+                                <option value="">请选择</option>
+                                <option value="裂纹">裂纹</option>
+                                <option value="核伤">核伤</option>
+                                <option value="磨耗">磨耗</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>伤损深度 (mm)</label>
+                            <input type="number" id="depth" step="0.1" min="0" placeholder="请输入深度" required>
+                        </div>
+                        <div class="form-group">
+                            <label>线路时速</label>
+                            <select id="lineSpeed">
+                                <option value="">自动匹配</option>
+                                <option value="80">80 km/h</option>
+                                <option value="100">100 km/h</option>
+                                <option value="120">120 km/h</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>检测日期</label>
+                            <input type="date" id="inspectionDate" required>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button type="submit" class="btn btn-primary">提交检测数据</button>
+                    </div>
+                </form>
+                <div id="work-order-result" class="work-order-info hidden"></div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">伤损分级阈值标准</h2>
+                <div style="overflow-x: auto;">
+                    <table class="threshold-table">
+                        <thead>
+                            <tr>
+                                <th>线路时速</th>
+                                <th>Ⅰ级 (轻微)</th>
+                                <th>Ⅱ级 (中度)</th>
+                                <th>Ⅲ级 (严重)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>80 km/h</strong></td>
+                                <td class="level1">深度 < 5mm</td>
+                                <td class="level2">5mm ≤ 深度 ≤ 10mm</td>
+                                <td class="level3">深度 > 10mm</td>
+                            </tr>
+                            <tr>
+                                <td><strong>100 km/h</strong></td>
+                                <td class="level1">深度 < 4.5mm</td>
+                                <td class="level2">4.5mm ≤ 深度 ≤ 9mm</td>
+                                <td class="level3">深度 > 9mm</td>
+                            </tr>
+                            <tr>
+                                <td><strong>120 km/h</strong></td>
+                                <td class="level1">深度 < 4mm</td>
+                                <td class="level2">4mm ≤ 深度 ≤ 8mm</td>
+                                <td class="level3">深度 > 8mm</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 6px; font-size: 13px;">
+                    <strong>💡 说明：</strong>系统会根据选择的线路区间自动匹配时速标准（1号线=80km/h，2号线=120km/h），也可手动指定线路时速。<br>
+                    <span style="color: #dc3545;">例如：120km/h线路 9mm伤损按Ⅲ级处理，需要立即修复！</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-inspection-list" class="tab-content hidden">
+            <div class="card">
+                <h2 class="card-title">检测数据列表</h2>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>线路区间</label>
+                        <select id="filter-section">
+                            <option value="">全部</option>
+                            <option value="1号线-区间A">1号线-区间A</option>
+                            <option value="1号线-区间B">1号线-区间B</option>
+                            <option value="1号线-区间C">1号线-区间C</option>
+                            <option value="2号线-区间A">2号线-区间A</option>
+                            <option value="2号线-区间B">2号线-区间B</option>
+                            <option value="2号线-区间C">2号线-区间C</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>严重程度</label>
+                        <select id="filter-level">
+                            <option value="">全部</option>
+                            <option value="Ⅰ级">Ⅰ级</option>
+                            <option value="Ⅱ级">Ⅱ级</option>
+                            <option value="Ⅲ级">Ⅲ级</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>伤损类型</label>
+                        <select id="filter-type">
+                            <option value="">全部</option>
+                            <option value="裂纹">裂纹</option>
+                            <option value="核伤">核伤</option>
+                            <option value="磨耗">磨耗</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button class="btn btn-primary btn-sm" onclick="loadInspections()">查询</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="inspections-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>线路区间</th>
+                                <th>里程桩号</th>
+                                <th>钢轨位置</th>
+                                <th>伤损类型</th>
+                                <th>深度(mm)</th>
+                                <th>线路时速</th>
+                                <th>严重程度</th>
+                                <th>检测日期</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-work-orders" class="tab-content hidden">
+            <div class="card">
+                <h2 class="card-title">维修工单管理</h2>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>工单状态</label>
+                        <select id="filter-order-status">
+                            <option value="">全部</option>
+                            <option value="PENDING">待处理</option>
+                            <option value="PROCESSING">处理中</option>
+                            <option value="COMPLETED">已完成</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button class="btn btn-primary btn-sm" onclick="loadWorkOrders()">查询</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="work-orders-table">
+                        <thead>
+                            <tr>
+                                <th>工单编号</th>
+                                <th>线路区间</th>
+                                <th>里程桩号</th>
+                                <th>伤损类型</th>
+                                <th>严重程度</th>
+                                <th>建议修复时间</th>
+                                <th>创建时间</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-reports" class="tab-content hidden">
+            <div class="stats-grid">
+                <div class="stat-card total">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">总检测数</div>
+                </div>
+                <div class="stat-card level1">
+                    <div class="stat-value" id="stat-level1">0</div>
+                    <div class="stat-label">Ⅰ级伤损</div>
+                </div>
+                <div class="stat-card level2">
+                    <div class="stat-value" id="stat-level2">0</div>
+                    <div class="stat-label">Ⅱ级伤损</div>
+                </div>
+                <div class="stat-card level3">
+                    <div class="stat-value" id="stat-level3">0</div>
+                    <div class="stat-label">Ⅲ级伤损</div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>各区间伤损密度分布</h3>
+                    <canvas id="density-chart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>伤损发展趋势预测</h3>
+                    <canvas id="trend-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 25px;">
+                <h2 class="card-title">各区间伤损统计明细</h2>
+                <div class="table-container">
+                    <table id="section-stats-table">
+                        <thead>
+                            <tr>
+                                <th>线路区间</th>
+                                <th>检测总数</th>
+                                <th>Ⅰ级伤损</th>
+                                <th>Ⅱ级伤损</th>
+                                <th>Ⅲ级伤损</th>
+                                <th>伤损密度(处/km)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

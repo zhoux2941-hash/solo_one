@@ -1,0 +1,12 @@
+com\balistics\repository\BallisticsResultRepository.class
+com\balistics\repository\BallisticsLogRepository.class
+com\balistics\service\BallisticsDragService.class
+com\balistics\service\AirDensityService.class
+com\balistics\repository\WeatherDataRepository.class
+com\balistics\BallisticsCalculatorApplication.class
+com\balistics\service\BallisticsLogService.class
+com\balistics\entity\WeatherData.class
+com\balistics\entity\BallisticsResult.class
+com\balistics\entity\BallisticsLog.class
+com\balistics\controller\BallisticsController.class
+com\balistics\service\SeasonComparisonService.class

@@ -1,0 +1,252 @@
+<div class="page-header">
+    <h1 class="page-title">生产线管理</h1>
+    <button class="btn btn-primary" onclick="openLineModal()">新增生产线</button>
+</div>
+
+<div class="card">
+    <div class="search-bar">
+        <div class="search-item">
+            <label class="form-label">生产线名称</label>
+            <input type="text" class="form-input" id="searchKeyword" placeholder="请输入生产线名称">
+        </div>
+        <button class="btn btn-primary" onclick="searchLine()">搜索</button>
+        <button class="btn btn-default" onclick="resetSearch()">重置</button>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>生产线编码</th>
+                <th>生产线名称</th>
+                <th>所属车间</th>
+                <th>负责人</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="lineTableBody">
+        </tbody>
+    </table>
+
+    <div class="pagination" id="pagination">
+    </div>
+</div>
+
+<div id="lineModal" class="modal-overlay hidden">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title" id="modalTitle">新增生产线</span>
+            <button class="modal-close" onclick="closeLineModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="lineForm">
+                <input type="hidden" id="lineId">
+                <div class="form-group">
+                    <label class="form-label">生产线编码 <span style="color: red;">*</span></label>
+                    <input type="text" class="form-input" id="lineCode" placeholder="请输入生产线编码">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">生产线名称 <span style="color: red;">*</span></label>
+                    <input type="text" class="form-input" id="lineName" placeholder="请输入生产线名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">所属车间 <span style="color: red;">*</span></label>
+                    <select class="form-select" id="workshopId">
+                        <option value="">请选择车间</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">负责人</label>
+                    <input type="text" class="form-input" id="lineLeader" placeholder="请输入负责人">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">描述</label>
+                    <textarea class="form-input" id="lineDescription" rows="3" placeholder="请输入描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">状态</label>
+                    <select class="form-select" id="lineStatus">
+                        <option value="1">启用</option>
+                        <option value="0">禁用</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-default" onclick="closeLineModal()">取消</button>
+            <button class="btn btn-primary" onclick="saveLine()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPage = 0;
+    const pageSize = 10;
+    let workshopList = [];
+
+    function initproduction_linePage() {
+        loadWorkshopList();
+        loadLineData();
+    }
+
+    async function loadWorkshopList() {
+        try {
+            const result = await get('/workshop/list');
+            workshopList = result.data;
+            
+            const select = document.getElementById('workshopId');
+            select.innerHTML = '<option value="">请选择车间</option>';
+            workshopList.forEach(workshop => {
+                const option = document.createElement('option');
+                option.value = workshop.id;
+                option.textContent = workshop.workshopName;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('加载车间列表失败', error);
+        }
+    }
+
+    function getWorkshopName(workshopId) {
+        const workshop = workshopList.find(w => w.id === workshopId);
+        return workshop ? workshop.workshopName : '-';
+    }
+
+    async function loadLineData() {
+        try {
+            const keyword = document.getElementById('searchKeyword')?.value || '';
+            const result = await get('/production-line/page', { page: currentPage, size: pageSize, keyword });
+            
+            const tbody = document.getElementById('lineTableBody');
+            tbody.innerHTML = '';
+            
+            result.data.content.forEach(line => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${line.lineCode}</td>
+                    <td>${line.lineName}</td>
+                    <td>${getWorkshopName(line.workshopId)}</td>
+                    <td>${line.lineLeader || '-'}</td>
+                    <td><span class="status-tag ${line.status === 1 ? 'status-active' : 'status-inactive'}">${line.status === 1 ? '启用' : '禁用'}</span></td>
+                    <td>${line.createTime ? new Date(line.createTime).toLocaleString() : '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-default" onclick="editLine(${line.id})">编辑</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteLine(${line.id})">删除</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            renderPagination(result.data.totalPages, result.data.totalElements);
+        } catch (error) {
+            console.error('加载生产线数据失败', error);
+        }
+    }
+
+    function renderPagination(totalPages, totalElements) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = `
+            <span class="pagination-info">共 ${totalElements} 条记录，第 ${currentPage + 1}/${totalPages} 页</span>
+            <button class="btn btn-sm btn-default" onclick="goToPage(0)" ${currentPage === 0 ? 'disabled' : ''}>首页</button>
+            <button class="btn btn-sm btn-default" onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>上一页</button>
+            <button class="btn btn-sm btn-default" onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>下一页</button>
+            <button class="btn btn-sm btn-default" onclick="goToPage(${totalPages - 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>末页</button>
+        `;
+    }
+
+    function goToPage(page) {
+        if (page >= 0) {
+            currentPage = page;
+            loadLineData();
+        }
+    }
+
+    function searchLine() {
+        currentPage = 0;
+        loadLineData();
+    }
+
+    function resetSearch() {
+        document.getElementById('searchKeyword').value = '';
+        currentPage = 0;
+        loadLineData();
+    }
+
+    function openLineModal() {
+        document.getElementById('modalTitle').textContent = '新增生产线';
+        document.getElementById('lineForm').reset();
+        document.getElementById('lineId').value = '';
+        document.getElementById('lineModal').classList.remove('hidden');
+    }
+
+    function closeLineModal() {
+        document.getElementById('lineModal').classList.add('hidden');
+    }
+
+    async function editLine(id) {
+        try {
+            const result = await get(`/production-line/${id}`);
+            const line = result.data;
+            
+            document.getElementById('modalTitle').textContent = '编辑生产线';
+            document.getElementById('lineId').value = line.id;
+            document.getElementById('lineCode').value = line.lineCode;
+            document.getElementById('lineName').value = line.lineName;
+            document.getElementById('workshopId').value = line.workshopId;
+            document.getElementById('lineLeader').value = line.lineLeader || '';
+            document.getElementById('lineDescription').value = line.description || '';
+            document.getElementById('lineStatus').value = line.status;
+            
+            document.getElementById('lineModal').classList.remove('hidden');
+        } catch (error) {
+            console.error('加载生产线详情失败', error);
+        }
+    }
+
+    async function saveLine() {
+        const id = document.getElementById('lineId').value;
+        const data = {
+            lineCode: document.getElementById('lineCode').value,
+            lineName: document.getElementById('lineName').value,
+            workshopId: parseInt(document.getElementById('workshopId').value),
+            lineLeader: document.getElementById('lineLeader').value,
+            description: document.getElementById('lineDescription').value,
+            status: parseInt(document.getElementById('lineStatus').value)
+        };
+
+        const codeError = Validator.required(data.lineCode, '请输入生产线编码');
+        const nameError = Validator.required(data.lineName, '请输入生产线名称');
+        const workshopError = Validator.required(data.workshopId, '请选择所属车间');
+
+        if (codeError) { showMessage(codeError, 'error'); return; }
+        if (nameError) { showMessage(nameError, 'error'); return; }
+        if (workshopError) { showMessage(workshopError, 'error'); return; }
+
+        try {
+            if (id) {
+                await put(`/production-line/${id}`, data);
+                showMessage('更新成功', 'success');
+            } else {
+                await post('/production-line', data);
+                showMessage('创建成功', 'success');
+            }
+            closeLineModal();
+            loadLineData();
+        } catch (error) {
+            console.error('保存失败', error);
+        }
+    }
+
+    async function deleteLine(id) {
+        if (confirm('确定要删除该生产线吗？')) {
+            try {
+                await del(`/production-line/${id}`);
+                showMessage('删除成功', 'success');
+                loadLineData();
+            } catch (error) {
+                console.error('删除失败', error);
+            }
+        }
+    }
+</script>

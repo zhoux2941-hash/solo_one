@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>律师案件管理系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>律师案件管理与诉讼时效自动提醒系统</h1>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="cases">案件列表</button>
+            <button class="tab-btn" data-tab="alerts">时效提醒</button>
+            <button class="tab-btn" data-tab="notifications">通知管理</button>
+            <button class="tab-btn" data-tab="reports">统计报表</button>
+        </nav>
+
+        <div class="tab-content">
+            <div id="cases" class="tab-pane active">
+                <div class="toolbar">
+                    <button id="addCaseBtn" class="btn btn-primary">新增案件</button>
+                    <input type="text" id="searchInput" placeholder="搜索案件..." class="search-input">
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>案号</th>
+                                <th>当事人</th>
+                                <th>对方当事人</th>
+                                <th>案由</th>
+                                <th>立案日期</th>
+                                <th>诉讼时效截止日</th>
+                                <th>剩余天数</th>
+                                <th>律师</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="casesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="alerts" class="tab-pane">
+                <div class="alert-summary">
+                    <div class="alert-card alert-danger">
+                        <h3>1天内到期</h3>
+                        <p id="alert1Day">0</p>
+                    </div>
+                    <div class="alert-card alert-warning">
+                        <h3>7天内到期</h3>
+                        <p id="alert7Days">0</p>
+                    </div>
+                    <div class="alert-card alert-info">
+                        <h3>30天内到期</h3>
+                        <p id="alert30Days">0</p>
+                    </div>
+                </div>
+                <h3>即将到期案件列表</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>案号</th>
+                                <th>当事人</th>
+                                <th>诉讼时效截止日</th>
+                                <th>剩余天数</th>
+                                <th>提醒级别</th>
+                                <th>律师</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alertsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="notifications" class="tab-pane">
+                <div class="toolbar">
+                    <button id="generateNotificationsBtn" class="btn btn-primary">生成待发送通知</button>
+                    <button id="sendAllBtn" class="btn btn-success">批量发送所有通知</button>
+                    <span id="notificationBadge" class="badge"></span>
+                </div>
+                <div class="notification-stats">
+                    <div class="stat-card stat-pending">
+                        <h4>待发送</h4>
+                        <p id="pendingCount">0</p>
+                    </div>
+                    <div class="stat-card stat-sent">
+                        <h4>已发送</h4>
+                        <p id="sentCount">0</p>
+                    </div>
+                    <div class="stat-card stat-urgent">
+                        <h4>紧急通知</h4>
+                        <p id="urgentCount">0</p>
+                    </div>
+                    <div class="stat-card stat-important">
+                        <h4>重要通知</h4>
+                        <p id="importantCount">0</p>
+                    </div>
+                </div>
+                <h3>通知列表</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>案件编号</th>
+                                <th>当事人</th>
+                                <th>律师</th>
+                                <th>提醒级别</th>
+                                <th>剩余天数</th>
+                                <th>消息内容</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>发送时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="notificationsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="reports" class="tab-pane">
+                <div class="reports-grid">
+                    <div class="report-card">
+                        <h3>各律师承办案件数量</h3>
+                        <div id="lawyerStats"></div>
+                    </div>
+                    <div class="report-card">
+                        <h3>案件统计概览</h3>
+                        <div id="caseOverview"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="caseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">新增案件</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="caseForm">
+                    <input type="hidden" id="caseId">
+                    <div class="form-group">
+                        <label>案号 *</label>
+                        <input type="text" id="caseNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label>当事人 *</label>
+                        <input type="text" id="party" required>
+                    </div>
+                    <div class="form-group">
+                        <label>对方当事人</label>
+                        <input type="text" id="opposingParty">
+                    </div>
+                    <div class="form-group">
+                        <label>案由</label>
+                        <input type="text" id="caseReason">
+                    </div>
+                    <div class="form-group">
+                        <label>立案日期 *</label>
+                        <input type="date" id="filingDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>诉讼时效截止日 *</label>
+                        <input type="date" id="statuteOfLimitationsDeadline" required>
+                    </div>
+                    <div class="form-group">
+                        <label>承办律师 *</label>
+                        <input type="text" id="lawyer" required>
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select id="status">
+                            <option value="办理中">办理中</option>
+                            <option value="已结案">已结案</option>
+                            <option value="已上诉">已上诉</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelBtn" class="btn btn-secondary">取消</button>
+                <button id="saveCaseBtn" class="btn btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="detailModalTitle">案件详情</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="caseDetail"></div>
+                <div class="section">
+                    <h3>开庭记录 <button id="addHearingBtn" class="btn btn-sm btn-primary">新增</button></h3>
+                    <div id="hearingsList"></div>
+                </div>
+                <div class="section">
+                    <h3>判决结果 <button id="addJudgmentBtn" class="btn btn-sm btn-primary">新增</button></h3>
+                    <div id="judgmentsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="hearingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>新增开庭记录</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="hearingForm">
+                    <input type="hidden" id="hearingCaseId">
+                    <div class="form-group">
+                        <label>开庭日期 *</label>
+                        <input type="date" id="hearingDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>法院</label>
+                        <input type="text" id="court">
+                    </div>
+                    <div class="form-group">
+                        <label>法官</label>
+                        <input type="text" id="judge">
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea id="hearingNotes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-modal">取消</button>
+                <button id="saveHearingBtn" class="btn btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="judgmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>新增判决结果</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="judgmentForm">
+                    <input type="hidden" id="judgmentCaseId">
+                    <div class="form-group">
+                        <label>判决日期 *</label>
+                        <input type="date" id="judgmentDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>判决结果</label>
+                        <select id="result">
+                            <option value="胜诉">胜诉</option>
+                            <option value="败诉">败诉</option>
+                            <option value="调解">调解</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>判决详情</label>
+                        <textarea id="judgmentDetails" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>上诉期限</label>
+                        <input type="date" id="appealDeadline">
+                    </div>
+                    <div class="form-group">
+                        <label>已上诉</label>
+                        <input type="checkbox" id="appealed">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-modal">取消</button>
+                <button id="saveJudgmentBtn" class="btn btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

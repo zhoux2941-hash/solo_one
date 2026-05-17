@@ -1,0 +1,5 @@
+com\slaughterhouse\entity\Pig.class
+com\slaughterhouse\service\PigService.class
+com\slaughterhouse\controller\PigController.class
+com\slaughterhouse\repository\PigRepository.class
+com\slaughterhouse\SlaughterhouseApplication.class
