@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.graphdb.grpc";
+option java_outer_classname = "GraphProto";
+
+package graphdb;
+
+message Vertex {
+    int64 id = 1;
+    string label = 2;
+    map<string, string> properties = 3;
+}
+
+message Edge {
+    int64 id = 1;
+    int64 from_vertex_id = 2;
+    int64 to_vertex_id = 3;
+    string label = 4;
+    double weight = 5;
+    map<string, string> properties = 6;
+}
+
+message AddVertexRequest {
+    Vertex vertex = 1;
+}
+
+message AddVertexResponse {
+    int64 vertex_id = 1;
+    bool success = 2;
+}
+
+message GetVertexRequest {
+    int64 vertex_id = 1;
+}
+
+message GetVertexResponse {
+    Vertex vertex = 1;
+    bool found = 2;
+}
+
+message AddEdgeRequest {
+    Edge edge = 1;
+}
+
+message AddEdgeResponse {
+    int64 edge_id = 1;
+    bool success = 2;
+}
+
+message PageRankRequest {
+    double damping_factor = 1;
+    double convergence_threshold = 2;
+    int32 max_iterations = 3;
+}
+
+message PageRankResponse {
+    map<int64, double> page_ranks = 1;
+}
+
+message CommunityDetectionRequest {
+    double resolution = 1;
+    int32 max_iterations = 2;
+}
+
+message CommunityDetectionResponse {
+    map<int64, int64> vertex_to_community = 1;
+    int32 num_communities = 2;
+    double modularity = 3;
+}
+
+message ShortestPathRequest {
+    int64 source_vertex_id = 1;
+}
+
+message ShortestPathResponse {
+    map<int64, int32> distances = 1;
+}
+
+message KCoreRequest {
+    int32 k = 1;
+}
+
+message KCoreResponse {
+    map<int64, int32> core_numbers = 1;
+}
+
+message GraphStatsRequest {}
+
+message GraphStatsResponse {
+    int64 vertex_count = 1;
+    int64 edge_count = 2;
+}
+
+service GraphService {
+    rpc AddVertex(AddVertexRequest) returns (AddVertexResponse);
+    rpc GetVertex(GetVertexRequest) returns (GetVertexResponse);
+    rpc AddEdge(AddEdgeRequest) returns (AddEdgeResponse);
+    rpc ComputePageRank(PageRankRequest) returns (PageRankResponse);
+    rpc DetectCommunities(CommunityDetectionRequest) returns (CommunityDetectionResponse);
+    rpc ComputeShortestPath(ShortestPathRequest) returns (ShortestPathResponse);
+    rpc ComputeKCore(KCoreRequest) returns (KCoreResponse);
+    rpc GetGraphStats(GraphStatsRequest) returns (GraphStatsResponse);
+}

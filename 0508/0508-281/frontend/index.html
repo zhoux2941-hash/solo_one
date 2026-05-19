@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时物体检测与多目标追踪系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .status-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .status-label {
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        .status-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .video-panel {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .panel h3 {
+            margin-bottom: 15px;
+            color: #00d4ff;
+            font-size: 1.2em;
+        }
+        
+        .detection-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .detection-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid #00d4ff;
+        }
+        
+        .detection-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .track-id {
+            font-weight: bold;
+            color: #7c3aed;
+        }
+        
+        .class-name {
+            background: rgba(0, 212, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+        
+        .detection-info {
+            font-size: 0.85em;
+            color: #aaa;
+        }
+        
+        .history-panel {
+            flex: 1;
+        }
+        
+        .history-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .history-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .history-time {
+            font-size: 0.85em;
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+        
+        .history-count {
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85em;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        
+        .connected {
+            background: rgba(0, 255, 100, 0.2);
+            color: #00ff64;
+        }
+        
+        .disconnected {
+            background: rgba(255, 0, 100, 0.2);
+            color: #ff0064;
+        }
+        
+        .pulse {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 212, 255, 0.5);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 212, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 实时物体检测与多目标追踪系统</h1>
+            <p>YOLOv5s + TensorRT + DeepSORT | Jetson Nano 边缘计算</p>
+        </header>
+        
+        <div class="status-bar">
+            <div class="connection-status disconnected" id="connectionStatus">
+                <div class="pulse" style="background: #ff0064;"></div>
+                <span>未连接</span>
+            </div>
+            <div class="status-item">
+                <div class="status-label">FPS</div>
+                <div class="status-value" id="fpsDisplay">0</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">检测目标数</div>
+                <div class="status-value" id="detectionCount">0</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">帧ID</div>
+                <div class="status-value" id="frameId">0</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="video-panel">
+                <div class="canvas-container">
+                    <canvas id="detectionCanvas"></canvas>
+                </div>
+                <div class="controls">
+                    <button class="btn-primary" onclick="toggleTrajectory()">
+                        <span id="trajectoryBtn">显示轨迹</span>
+                    </button>
+                    <button class="btn-secondary" onclick="loadHistory()">加载历史记录</button>
+                    <button class="btn-secondary" onclick="clearCanvas()">清除画布</button>
+                </div>
+                <div class="legend" id="legend"></div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="panel">
+                    <h3>🎯 当前检测</h3>
+                    <div class="detection-list" id="detectionList">
+                        <div style="text-align: center; color: #666; padding: 20px;">
+                            等待检测数据...
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel history-panel">
+                    <h3>📜 历史记录</h3>
+                    <div class="history-list" id="historyList">
+                        <div style="text-align: center; color: #666; padding: 20px;">
+                            点击"加载历史记录"获取数据
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('detectionCanvas');
+        const ctx = canvas.getContext('2d');
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+        let ws = null;
+        let trajectories = new Map();
+        let showTrajectory = false;
+        let classColors = new Map();
+        
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        function getClassColor(className) {
+            if (!classColors.has(className)) {
+                const hue = (classColors.size * 137) % 360;
+                classColors.set(className, `hsl(${hue}, 80%, 50%)`);
+            }
+            return classColors.get(className);
+        }
+        
+        function updateLegend() {
+            const legend = document.getElementById('legend');
+            legend.innerHTML = '';
+            classColors.forEach((color, name) => {
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                item.innerHTML = `
+                    <div class="legend-color" style="background: ${color};"></div>
+                    <span>${name}</span>
+                `;
+                legend.appendChild(item);
+            });
+        }
+        
+        function drawDetections(detections) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            detections.forEach(det => {
+                const [x1, y1, x2, y2] = det.bbox.map(v => v * Math.min(canvas.width / 1280, canvas.height / 720));
+                const color = getClassColor(det.class_name);
+                
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+                
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 0.2;
+                ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+                ctx.globalAlpha = 1;
+                
+                const label = `#${det.track_id} ${det.class_name} ${(det.confidence * 100).toFixed(0)}%`;
+                ctx.font = 'bold 14px Arial';
+                const textWidth = ctx.measureText(label).width;
+                const textHeight = 20;
+                
+                ctx.fillStyle = color;
+                ctx.fillRect(x1, y1 - textHeight - 4, textWidth + 10, textHeight + 4);
+                
+                ctx.fillStyle = '#fff';
+                ctx.fillText(label, x1 + 5, y1 - 5);
+                
+                if (showTrajectory) {
+                    if (!trajectories.has(det.track_id)) {
+                        trajectories.set(det.track_id, []);
+                    }
+                    const trajectory = trajectories.get(det.track_id);
+                    const centerX = (x1 + x2) / 2;
+                    const centerY = (y1 + y2) / 2;
+                    trajectory.push({ x: centerX, y: centerY, time: Date.now() });
+                    
+                    const now = Date.now();
+                    while (trajectory.length > 0 && now - trajectory[0].time > 5000) {
+                        trajectory.shift();
+                    }
+                    
+                    if (trajectory.length > 1) {
+                        ctx.strokeStyle = color;
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(trajectory[0].x, trajectory[0].y);
+                        for (let i = 1; i < trajectory.length; i++) {
+                            ctx.lineTo(trajectory[i].x, trajectory[i].y);
+                        }
+                        ctx.stroke();
+                    }
+                }
+            });
+            
+            updateLegend();
+        }
+        
+        function updateDetectionList(detections) {
+            const list = document.getElementById('detectionList');
+            
+            if (detections.length === 0) {
+                list.innerHTML = `
+                    <div style="text-align: center; color: #666; padding: 20px;">
+                        未检测到目标
+                    </div>
+                `;
+                return;
+            }
+            
+            list.innerHTML = detections.map(det => `
+                <div class="detection-item">
+                    <div class="detection-header">
+                        <span class="track-id">ID: ${det.track_id}</span>
+                        <span class="class-name">${det.class_name}</span>
+                    </div>
+                    <div class="detection-info">
+                        置信度: ${(det.confidence * 100).toFixed(1)}% | 
+                        位置: [${det.bbox.join(', ')}]
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function connectWebSocket() {
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                const status = document.getElementById('connectionStatus');
+                status.className = 'connection-status connected';
+                status.innerHTML = `
+                    <div class="pulse" style="background: #00ff64;"></div>
+                    <span>已连接</span>
+                `;
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'history') {
+                    updateHistoryList(data.data);
+                    return;
+                }
+                
+                if (data.fps) {
+                    document.getElementById('fpsDisplay').textContent = data.fps.toFixed(1);
+                }
+                if (data.frame_id) {
+                    document.getElementById('frameId').textContent = data.frame_id;
+                }
+                if (data.detections) {
+                    document.getElementById('detectionCount').textContent = data.detections.length;
+                    drawDetections(data.detections);
+                    updateDetectionList(data.detections);
+                }
+            };
+            
+            ws.onclose = () => {
+                const status = document.getElementById('connectionStatus');
+                status.className = 'connection-status disconnected';
+                status.innerHTML = `
+                    <div class="pulse" style="background: #ff0064;"></div>
+                    <span>连接断开，正在重连...</span>
+                `;
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        }
+        
+        function toggleTrajectory() {
+            showTrajectory = !showTrajectory;
+            const btn = document.getElementById('trajectoryBtn');
+            btn.textContent = showTrajectory ? '隐藏轨迹' : '显示轨迹';
+            if (!showTrajectory) {
+                trajectories.clear();
+            }
+        }
+        
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            trajectories.clear();
+            classColors.clear();
+            document.getElementById('legend').innerHTML = '';
+        }
+        
+        function loadHistory() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'get_history' }));
+            }
+        }
+        
+        function updateHistoryList(history) {
+            const list = document.getElementById('historyList');
+            
+            if (!history || history.length === 0) {
+                list.innerHTML = `
+                    <div style="text-align: center; color: #666; padding: 20px;">
+                        暂无历史记录
+                    </div>
+                `;
+                return;
+            }
+            
+            list.innerHTML = history.slice().reverse().map(item => `
+                <div class="history-item" onclick='viewHistory(${JSON.stringify(item.detections)})'>
+                    <div class="history-time">${item.timestamp}</div>
+                    <div class="history-count">检测到 ${item.detections.length} 个目标</div>
+                </div>
+            `).join('');
+        }
+        
+        function viewHistory(detections) {
+            drawDetections(detections);
+            updateDetectionList(detections);
+        }
+        
+        connectWebSocket();
+    </script>
+</body>
+</html>

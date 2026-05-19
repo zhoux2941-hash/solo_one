@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博物馆展厅分析系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>🏛️ 博物馆展厅观众停留时长与展品热度分析系统</h1>
+            <div class="header-info">
+                <span id="current-time">--:--:--</span>
+                <span class="status-badge" id="connection-status">连接中...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <section class="stats-section">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="current-visitors">0</div>
+                    <div class="stat-label">当前展厅人数</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="hot-exhibits">0</div>
+                    <div class="stat-label">热门展品数</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📱</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="wifi-probes">0</div>
+                    <div class="stat-label">Wi-Fi探针活跃</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="total-records">0</div>
+                    <div class="stat-label">累计停留记录</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-info">
+                    <div class="stat-value"><span id="avg-accuracy">0</span>m</div>
+                    <div class="stat-label">平均定位精度</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="avg-confidence">0%</div>
+                    <div class="stat-label">定位置信度</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👁️</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="avg-gaze-ratio">0%</div>
+                    <div class="stat-label">平均注视率</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🚶</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="passing-by-rate">0%</div>
+                    <div class="stat-label">路过过滤率</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📹</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="active-cameras">0</div>
+                    <div class="stat-label">摄像头在线</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="algorithm-info">
+            <div class="algorithm-card dual-card">
+                <div class="dual-section">
+                    <h3>🔬 定位精度修正算法</h3>
+                    <div class="algorithm-details">
+                    <div class="algo-item">
+                        <span class="algo-label">硬件精度:</span>
+                        <span class="algo-value">3-5米</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="algo-label">展品间距:</span>
+                        <span class="algo-value">2米</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="algo-label">修正算法:</span>
+                        <span class="algo-value">三边测量 + 卡尔曼滤波 + 高斯加权分配</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="algo-label">探针数量:</span>
+                        <span class="algo-value">4个 (四角部署)</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="algo-value highlight">✅ 已启用数据稀释防护</span>
+                    </div>
+                    </div>
+                </div>
+                <div class="dual-section">
+                    <h3>👁️ 视线追踪辅助系统</h3>
+                    <div class="algorithm-details">
+                    <div class="algo-item">
+                        <span class="algo-label">摄像头:</span>
+                        <span class="algo-value">4个 (区域覆盖)</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="algo-label">注视判定:</span>
+                        <span class="algo-value">向量夹角 + 距离阈值</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="algo-label">路过过滤:</span>
+                        <span class="algo-value">注视率 < 20% 标记为路过</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="algo-label">有效时长:</span>
+                        <span class="algo-value">分配时长 × 注视权重</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="algo-value highlight">✅ 已启用路过排除</span>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="charts-section">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h2>📈 展厅客流曲线</h2>
+                    <div class="chart-controls">
+                        <button class="time-btn active" data-minutes="60">1小时</button>
+                        <button class="time-btn" data-minutes="180">3小时</button>
+                        <button class="time-btn" data-minutes="360">6小时</button>
+                        <button class="time-btn" data-minutes="720">12小时</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="flowChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h2>🗺️ 展厅热力图</h2>
+                    <div class="legend">
+                        <span class="legend-item"><span class="legend-color cold"></span>低热度</span>
+                        <span class="legend-item"><span class="legend-color warm"></span>中热度</span>
+                        <span class="legend-item"><span class="legend-color hot"></span>高热度</span>
+                    </div>
+                </div>
+                <div class="heatmap-container">
+                    <canvas id="heatmapCanvas"></canvas>
+                    <div id="heatmap-tooltip" class="heatmap-tooltip"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="ranking-section">
+            <div class="ranking-card">
+                <div class="chart-header">
+                    <h2>🏆 展品热度排行榜</h2>
+                    <span class="threshold-info">热门阈值：平均停留 &gt; 30秒</span>
+                </div>
+                <div class="ranking-table-container">
+                    <table class="ranking-table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>展品名称</th>
+                                <th>参观人数</th>
+                                <th>平均停留(秒)</th>
+                                <th>总停留(秒)</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ranking-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="exhibits-section">
+            <div class="chart-header">
+                <h2>📋 展品列表</h2>
+            </div>
+            <div class="exhibits-grid" id="exhibits-grid">
+            </div>
+        </section>
+    </main>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

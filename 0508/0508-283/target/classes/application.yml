@@ -1,0 +1,50 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: distributed-graph-db
+
+graphdb:
+  storage:
+    path: ./data/rocksdb
+    enable-wal: true
+  bsp:
+    max-supersteps: 100
+    message-timeout: 300000
+    barrier-timeout: 600000
+    use-optimized-engine: true
+    num-partitions: -1
+    message-batch-size: 1000
+    enable-local-message-optimization: true
+    enable-message-aggregation: true
+  stream:
+    window-size-ms: 60000
+    slide-interval-ms: 10000
+    auto-update-interval-ms: 5000
+    auto-update-enabled: true
+    damping-factor: 0.85
+    convergence-threshold: 1e-4
+    max-iterations: 20
+    resolution: 1.0
+    max-local-move-iterations: 5
+  memory:
+    max-heap-percent: 70
+    spill-threshold-percent: 80
+    spill-path: ./data/spill
+  algorithm:
+    pagerank:
+      damping-factor: 0.85
+      convergence-threshold: 1e-6
+      max-iterations: 100
+    louvain:
+      resolution: 1.0
+      max-iterations: 10
+    kcore:
+      min-k: 1
+
+grpc:
+  server:
+    port: 9090
+  client:
+    default-deadline-ms: 300000

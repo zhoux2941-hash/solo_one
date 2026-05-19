@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebHID 绘图板配置工具</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>🎨 WebHID 绘图板配置工具</h1>
+            <div class="header-actions">
+                <div class="device-status" id="deviceStatus">
+                    <span class="status-indicator disconnected"></span>
+                    <span class="status-text">未连接设备</span>
+                </div>
+                <button id="connectBtn" class="btn btn-primary">连接数位板</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="sidebar">
+                <div class="panel">
+                    <h2>配置文件</h2>
+                    <div class="profile-manager">
+                        <select id="profileSelect" class="profile-select">
+                            <option value="default">默认配置</option>
+                        </select>
+                        <div class="profile-actions">
+                            <button id="addProfileBtn" class="btn btn-small" title="新建配置">+</button>
+                            <button id="saveProfileBtn" class="btn btn-small" title="保存配置">💾</button>
+                            <button id="deleteProfileBtn" class="btn btn-small btn-danger" title="删除配置">🗑️</button>
+                        </div>
+                    </div>
+                    <input type="text" id="profileName" class="profile-name-input" placeholder="配置名称">
+                </div>
+
+                <div class="panel">
+                    <h2>压力曲线</h2>
+                    <div class="curve-presets">
+                        <button class="curve-preset active" data-curve="linear">线性</button>
+                        <button class="curve-preset" data-curve="logarithmic">柔和</button>
+                        <button class="curve-preset" data-curve="exp1">微硬</button>
+                        <button class="curve-preset" data-curve="exp2">中硬</button>
+                        <button class="curve-preset" data-curve="exp3">特硬</button>
+                    </div>
+                    <canvas id="curveCanvas" class="curve-canvas"></canvas>
+                    <div class="curve-info">
+                        <span>输入: <strong id="inputPressure">0</strong></span>
+                        <span>输出: <strong id="outputPressure">0</strong></span>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>实时压感</h2>
+                    <div class="pressure-display">
+                        <div class="pressure-bar-container">
+                            <div id="pressureBar" class="pressure-bar"></div>
+                        </div>
+                        <div class="pressure-values">
+                            <span class="pressure-value" id="pressureValue">0</span>
+                            <span class="pressure-unit">/ 8192</span>
+                        </div>
+                    </div>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <span class="stat-label">采样率</span>
+                            <span class="stat-value" id="sampleRate">0 Hz</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">延迟</span>
+                            <span class="stat-value" id="latency">0 ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>笔倾斜感应</h2>
+                    <div class="tilt-display">
+                        <div class="tilt-visual" id="tiltVisual">
+                            <svg width="60" height="60" viewBox="0 0 60 60">
+                                <circle cx="30" cy="30" r="25" fill="none" stroke="#334155" stroke-width="1"/>
+                                <circle cx="30" cy="30" r="2" fill="#334155"/>
+                                <circle cx="30" cy="30" r="5" fill="#06b6d4" opacity="0.3"/>
+                            </svg>
+                        </div>
+                        <div class="tilt-info">
+                            <div class="tilt-row">
+                                <span class="tilt-label">X轴:</span>
+                                <span class="tilt-value" id="tiltX">0.00</span>
+                            </div>
+                            <div class="tilt-row">
+                                <span class="tilt-label">Y轴:</span>
+                                <span class="tilt-value" id="tiltY">0.00</span>
+                            </div>
+                            <div class="tilt-row">
+                                <span class="tilt-label">角度:</span>
+                                <span class="tilt-value" id="tiltAngle">0°</span>
+                            </div>
+                            <div class="tilt-row">
+                                <span class="tilt-label">幅度:</span>
+                                <span class="tilt-value" id="tiltMagnitude">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tilt-mapping">
+                        <label class="tilt-mapping-label">映射方式:</label>
+                        <select id="tiltMapping" class="tilt-mapping-select">
+                            <option value="none">禁用</option>
+                            <option value="rotation">旋转画笔</option>
+                            <option value="opacity">控制透明度</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-panel">
+                <div class="panel panel-large">
+                    <h2>压感测试区域</h2>
+                    <div class="canvas-container">
+                        <canvas id="testCanvas" class="test-canvas"></canvas>
+                        <div class="canvas-controls">
+                            <button id="clearCanvasBtn" class="btn">清除画布</button>
+                            <label class="color-picker-label">
+                                颜色:
+                                <input type="color" id="brushColor" value="#1a1a2e">
+                            </label>
+                            <label class="slider-label">
+                                最大笔刷:
+                                <input type="range" id="maxBrushSize" min="2" max="50" value="20">
+                                <span id="maxBrushSizeValue">20</span>px
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>快捷键配置</h2>
+                    <div class="tablet-buttons" id="tabletButtons">
+                    </div>
+                    <div class="shortcut-hint">
+                        <p>💡 提示：点击按键进行配置，按下键盘组合键进行映射</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div id="shortcutModal" class="modal hidden">
+            <div class="modal-content">
+                <h3>配置快捷键 - <span id="modalButtonName">按键 1</span></h3>
+                <p>按下要映射的键盘组合键...</p>
+                <div id="shortcutPreview" class="shortcut-preview">等待输入...</div>
+                <div class="modal-actions">
+                    <button id="clearShortcutBtn" class="btn">清除</button>
+                    <button id="cancelShortcutBtn" class="btn">取消</button>
+                    <button id="confirmShortcutBtn" class="btn btn-primary">确认</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast" class="toast hidden"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

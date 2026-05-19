@@ -1,0 +1,23 @@
+{
+  "name": "webcodecs-multistream",
+  "version": "1.0.0",
+  "description": "基于 WebCodecs 的实时屏幕录制和多路直播推流工具",
+  "main": "index.html",
+  "scripts": {
+    "test-server": "node test-server.js",
+    "dev": "python -m http.server 8080"
+  },
+  "keywords": [
+    "webcodecs",
+    "screen-capture",
+    "live-streaming",
+    "multistream",
+    "h264",
+    "aac"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "ws": "^8.14.0"
+  }
+}

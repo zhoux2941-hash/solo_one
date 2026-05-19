@@ -1,0 +1,123 @@
+audio:
+  sample_rate: 16000
+  channels: 1
+  format: 'int16'
+  chunk_size: 512
+  record_seconds: 2
+  silence_threshold: 500
+  
+aec:
+  enabled: true
+  filter_length_ms: 200
+  delay_ms: 0
+  algorithm: 'nlms'
+  
+ns:
+  enabled: true
+  level: 3
+  method: 'mmse'
+  adaptive_noise_estimation: true
+  noise_update_alpha: 0.95
+  over_subtraction_factor: 2.0
+  
+vad:
+  enabled: true
+  mode: 'energy'
+  energy_threshold: 0.01
+  spectral_flatness_threshold: 0.6
+  zcr_threshold: 0.1
+  min_speech_frames: 3
+  min_silence_frames: 10
+  
+mfcc:
+  n_mfcc: 40
+  n_mels: 64
+  n_fft: 512
+  hop_length: 256
+  win_length: 512
+  fmin: 20
+  fmax: 8000
+  enable_cmn: true
+  enable_cvn: true
+  enable_spectral_weighting: true
+  lifter_coeff: 22
+  
+feature_enhancement:
+  enabled: true
+  spectral_subtraction: true
+  snr_adaptive_weighting: true
+  
+model:
+  wake_word:
+    name: "Hey Device"
+    base_threshold: 0.85
+    noise_adaptive_threshold: true
+    window_size: 30
+    min_activation_count: 5
+    temporal_smoothing: true
+    smoothing_alpha: 0.3
+    multi_stage_verification: true
+    min_verification_count: 2
+    false_positive_filter: true
+    min_fp_check: 10
+    cooldown_duration: 2.0
+    
+  commands:
+    - "开灯"
+    - "关灯"
+    - "调亮"
+    - "调暗"
+    - "查询温度"
+    - "查询湿度"
+    - "播放音乐"
+    - "停止播放"
+    - "打开窗帘"
+    - "关闭窗帘"
+    
+  inference:
+    backend: "tensorrt"
+    precision: "fp16"
+    batch_size: 1
+    max_workspace_size: 1073741824
+    
+  paths:
+    wake_model: "models/wake_word_dnn.onnx"
+    command_model: "models/command_recognition_dnn.onnx"
+    wake_trt_engine: "models/wake_word_dnn_fp16.engine"
+    command_trt_engine: "models/command_recognition_dnn_fp16.engine"
+
+noise_robustness:
+  enabled: true
+  target_snr_db: 10
+  noise_types: ['white', 'pink', 'brown']
+  enable_data_augmentation: false
+  augmentation_snr_range: [0, 15]
+
+learning:
+  enabled: true
+  history_path: 'data/user_history.json'
+  max_history: 10000
+  
+  adaptive_threshold:
+    enabled: true
+    base_wake_threshold: 0.85
+    base_command_threshold: 0.70
+    min_wake_threshold: 0.70
+    max_wake_threshold: 0.97
+    min_command_threshold: 0.50
+    max_command_threshold: 0.95
+    adjustment_step: 0.02
+    target_wake_fpr: 0.05
+    target_command_success_rate: 0.90
+    threshold_adjustment_interval: 300
+    min_samples_for_adjustment: 10
+  
+  behavior_model:
+    enabled: true
+    max_sequence_length: 3
+    adaptation_rate: 0.1
+    forget_rate: 0.001
+  
+  feedback:
+    auto_save: true
+    save_interval: 300

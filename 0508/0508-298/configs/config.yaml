@@ -1,0 +1,32 @@
+node:
+  id: node1
+  data_dir: ./data
+
+cluster:
+  peers:
+    - node1
+    - node2
+    - node3
+
+raft:
+  election_timeout: 1000ms
+  heartbeat_interval: 100ms
+  enable_pre_vote: true
+  snapshot_interval: 10000
+  snapshot_threshold: 1000
+  max_entries_per_append: 100
+
+lsm:
+  memtable_size: 67108864
+  max_level: 7
+  level_size_multiplier: 10
+  bloom_filter_k: 4
+  bloom_filter_m: 8192
+
+server:
+  bind: :8080
+  grpc_port: 9000
+
+logging:
+  level: info
+  format: json

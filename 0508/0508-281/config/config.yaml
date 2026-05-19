@@ -1,0 +1,64 @@
+detector:
+  model_path: models/yolov5s.engine
+  input_size: 640
+  conf_threshold: 0.5
+  iou_threshold: 0.45
+  max_batch_size: 8
+  classes: 80
+  fp16: true
+
+tracker:
+  max_cosine_distance: 0.6
+  nn_budget: 100
+  max_iou_distance: 1.0
+  max_age: 150
+  n_init: 5
+
+stream:
+  rtsp_url: rtsp://localhost:8554/stream
+  fps: 30
+  width: 1280
+  height: 720
+
+server:
+  host: 0.0.0.0
+  port: 8000
+  ws_path: /ws
+
+distributed:
+  enabled: true
+  is_master: false
+  master_host: localhost
+  master_port: 8765
+  port: 8765
+  camera_id: cam_01
+  region: region_a
+  
+  heartbeat_interval: 2.0
+  node_timeout: 10.0
+  
+  association:
+    feature_weight: 0.6
+    spatial_weight: 0.3
+    temporal_weight: 0.1
+    threshold: 0.45
+    max_track_age: 300.0
+  
+  reid:
+    feature_dim: 128
+    feature_history_size: 50
+    match_threshold: 0.55
+
+camera_calibration:
+  cam_01:
+    position: [0, 0, 0]
+    rotation: [0, 0, 0]
+    fov: 90.0
+  cam_02:
+    position: [10, 0, 0]
+    rotation: [0, 180, 0]
+    fov: 90.0
+  cam_03:
+    position: [5, 10, 0]
+    rotation: [0, -90, 0]
+    fov: 90.0

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fulfillment.order.mapper.ProductMapper">
+
+    <resultMap id="BaseResultMap" type="com.fulfillment.order.entity.Product">
+        <id column="id" property="id"/>
+        <result column="product_name" property="productName"/>
+        <result column="price" property="price"/>
+        <result column="stock" property="stock"/>
+        <result column="version" property="version"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM t_product WHERE id = #{id}
+    </select>
+
+    <update id="deductStock">
+        UPDATE t_product
+        SET stock = stock - #{quantity}, version = version + 1
+        WHERE id = #{id} AND version = #{version} AND stock >= #{quantity}
+    </update>
+
+    <update id="rollbackStock">
+        UPDATE t_product
+        SET stock = stock + #{quantity}, version = version + 1
+        WHERE id = #{id}
+    </update>
+
+    <update id="deductStockAtomic">
+        UPDATE t_product
+        SET stock = stock - #{quantity}, version = version + 1
+        WHERE id = #{id} AND stock >= #{quantity}
+    </update>
+
+    <select id="selectStockById" resultType="java.lang.Integer">
+        SELECT stock FROM t_product WHERE id = #{id}
+    </select>
+
+</mapper>

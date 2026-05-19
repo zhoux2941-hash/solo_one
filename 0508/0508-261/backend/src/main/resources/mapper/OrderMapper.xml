@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fulfillment.order.mapper.OrderMapper">
+
+    <resultMap id="BaseResultMap" type="com.fulfillment.order.entity.Order">
+        <id column="id" property="id"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="user_id" property="userId"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="status" property="status"/>
+        <result column="receiver_name" property="receiverName"/>
+        <result column="receiver_phone" property="receiverPhone"/>
+        <result column="receiver_address" property="receiverAddress"/>
+        <result column="payment_time" property="paymentTime"/>
+        <result column="ship_time" property="shipTime"/>
+        <result column="delivery_time" property="deliveryTime"/>
+        <result column="cancel_time" property="cancelTime"/>
+        <result column="cancel_reason" property="cancelReason"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_order (order_no, user_id, total_amount, status, receiver_name, receiver_phone, receiver_address)
+        VALUES (#{orderNo}, #{userId}, #{totalAmount}, #{status}, #{receiverName}, #{receiverPhone}, #{receiverAddress})
+    </insert>
+
+    <select id="selectByOrderNo" resultMap="BaseResultMap">
+        SELECT * FROM t_order WHERE order_no = #{orderNo}
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM t_order WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM t_order
+        <where>
+            <if test="orderNo != null and orderNo != ''">
+                AND order_no LIKE CONCAT('%', #{orderNo}, '%')
+            </if>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{pageSize} OFFSET (#{pageNum} - 1) * #{pageSize}
+    </select>
+
+    <select id="selectListByCursor" resultMap="BaseResultMap">
+        SELECT * FROM t_order
+        <where>
+            <if test="orderNo != null and orderNo != ''">
+                AND order_no LIKE CONCAT('%', #{orderNo}, '%')
+            </if>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="lastId != null and lastId > 0">
+                AND id &lt; #{lastId}
+            </if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{pageSize}
+    </select>
+
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM t_order
+        <where>
+            <if test="orderNo != null and orderNo != ''">
+                AND order_no LIKE CONCAT('%', #{orderNo}, '%')
+            </if>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <update id="updateStatus">
+        UPDATE t_order SET status = #{status}, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}
+    </update>
+
+    <update id="updatePaymentStatus">
+        UPDATE t_order SET status = #{status}, payment_time = #{paymentTime}, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}
+    </update>
+
+    <update id="updateShipStatus">
+        UPDATE t_order SET status = #{status}, ship_time = #{shipTime}, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}
+    </update>
+
+    <update id="updateDeliveryStatus">
+        UPDATE t_order SET status = #{status}, delivery_time = #{deliveryTime}, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}
+    </update>
+
+    <update id="updateCancelStatus">
+        UPDATE t_order SET status = #{status}, cancel_time = #{cancelTime}, cancel_reason = #{cancelReason}, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}
+    </update>
+
+    <update id="updateCancelStatusWithCondition">
+        UPDATE t_order
+        SET status = #{newStatus}, cancel_time = #{cancelTime}, cancel_reason = #{cancelReason}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND status = #{expectStatus}
+    </update>
+
+    <select id="selectTimeoutOrders" resultMap="BaseResultMap">
+        SELECT * FROM t_order
+        WHERE status = 'CREATED'
+        AND created_at &lt; DATE_SUB(NOW(), INTERVAL #{timeoutMinutes} MINUTE)
+    </select>
+
+</mapper>

@@ -1,0 +1,39 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: community-buying
+  datasource:
+    url: jdbc:h2:mem:community_buying;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
+
+jwt:
+  secret: community-buying-secret-key-2024-spring-boot-jwt-authentication
+  expiration: 86400000
+
+file:
+  upload:
+    path: ./uploads
+    max-size: 10485760
+    allowed-types: image/jpeg,image/png,image/gif,image/webp
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB

@@ -1,0 +1,55 @@
+# Build directories
+build/
+build_*/
+out/
+dist/
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.sln
+*.vcxproj
+*.vcxproj.filters
+CMakeSettings.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+.tox/
+
+# Android
+.gradle/
+local.properties
+*.iml
+.externalNativeBuild/
+build/
+
+# iOS
+Pods/
+*.xcworkspace/
+*.xcodeproj/
+DerivedData/
+
+# Logs and temp
+*.log
+*.tmp
+*.csv
+*.png
+!docs/**/*.png
+
+# Models
+*.tflite
+*.pb
+*.onnx

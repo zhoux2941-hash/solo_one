@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多模态知识图谱系统 v2.0</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            color: white;
+        }
+
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-height: calc(100vh - 150px);
+            overflow-y: auto;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .upload-area:hover {
+            background: #f0f3ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area input {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 1.8em;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .upload-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+
+        .query-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: all 0.3s;
+        }
+
+        .query-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .graph-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            height: 400px;
+        }
+
+        #graph-network {
+            width: 100%;
+            height: 100%;
+        }
+
+        .results-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-header h3 {
+            color: #667eea;
+        }
+
+        .results-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .results-tab {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .results-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .image-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .image-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .image-card img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+        }
+
+        .image-info {
+            padding: 8px;
+            font-size: 0.8em;
+        }
+
+        .image-info p {
+            margin: 2px 0;
+            color: #666;
+        }
+
+        .similarity-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border-radius: 10px;
+            font-size: 0.75em;
+            margin-top: 5px;
+        }
+
+        .document-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .document-text {
+            font-size: 0.9em;
+            color: #444;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8em;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .status-bar {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+
+        .message-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            color: #666;
+        }
+
+        .example-queries {
+            margin-top: 12px;
+        }
+
+        .example-queries p {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .example-btn {
+            display: block;
+            width: 100%;
+            padding: 7px;
+            margin-bottom: 5px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+            text-align: left;
+            transition: all 0.3s;
+        }
+
+        .example-btn:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+        }
+
+        .crossmodal-preview {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 10px;
+            background: #f8f9ff;
+        }
+
+        .crossmodal-preview img {
+            max-width: 100%;
+            max-height: 120px;
+            border-radius: 8px;
+        }
+
+        .crossmodal-preview p {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #e9ecef;
+            border-radius: 12px;
+            font-size: 0.75em;
+            margin: 2px;
+        }
+
+        .badge-entity {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔗 多模态知识图谱系统 v2.0</h1>
+            <p>CLIP跨模态检索 · OCR文字识别 · 实体关系抽取 · 自然语言问答</p>
+        </header>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="section">
+                    <h3>📤 数据上传</h3>
+                    <div class="upload-area" onclick="document.getElementById('image-upload').click()">
+                        <div class="upload-icon">🖼️</div>
+                        <div class="upload-label">点击上传图片</div>
+                        <input type="file" id="image-upload" accept="image/*" onchange="uploadImage(this)">
+                    </div>
+                    <div class="upload-area" onclick="document.getElementById('doc-upload').click()">
+                        <div class="upload-icon">📄</div>
+                        <div class="upload-label">点击上传文档</div>
+                        <input type="file" id="doc-upload" accept=".txt,.json,.csv" onchange="uploadDocument(this)">
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>🔍 检索模式</h3>
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchSearchMode('natural')">自然语言</button>
+                        <button class="tab" onclick="switchSearchMode('crossmodal')">跨模态检索</button>
+                        <button class="tab" onclick="switchSearchMode('text2image')">文搜图</button>
+                    </div>
+
+                    <div id="natural-search">
+                        <input type="text" class="query-input" id="query-input" placeholder="输入查询语句...">
+                        <button class="btn btn-primary" onclick="executeQuery()">执行查询</button>
+                        
+                        <div class="example-queries">
+                            <p>示例查询：</p>
+                            <button class="example-btn" onclick="setQuery('找包含长城的图片')">找包含"长城"的图片</button>
+                            <button class="example-btn" onclick="setQuery('显示所有实体')">显示所有实体</button>
+                            <button class="example-btn" onclick="setQuery('显示所有关系')">显示所有关系</button>
+                        </div>
+                    </div>
+
+                    <div id="crossmodal-search" class="hidden">
+                        <div class="upload-area" id="crossmodal-upload-area" onclick="document.getElementById('crossmodal-image').click()">
+                            <div class="upload-icon">🔄</div>
+                            <div class="upload-label">点击上传查询图片</div>
+                            <input type="file" id="crossmodal-image" accept="image/*" onchange="previewCrossmodalImage(this)">
+                        </div>
+                        <div id="crossmodal-preview" class="crossmodal-preview hidden">
+                            <img id="preview-img" src="" alt="预览">
+                            <p>已选择查询图片 ✓</p>
+                        </div>
+                        <button class="btn btn-success" onclick="executeCrossModalSearch()">以图搜图 + 搜文</button>
+                    </div>
+
+                    <div id="text2image-search" class="hidden">
+                        <input type="text" class="query-input" id="text2image-input" placeholder="输入描述搜索图片...">
+                        <button class="btn btn-success" onclick="executeText2ImageSearch()">文本搜索图片</button>
+                        
+                        <div class="example-queries">
+                            <p>示例搜索词：</p>
+                            <button class="example-btn" onclick="setText2ImageQuery('长城 风景')">长城 风景</button>
+                            <button class="example-btn" onclick="setText2ImageQuery('故宫 建筑')">故宫 建筑</button>
+                            <button class="example-btn" onclick="setText2ImageQuery('西湖 旅游')">西湖 旅游</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>📊 系统统计</h3>
+                    <div class="stats" id="stats-container">
+                        <div class="stat-item">
+                            <div class="stat-number" id="entity-count">0</div>
+                            <div class="stat-label">实体数量</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="relation-count">0</div>
+                            <div class="stat-label">关系数量</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="image-count">0</div>
+                            <div class="stat-label">图片索引</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="text-count">0</div>
+                            <div class="stat-label">文本索引</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="refreshGraph()">刷新图谱</button>
+                    <button class="btn btn-danger" onclick="clearDatabase()">清空数据库</button>
+                </div>
+
+                <div class="section">
+                    <h3>🎨 图例</h3>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ff7675;"></div>
+                            <span>人物</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #74b9ff;"></div>
+                            <span>地点</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #55efc4;"></div>
+                            <span>组织</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #fdcb6e;"></div>
+                            <span>事件</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #a29bfe;"></div>
+                            <span>物体</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-panel">
+                <div class="graph-container">
+                    <div id="graph-network"></div>
+                </div>
+
+                <div class="results-container">
+                    <div class="results-header">
+                        <h3>📋 检索结果</h3>
+                        <span id="result-summary"></span>
+                    </div>
+                    
+                    <div id="results-tabs" class="results-tabs hidden">
+                        <button class="results-tab active" onclick="switchResultsTab('images')">相似图片</button>
+                        <button class="results-tab" onclick="switchResultsTab('documents')">相关文档</button>
+                    </div>
+                    
+                    <div id="results-content"></div>
+                </div>
+
+                <div class="status-bar" id="status-bar">
+                    <span id="status-message">✅ 系统已就绪，等待操作...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+        let network = null;
+        let currentQueryImage = null;
+        let currentResults = null;
+
+        async function init() {
+            await refreshGraph();
+            await updateStats();
+            await updateCrossModalStats();
+        }
+
+        async function refreshGraph() {
+            try {
+                showStatus('🔄 正在加载图谱数据...', true);
+                const response = await fetch(`${API_BASE}/graph`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderGraph(data.data);
+                    showStatus('✅ 图谱加载成功');
+                }
+            } catch (error) {
+                showStatus('❌ 加载图谱失败: ' + error.message);
+            }
+        }
+
+        function renderGraph(graphData) {
+            const container = document.getElementById('graph-network');
+            
+            const nodes = new vis.DataSet(graphData.nodes || []);
+            const edges = new vis.DataSet(graphData.edges || []);
+
+            const data = { nodes: nodes, edges: edges };
+
+            const options = {
+                nodes: {
+                    shape: 'dot',
+                    size: 25,
+                    font: {
+                        size: 14,
+                        color: '#333'
+                    },
+                    borderWidth: 2,
+                    borderWidthSelected: 4
+                },
+                edges: {
+                    width: 2,
+                    color: {
+                        color: '#b2bec3',
+                        highlight: '#667eea'
+                    },
+                    font: {
+                        size: 12,
+                        align: 'middle'
+                    },
+                    arrows: {
+                        to: { enabled: true, scaleFactor: 0.5 }
+                    }
+                },
+                physics: {
+                    enabled: true,
+                    barnesHut: {
+                        gravitationalConstant: -3000,
+                        centralGravity: 0.3,
+                        springLength: 150,
+                        springConstant: 0.04
+                    }
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 200
+                }
+            };
+
+            if (network) {
+                network.destroy();
+            }
+            
+            network = new vis.Network(container, data, options);
+        }
+
+        async function updateStats() {
+            try {
+                const [entitiesRes, relationsRes, imagesRes] = await Promise.all([
+                    fetch(`${API_BASE}/entities`),
+                    fetch(`${API_BASE}/relations`),
+                    fetch(`${API_BASE}/images`)
+                ]);
+                
+                const entitiesData = await entitiesRes.json();
+                const relationsData = await relationsRes.json();
+                const imagesData = await imagesRes.json();
+                
+                document.getElementById('entity-count').textContent = entitiesData.data.length;
+                document.getElementById('relation-count').textContent = relationsData.data.length;
+                document.getElementById('image-count').textContent = imagesData.data.length;
+            } catch (error) {
+                console.error('更新统计失败:', error);
+            }
+        }
+
+        async function updateCrossModalStats() {
+            try {
+                const response = await fetch(`${API_BASE}/crossmodal/stats`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    document.getElementById('image-count').textContent = data.data.total_images || 0;
+                    document.getElementById('text-count').textContent = data.data.total_texts || 0;
+                }
+            } catch (error) {
+                console.error('更新跨模态统计失败:', error);
+            }
+        }
+
+        async function uploadImage(input) {
+            if (!input.files.length) return;
+            
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                showStatus('🔄 正在处理图片（OCR + 特征提取）...', true);
+                const response = await fetch(`${API_BASE}/upload/image`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('✅ 图片处理成功！OCR识别完成，已加入跨模态索引');
+                    await refreshGraph();
+                    await updateStats();
+                    await updateCrossModalStats();
+                } else {
+                    showStatus('❌ 图片处理失败');
+                }
+            } catch (error) {
+                showStatus('❌ 上传失败: ' + error.message);
+            }
+            
+            input.value = '';
+        }
+
+        async function uploadDocument(input) {
+            if (!input.files.length) return;
+            
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                showStatus('🔄 正在处理文档（实体抽取）...', true);
+                const response = await fetch(`${API_BASE}/upload/document`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('✅ 文档处理成功！实体关系抽取完成');
+                    await refreshGraph();
+                    await updateStats();
+                    await updateCrossModalStats();
+                } else {
+                    showStatus('❌ 文档处理失败');
+                }
+            } catch (error) {
+                showStatus('❌ 上传失败: ' + error.message);
+            }
+            
+            input.value = '';
+        }
+
+        function switchSearchMode(mode) {
+            document.querySelectorAll('.tabs .tab').forEach((tab, index) => {
+                tab.classList.toggle('active', 
+                    (mode === 'natural' && index === 0) ||
+                    (mode === 'crossmodal' && index === 1) ||
+                    (mode === 'text2image' && index === 2)
+                );
+            });
+
+            document.getElementById('natural-search').classList.toggle('hidden', mode !== 'natural');
+            document.getElementById('crossmodal-search').classList.toggle('hidden', mode !== 'crossmodal');
+            document.getElementById('text2image-search').classList.toggle('hidden', mode !== 'text2image');
+        }
+
+        function previewCrossmodalImage(input) {
+            if (!input.files.length) return;
+            
+            currentQueryImage = input.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                document.getElementById('preview-img').src = e.target.result;
+                document.getElementById('crossmodal-preview').classList.remove('hidden');
+                document.getElementById('crossmodal-upload-area').classList.add('hidden');
+            };
+            
+            reader.readAsDataURL(currentQueryImage);
+        }
+
+        async function executeCrossModalSearch() {
+            if (!currentQueryImage) {
+                showStatus('⚠️ 请先选择查询图片');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', currentQueryImage);
+            formData.append('top_k_images', 5);
+            formData.append('top_k_texts', 5);
+            
+            try {
+                showStatus('🔄 正在进行跨模态检索（CLIP特征匹配）...', true);
+                const response = await fetch(`${API_BASE}/crossmodal/search`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentResults = data.data;
+                    renderCrossModalResults(data.data);
+                    showStatus('✅ ' + data.message);
+                } else {
+                    showStatus('❌ 检索失败: ' + data.message);
+                }
+            } catch (error) {
+                showStatus('❌ 检索失败: ' + error.message);
+            }
+        }
+
+        async function executeText2ImageSearch() {
+            const query = document.getElementById('text2image-input').value.trim();
+            if (!query) {
+                showStatus('⚠️ 请输入搜索描述');
+                return;
+            }
+            
+            try {
+                showStatus('🔄 正在进行文本到图像检索...', true);
+                const response = await fetch(`${API_BASE}/text2image/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentResults = data.data;
+                    renderText2ImageResults(data.data);
+                    showStatus('✅ ' + data.message);
+                } else {
+                    showStatus('❌ 检索失败: ' + data.message);
+                }
+            } catch (error) {
+                showStatus('❌ 检索失败: ' + error.message);
+            }
+        }
+
+        function renderCrossModalResults(results) {
+            const container = document.getElementById('results-content');
+            const summary = document.getElementById('result-summary');
+            const tabs = document.getElementById('results-tabs');
+            
+            tabs.classList.remove('hidden');
+            switchResultsTab('images');
+            
+            summary.textContent = `找到 ${results.similar_images?.length || 0} 张相似图片，${results.related_documents?.length || 0} 条相关文档`;
+            
+            let html = '';
+            
+            if (results.similar_images && results.similar_images.length > 0) {
+                html += '<div id="images-results">';
+                html += '<h4 style="margin-bottom: 15px; color: #667eea;">🖼️ 相似图片</h4>';
+                html += '<div class="image-grid">';
+                
+                results.similar_images.forEach(img => {
+                    html += `
+                        <div class="image-card">
+                            <img src="http://localhost:8000${img.thumbnail_path || img.image_path}" alt="图片">
+                            <div class="image-info">
+                                <p><strong>ID:</strong> ${(img.image_id || '').substring(0, 8)}...</p>
+                                <div class="similarity-badge">相似度: ${((img.similarity_score || 0) * 100).toFixed(1)}%</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            } else {
+                html += '<div class="message message-info">未找到相似图片，请先上传更多图片</div>';
+            }
+            
+            if (results.related_documents && results.related_documents.length > 0) {
+                html += '<div id="documents-results" class="hidden">';
+                html += '<h4 style="margin: 20px 0 15px; color: #667eea;">📄 相关文档片段</h4>';
+                
+                results.related_documents.forEach(doc => {
+                    html += `
+                        <div class="document-card">
+                            <div class="document-text">${doc.text?.substring(0, 200) || '暂无内容'}${doc.text?.length > 200 ? '...' : ''}</div>
+                            <div class="similarity-badge">相似度: ${((doc.similarity_score || 0) * 100).toFixed(1)}%</div>
+                            ${doc.metadata?.entities ? doc.metadata.entities.map(e => `<span class="badge badge-entity">${e}</span>`).join('') : ''}
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function renderText2ImageResults(results) {
+            const container = document.getElementById('results-content');
+            const summary = document.getElementById('result-summary');
+            const tabs = document.getElementById('results-tabs');
+            
+            tabs.classList.add('hidden');
+            
+            summary.textContent = `搜索: "${results.query_text}" - 找到 ${results.similar_images?.length || 0} 张相关图片`;
+            
+            let html = '';
+            
+            if (results.similar_images && results.similar_images.length > 0) {
+                html += '<h4 style="margin-bottom: 15px; color: #667eea;">🖼️ 匹配图片</h4>';
+                html += '<div class="image-grid">';
+                
+                results.similar_images.forEach(img => {
+                    html += `
+                        <div class="image-card">
+                            <img src="http://localhost:8000${img.thumbnail_path || img.image_path}" alt="图片">
+                            <div class="image-info">
+                                <p><strong>ID:</strong> ${(img.image_id || '').substring(0, 8)}...</p>
+                                <div class="similarity-badge">匹配度: ${((img.similarity_score || 0) * 100).toFixed(1)}%</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            } else {
+                html = '<div class="message message-info">未找到匹配的图片，请先上传更多图片</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function switchResultsTab(tab) {
+            document.querySelectorAll('.results-tab').forEach((t, index) => {
+                t.classList.toggle('active', 
+                    (tab === 'images' && index === 0) ||
+                    (tab === 'documents' && index === 1)
+                );
+            });
+
+            const imagesResults = document.getElementById('images-results');
+            const docsResults = document.getElementById('documents-results');
+            
+            if (imagesResults) imagesResults.classList.toggle('hidden', tab !== 'images');
+            if (docsResults) docsResults.classList.toggle('hidden', tab !== 'documents');
+        }
+
+        function setQuery(text) {
+            document.getElementById('query-input').value = text;
+        }
+
+        function setText2ImageQuery(text) {
+            document.getElementById('text2image-input').value = text;
+        }
+
+        async function executeQuery() {
+            const query = document.getElementById('query-input').value.trim();
+            if (!query) {
+                showStatus('⚠️ 请输入查询语句');
+                return;
+            }
+            
+            try {
+                showStatus('🔄 正在执行查询...', true);
+                const response = await fetch(`${API_BASE}/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderResults(data.data);
+                    showStatus('✅ ' + data.message);
+                } else {
+                    showStatus('❌ 查询失败');
+                }
+            } catch (error) {
+                showStatus('❌ 查询失败: ' + error.message);
+            }
+        }
+
+        function renderResults(results) {
+            const container = document.getElementById('results-content');
+            const summary = document.getElementById('result-summary');
+            const tabs = document.getElementById('results-tabs');
+            
+            tabs.classList.add('hidden');
+            summary.textContent = results.summary || '';
+            
+            let html = '';
+            
+            if (results.images && results.images.length > 0) {
+                html += '<h4 style="margin-bottom: 15px; color: #667eea;">🖼️ 匹配的图片</h4>';
+                html += '<div class="image-grid">';
+                
+                results.images.forEach(img => {
+                    html += `
+                        <div class="image-card">
+                            <img src="http://localhost:8000${img.thumbnail || img.thumbnail_path}" alt="图片">
+                            <div class="image-info">
+                                <p><strong>图片ID:</strong> ${(img.image_id || '').substring(0, 8)}...</p>
+                                ${img.text ? `<p><strong>文字:</strong> ${img.text.substring(0, 30)}...</p>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+            
+            if (results.entities && results.entities.length > 0) {
+                html += '<h4 style="margin: 20px 0 15px; color: #667eea;">📍 实体列表</h4>';
+                html += '<div style="display: flex; flex-wrap: wrap; gap: 10px;">';
+                
+                results.entities.forEach(entity => {
+                    const colors = {
+                        'Person': '#ff7675',
+                        'Location': '#74b9ff',
+                        'Organization': '#55efc4',
+                        'Event': '#fdcb6e',
+                        'Object': '#a29bfe'
+                    };
+                    html += `
+                        <span style="padding: 8px 15px; background: ${colors[entity.type] || '#b2bec3'}; 
+                                     color: white; border-radius: 20px; font-size: 0.9em;">
+                            ${entity.label || entity.type}: ${entity.name}
+                        </span>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+            
+            if (results.relations && results.relations.length > 0) {
+                html += '<h4 style="margin: 20px 0 15px; color: #667eea;">🔗 关系列表</h4>';
+                html += '<div style="max-height: 200px; overflow-y: auto;">';
+                
+                results.relations.forEach(rel => {
+                    html += `
+                        <div style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px;">
+                            <strong>${rel.source}</strong> 
+                            <span style="color: #667eea;">[${rel.relation}]</span> 
+                            <strong>${rel.target}</strong>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+            
+            if (!html) {
+                html = '<div class="message message-info">未找到匹配的结果</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        async function clearDatabase() {
+            if (!confirm('确定要清空数据库和索引吗？此操作不可恢复！')) return;
+            
+            try {
+                showStatus('🔄 正在清空数据库...', true);
+                const response = await fetch(`${API_BASE}/clear`, { method: 'DELETE' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('✅ 数据库和索引已清空');
+                    await refreshGraph();
+                    await updateStats();
+                    await updateCrossModalStats();
+                    document.getElementById('results-content').innerHTML = '';
+                    document.getElementById('result-summary').textContent = '';
+                    
+                    currentQueryImage = null;
+                    document.getElementById('crossmodal-preview').classList.add('hidden');
+                    document.getElementById('crossmodal-upload-area').classList.remove('hidden');
+                }
+            } catch (error) {
+                showStatus('❌ 清空失败: ' + error.message);
+            }
+        }
+
+        function showStatus(message, loading = false) {
+            const statusMessage = document.getElementById('status-message');
+            
+            if (loading) {
+                statusMessage.innerHTML = `<span class="loading"></span> ${message}`;
+            } else {
+                statusMessage.innerHTML = message;
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

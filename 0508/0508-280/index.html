@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGPU 海面波浪模拟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        #controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 20, 40, 0.85);
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+            min-width: 280px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 180, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 100, 200, 0.3);
+        }
+        #controls h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #64b4ff;
+            border-bottom: 1px solid rgba(100, 180, 255, 0.3);
+            padding-bottom: 10px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #a0c4ff;
+        }
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(100, 180, 255, 0.3);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #64b4ff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(100, 180, 255, 0.5);
+        }
+        .value-display {
+            font-size: 12px;
+            color: #80a0c0;
+            text-align: right;
+            margin-top: 3px;
+        }
+        #cameraMode {
+            width: 100%;
+            padding: 8px;
+            background: rgba(100, 180, 255, 0.2);
+            border: 1px solid rgba(100, 180, 255, 0.4);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        #info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+        #info strong {
+            color: #64b4ff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="controls">
+        <h2>🌊 海面参数</h2>
+        <div class="control-group">
+            <label>风速 (m/s)</label>
+            <input type="range" id="windSpeed" min="1" max="30" value="15" step="0.5">
+            <div class="value-display" id="windSpeedValue">15 m/s</div>
+        </div>
+        <div class="control-group">
+            <label>风向 (度)</label>
+            <input type="range" id="windDirection" min="0" max="360" value="45" step="1">
+            <div class="value-display" id="windDirectionValue">45°</div>
+        </div>
+        <div class="control-group">
+            <label>波高缩放</label>
+            <input type="range" id="waveScale" min="0.1" max="3" value="1" step="0.1">
+            <div class="value-display" id="waveScaleValue">1.0x</div>
+        </div>
+        <div class="control-group">
+            <label>泡沫强度</label>
+            <input type="range" id="foamIntensity" min="0" max="2" value="1" step="0.1">
+            <div class="value-display" id="foamIntensityValue">1.0</div>
+        </div>
+        <div class="control-group">
+            <label>摄像机模式</label>
+            <select id="cameraMode">
+                <option value="fly">第一人称飞行</option>
+                <option value="follow">跟随模式</option>
+            </select>
+        </div>
+    </div>
+    <div id="info">
+        <div><strong>WASD</strong> - 移动 | <strong>鼠标</strong> - 视角</div>
+        <div><strong>Shift</strong> - 上升 | <strong>Ctrl</strong> - 下降</div>
+        <div><strong>空格</strong> - 切换模式</div>
+    </div>
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>

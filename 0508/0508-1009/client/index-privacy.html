@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy-Protected 3D Streaming</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .privacy-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .privacy-panel {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .privacy-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .shield-icon {
+            width: 20px;
+            height: 20px;
+            color: #10b981;
+        }
+        
+        .blur-slider {
+            width: 100%;
+            margin: 8px 0;
+        }
+        
+        .processing-steps {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+        
+        .processing-steps div {
+            margin: 2px 0;
+            padding-left: 12px;
+            border-left: 2px solid #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>
+                Privacy-Protected 3D Streaming
+                <span class="privacy-badge">🔒 Privacy Enabled</span>
+            </h1>
+            <div class="subtitle">Automatic Face Detection & Blurring via Edge Detection</div>
+        </header>
+
+        <main class="main-content">
+            <div id="model-container" class="model-container"></div>
+            
+            <aside class="sidebar">
+                <div class="panel privacy-panel">
+                    <h3>Privacy Protection</h3>
+                    <div class="privacy-indicator">
+                        <svg class="shield-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        <span id="privacy-status">Active</span>
+                    </div>
+                    <div id="faces-detected">Faces detected: --</div>
+                    <div id="blur-intensity">Blur intensity: --</div>
+                    
+                    <div class="processing-steps">
+                        <div>✓ Geometry analysis</div>
+                        <div>✓ Face region detection</div>
+                        <div>✓ Edge detection (Sobel)</div>
+                        <div>✓ Gaussian blur application</div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Connection Status</h3>
+                    <div id="status" class="status">Initializing...</div>
+                    <button id="connect-btn" class="btn">Connect</button>
+                </div>
+
+                <div class="panel">
+                    <h3>Progress</h3>
+                    <div class="progress-container">
+                        <div id="progress-bar" class="progress-bar"></div>
+                    </div>
+                    <div id="progress" class="progress-text">0%</div>
+                </div>
+
+                <div class="panel">
+                    <h3>Performance</h3>
+                    <div id="stats" class="stats">
+                        <div>Vertices: 0</div>
+                        <div>Triangles: 0</div>
+                        <div>Draw Calls: 0</div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>LOD Information</h3>
+                    <div id="lod-info" class="stats">
+                        <div>Current LOD: 3</div>
+                        <div>Meshes: 0</div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Network</h3>
+                    <div id="bandwidth-info" class="stats">
+                        <div>Bandwidth: -- Mbps</div>
+                    </div>
+                </div>
+
+                <div class="panel info-panel">
+                    <h3>About Privacy Protection</h3>
+                    <p style="font-size: 12px; color: #94a3b8; line-height: 1.5;">
+                        This system automatically detects sensitive regions (like faces) in 3D models
+                        and applies intelligent blurring using edge detection. The blurring preserves
+                        overall shape while obscuring identifiable features.
+                    </p>
+                    <ul class="target-list" style="margin-top: 8px;">
+                        <li><span class="target-label">Detection:</span> Geometry-based face region detection</li>
+                        <li><span class="target-label">Method:</span> Sobel edge detection + Gaussian blur</li>
+                        <li><span class="target-label">Scope:</span> Vertices and textures</li>
+                    </ul>
+                </div>
+            </aside>
+        </main>
+
+        <footer class="footer">
+            <div class="legend">
+                <span class="legend-item"><span class="dot lod-0"></span> LOD 0 (Full Detail)</span>
+                <span class="legend-item"><span class="dot lod-1"></span> LOD 1</span>
+                <span class="legend-item"><span class="dot lod-2"></span> LOD 2</span>
+                <span class="legend-item"><span class="dot lod-3"></span> LOD 3 (Low Detail)</span>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module">
+        import WebSocketClient from './js/websocket-client-v2.js';
+        import ProgressiveRenderer from './js/progressive-renderer-v2.js';
+
+        class PrivacyApp {
+            constructor() {
+                this.client = null;
+                this.renderer = null;
+                this.startTime = 0;
+                this.firstFrameTime = 0;
+                this.ui = {};
+                
+                this.initUI();
+                this.initRenderer();
+                this.initClient();
+            }
+
+            initUI() {
+                this.ui.status = document.getElementById('status');
+                this.ui.progress = document.getElementById('progress');
+                this.ui.progressBar = document.getElementById('progress-bar');
+                this.ui.stats = document.getElementById('stats');
+                this.ui.lodInfo = document.getElementById('lod-info');
+                this.ui.bandwidthInfo = document.getElementById('bandwidth-info');
+                this.ui.connectBtn = document.getElementById('connect-btn');
+                this.ui.privacyStatus = document.getElementById('privacy-status');
+                this.ui.facesDetected = document.getElementById('faces-detected');
+                this.ui.blurIntensity = document.getElementById('blur-intensity');
+                
+                if (this.ui.connectBtn) {
+                    this.ui.connectBtn.addEventListener('click', () => this.connect());
+                }
+            }
+
+            initRenderer() {
+                const container = document.getElementById('model-container');
+                
+                this.renderer = new ProgressiveRenderer(container, {
+                    onFirstFrame: () => this.onFirstFrame(),
+                    onProgress: (progress) => this.onProgress(progress),
+                    onBandwidthUpdate: (bandwidth) => this.onBandwidthUpdate(bandwidth)
+                });
+            }
+
+            initClient() {
+                const serverUrl = `ws://${window.location.hostname}:${window.location.port}`;
+                
+                this.client = new WebSocketClient(serverUrl, {
+                    maxReconnectAttempts: 10,
+                    reconnectDelay: 1000
+                });
+                
+                this.client.onMetadata((metadata) => {
+                    this.renderer.setMetadata(metadata);
+                    this.updatePrivacyInfo(metadata.privacy);
+                    this.updateStatus('Streaming model data...');
+                });
+                
+                this.client.onConnection((connected) => {
+                    this.updateStatus(connected ? 'Connected' : 'Disconnected');
+                    this.ui.connectBtn.textContent = connected ? 'Reconnect' : 'Connect';
+                });
+                
+                this.client.onChunk('g', (chunkId, data) => {
+                    if (chunkId.includes('_v')) {
+                        this.renderer.handleVertexChunk(chunkId, data);
+                    } else if (chunkId.includes('_i')) {
+                        this.renderer.handleIndexChunk(chunkId, data);
+                    }
+                    
+                    this.renderer.updateBandwidthEstimate(data.length);
+                });
+                
+                this.client.onChunk('t', (chunkId, data) => {
+                    this.renderer.handleTextureChunk(chunkId, data);
+                });
+            }
+
+            connect() {
+                this.client.connect();
+                this.startTime = performance.now();
+                this.updateStatus('Connecting...');
+            }
+
+            updatePrivacyInfo(privacy) {
+                if (privacy) {
+                    this.ui.privacyStatus.textContent = privacy.enabled ? '🔒 Active' : '⚠️ Disabled';
+                    this.ui.privacyStatus.style.color = privacy.enabled ? '#10b981' : '#f59e0b';
+                    this.ui.facesDetected.textContent = `Faces detected: ${privacy.facesDetected || 0}`;
+                    this.ui.blurIntensity.textContent = `Blur intensity: ${privacy.blurIntensity || 0}`;
+                }
+            }
+
+            onFirstFrame() {
+                this.firstFrameTime = performance.now();
+                const timeToFirstFrame = (this.firstFrameTime - this.startTime) / 1000;
+                
+                console.log(`First frame rendered in ${timeToFirstFrame.toFixed(2)}s`);
+                this.updateStatus(`First frame: ${timeToFirstFrame.toFixed(2)}s`);
+                
+                if (timeToFirstFrame < 2) {
+                    this.ui.status.style.color = '#4ade80';
+                }
+            }
+
+            onProgress(progress) {
+                const percent = Math.round(progress * 100);
+                this.ui.progress.textContent = `${percent}%`;
+                this.ui.progressBar.style.width = `${percent}%`;
+                
+                const stats = this.renderer.getStats();
+                this.ui.stats.innerHTML = `
+                    <div>Vertices: ${stats.vertexCount.toLocaleString()}</div>
+                    <div>Triangles: ${stats.triangleCount.toLocaleString()}</div>
+                    <div>Draw Calls: ${stats.drawCalls}</div>
+                `;
+                
+                this.ui.lodInfo.innerHTML = `
+                    <div>Current LOD: ${stats.currentLOD}</div>
+                    <div>Meshes: ${stats.meshes}</div>
+                `;
+                
+                if (progress >= 1) {
+                    const totalTime = (performance.now() - this.startTime) / 1000;
+                    console.log(`Load complete in ${totalTime.toFixed(2)}s`);
+                    this.updateStatus(`Complete: ${totalTime.toFixed(2)}s`);
+                    
+                    if (totalTime < 10) {
+                        this.ui.status.style.color = '#4ade80';
+                    }
+                }
+            }
+
+            onBandwidthUpdate(bandwidth) {
+                const mbps = (bandwidth * 8 / 1024 / 1024).toFixed(1);
+                this.ui.bandwidthInfo.innerHTML = `
+                    <div>Bandwidth: ${mbps} Mbps</div>
+                `;
+            }
+
+            updateStatus(text) {
+                if (this.ui.status) {
+                    this.ui.status.textContent = text;
+                }
+            }
+
+            start() {
+                this.connect();
+                this.updateCameraPosition();
+            }
+
+            updateCameraPosition() {
+                const update = () => {
+                    if (this.client && this.client.isConnected && this.renderer) {
+                        const camera = this.renderer.camera;
+                        const target = this.renderer.controls.target;
+                        this.client.updateCamera(camera.position, target);
+                    }
+                    requestAnimationFrame(update);
+                };
+                update();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const app = new PrivacyApp();
+            app.start();
+        });
+    </script>
+</body>
+</html>

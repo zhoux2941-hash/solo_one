@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebCodecs 屏幕录制与直播推流工具</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎬 WebCodecs 直播推流工具</h1>
+            <div class="status-indicator">
+                <span id="connectionStatus" class="status-dot disconnected"></span>
+                <span id="statusText">未连接</span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <aside class="control-panel">
+                <div class="panel-section">
+                    <h3>📺 屏幕采集</h3>
+                    <div class="form-group">
+                        <label>采集模式</label>
+                        <select id="captureMode">
+                            <option value="fullscreen">全屏采集</option>
+                            <option value="window">窗口采集</option>
+                            <option value="region">区域采集</option>
+                        </select>
+                    </div>
+                    <button id="selectSource" class="btn btn-primary">选择采集源</button>
+                    <div id="sourceInfo" class="info-text"></div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>⚙️ 编码设置</h3>
+                    <div class="form-group">
+                        <label>分辨率</label>
+                        <select id="resolution">
+                            <option value="1920x1080">1920x1080 (1080p)</option>
+                            <option value="1280x720">1280x720 (720p)</option>
+                            <option value="854x480">854x480 (480p)</option>
+                            <option value="custom">自定义</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="customResolution" style="display: none;">
+                        <div class="input-group">
+                            <input type="number" id="customWidth" placeholder="宽度" value="1920" min="320" max="3840">
+                            <span>×</span>
+                            <input type="number" id="customHeight" placeholder="高度" value="1080" min="240" max="2160">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>帧率</label>
+                        <select id="framerate">
+                            <option value="15">15 fps</option>
+                            <option value="30" selected>30 fps</option>
+                            <option value="60">60 fps</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>码率: <span id="bitrateValue">3000</span> kbps</label>
+                        <input type="range" id="bitrate" min="1000" max="10000" value="3000" step="500">
+                    </div>
+                    <div class="form-group">
+                        <label>编码预设</label>
+                        <select id="preset">
+                            <option value="hardware" selected>硬件加速 (优先)</option>
+                            <option value="software">软件编码</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>🎙️ 音频设置</h3>
+                    <div class="form-group">
+                        <label>音频码率</label>
+                        <select id="audioBitrate">
+                            <option value="64000">64 kbps</option>
+                            <option value="128000" selected>128 kbps</option>
+                            <option value="192000">192 kbps</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>采样率</label>
+                        <select id="sampleRate">
+                            <option value="44100" selected>44100 Hz</option>
+                            <option value="48000">48000 Hz</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>🌐 多路推流设置</h3>
+                    
+                    <div class="stream-target" data-platform="custom">
+                        <div class="stream-target-header">
+                            <span class="platform-name">自定义服务器</span>
+                            <label class="switch">
+                                <input type="checkbox" id="enableCustom" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="stream-target-body">
+                            <div class="form-group">
+                                <label>WebSocket 服务器</label>
+                                <input type="text" id="wsServerCustom" placeholder="ws://localhost:8000/rtmp" value="ws://localhost:8000/rtmp">
+                            </div>
+                            <div class="form-group">
+                                <label>推流密钥</label>
+                                <input type="text" id="streamKeyCustom" placeholder="输入推流密钥">
+                            </div>
+                            <div class="connection-status" id="statusCustom">
+                                <span class="status-indicator disconnected"></span>
+                                <span>未连接</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stream-target" data-platform="bilibili">
+                        <div class="stream-target-header">
+                            <span class="platform-name">📺 B站直播</span>
+                            <label class="switch">
+                                <input type="checkbox" id="enableBilibili">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="stream-target-body">
+                            <div class="form-group">
+                                <label>B站 WebSocket 服务器</label>
+                                <select id="bilibiliServer">
+                                    <option value="ws://live-bj.ws.douyucdn.cn/live">北京</option>
+                                    <option value="ws://live-sh.ws.douyucdn.cn/live">上海</option>
+                                    <option value="ws://live-gz.ws.douyucdn.cn/live">广州</option>
+                                    <option value="ws://localhost:8001/rtmp">本地代理</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>B站推流地址</label>
+                                <input type="text" id="bilibiliRtmpUrl" placeholder="rtmp://live-push.bilivideo.com/live-bvc/">
+                            </div>
+                            <div class="form-group">
+                                <label>B站推流密钥</label>
+                                <input type="text" id="bilibiliStreamKey" placeholder="?streamname=xxx&key=xxx">
+                            </div>
+                            <div class="connection-status" id="statusBilibili">
+                                <span class="status-indicator disconnected"></span>
+                                <span>未连接</span>
+                            </div>
+                            <small class="hint">提示：B站需要WebSocket转RTMP代理服务</small>
+                        </div>
+                    </div>
+
+                    <button id="connectAllBtn" class="btn btn-success" style="margin-top: 10px;">连接所有服务器</button>
+                    <button id="disconnectAllBtn" class="btn btn-danger" style="margin-top: 10px;">断开所有连接</button>
+                </div>
+
+                <div class="panel-section">
+                    <h3>🎮 控制</h3>
+                    <div class="button-group">
+                        <button id="startBtn" class="btn btn-primary btn-lg" disabled>开始推流</button>
+                        <button id="stopBtn" class="btn btn-danger btn-lg" disabled>停止推流</button>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="content-area">
+                <div class="preview-section">
+                    <div class="preview-header">
+                        <h3>📹 实时预览</h3>
+                        <div class="preview-stats">
+                            <span id="resolutionStat">--</span>
+                            <span id="fpsStat">-- fps</span>
+                        </div>
+                    </div>
+                    <div class="preview-container">
+                        <video id="previewVideo" autoplay muted playsinline></video>
+                        <canvas id="cropCanvas" style="display: none;"></canvas>
+                        <div id="regionSelector" class="region-selector" style="display: none;">
+                            <div class="selection-box">
+                                <div class="handle handle-nw"></div>
+                                <div class="handle handle-n"></div>
+                                <div class="handle handle-ne"></div>
+                                <div class="handle handle-w"></div>
+                                <div class="handle handle-e"></div>
+                                <div class="handle handle-sw"></div>
+                                <div class="handle handle-s"></div>
+                                <div class="handle handle-se"></div>
+                            </div>
+                        </div>
+                        <div id="previewPlaceholder" class="preview-placeholder">
+                            <span>请选择采集源</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-section">
+                    <div class="stats-header">
+                        <h3>📊 码率统计</h3>
+                        <div class="stats-summary">
+                            <div class="stat-item">
+                                <label>视频码率</label>
+                                <span id="videoBitrateStat">0 kbps</span>
+                            </div>
+                            <div class="stat-item">
+                                <label>音频码率</label>
+                                <span id="audioBitrateStat">0 kbps</span>
+                            </div>
+                            <div class="stat-item">
+                                <label>总码率</label>
+                                <span id="totalBitrateStat">0 kbps</span>
+                            </div>
+                            <div class="stat-item">
+                                <label>CPU 占用</label>
+                                <span id="cpuStat">--</span>
+                            </div>
+                        </div>
+                        <div class="multi-stats" id="multiStats">
+                            <h4>🚀 多平台推流统计</h4>
+                            <div class="platform-stat" data-platform="custom">
+                                <div class="platform-stat-name">
+                                    <span class="status-indicator disconnected"></span>
+                                    <span>自定义服务器</span>
+                                </div>
+                                <div class="platform-stat-bitrate" id="bitrateCustom">-- kbps</div>
+                            </div>
+                            <div class="platform-stat" data-platform="bilibili">
+                                <div class="platform-stat-name">
+                                    <span class="status-indicator disconnected"></span>
+                                    <span>📺 B站直播</span>
+                                </div>
+                                <div class="platform-stat-bitrate" id="bitrateBilibili">-- kbps</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="bitrateChart"></canvas>
+                    </div>
+                    <div class="log-container">
+                        <div class="log-header">
+                            <span>日志</span>
+                            <button id="clearLog" class="btn btn-small">清空</button>
+                        </div>
+                        <div id="logOutput" class="log-output"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">AR室内导航</string>
+    <string name="scan_environment">扫描环境</string>
+    <string name="create_anchor">创建锚点</string>
+    <string name="mark_poi">标记POI</string>
+    <string name="start_navigation">开始导航</string>
+    <string name="select_floor">选择楼层</string>
+    <string name="share_map">共享地图</string>
+    <string name="scanning_in_progress">正在扫描环境...</string>
+    <string name="navigation_started">导航已开始</string>
+    <string name="floor_changed">楼层已切换</string>
+    <string name="poi_added">POI已添加</string>
+    <string name="anchor_created">锚点已创建</string>
+    <string name="map_shared">地图已共享</string>
+    <string name="meeting_room">会议室</string>
+    <string name="workstation">工位</string>
+    <string name="restroom">卫生间</string>
+    <string name="elevator">电梯</string>
+    <string name="stairs">楼梯</string>
+    <string name="exit">出口</string>
+    <string name="select_destination">选择目的地</string>
+    <string name="current_floor">当前楼层: %1$s</string>
+    <string name="distance_to_target">距离目标: %1$.1f米</string>
+    <string name="drift_warning">定位漂移警告: 请重新校准</string>
+    <string name="no_anchor_found">未检测到锚点，请先扫描环境</string>
+    <string name="network_error">网络错误，请检查连接</string>
+    <string name="map_saved">地图已保存</string>
+    <string name="map_loaded">地图已加载</string>
+</resources>

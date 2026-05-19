@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>机械键盘固件配置工具 - QMK WebUSB</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>⌨️ 机械键盘固件配置工具</h1>
+            <div class="connection-status">
+                <span id="statusIndicator" class="status-indicator disconnected"></span>
+                <span id="statusText">未连接</span>
+            </div>
+        </header>
+
+        <div class="toolbar">
+            <button id="connectBtn" class="btn btn-primary">
+                <span>🔌 连接键盘</span>
+            </button>
+            <button id="readConfigBtn" class="btn btn-secondary" disabled>
+                <span>📥 读取配置</span>
+            </button>
+            <button id="writeConfigBtn" class="btn btn-success" disabled>
+                <span>📤 写入配置</span>
+            </button>
+            <button id="resetBtn" class="btn btn-warning" disabled>
+                <span>🔄 重置默认</span>
+            </button>
+        </div>
+
+        <div class="main-content">
+            <nav class="tab-nav">
+                <button class="tab-btn active" data-tab="keymap">键位映射</button>
+                <button class="tab-btn" data-tab="rgb">RGB灯效</button>
+                <button class="tab-btn" data-tab="macro">宏编程</button>
+            </nav>
+
+            <div class="tab-content">
+                <div id="keymapTab" class="tab-pane active">
+                    <div class="layer-selector">
+                        <label>当前层:</label>
+                        <select id="layerSelect">
+                            <option value="0">层 0 (默认)</option>
+                            <option value="1">层 1 (Fn)</option>
+                            <option value="2">层 2</option>
+                            <option value="3">层 3</option>
+                        </select>
+                    </div>
+                    <div id="keyboardVisual" class="keyboard-visual"></div>
+                    <div class="key-selector-panel" id="keySelectorPanel" style="display: none;">
+                        <h3>选择键值</h3>
+                        <div class="key-categories">
+                            <button class="cat-btn active" data-cat="basic">基础键</button>
+                            <button class="cat-btn" data-cat="modifier">修饰键</button>
+                            <button class="cat-btn" data-cat="function">功能键</button>
+                            <button class="cat-btn" data-cat="media">媒体键</button>
+                            <button class="cat-btn" data-cat="layer">层切换</button>
+                            <button class="cat-btn" data-cat="macro">宏</button>
+                        </div>
+                        <div id="keyGrid" class="key-grid"></div>
+                    </div>
+                </div>
+
+                <div id="rgbTab" class="tab-pane">
+                    <div class="rgb-controls">
+                        <div class="control-group">
+                            <label>灯效模式</label>
+                            <div class="effect-grid" id="effectGrid"></div>
+                        </div>
+                        <div class="control-group">
+                            <label>亮度: <span id="brightnessValue">100</span>%</label>
+                            <input type="range" id="brightnessSlider" min="0" max="100" value="100">
+                        </div>
+                        <div class="control-group">
+                            <label>速度: <span id="speedValue">50</span>%</label>
+                            <input type="range" id="speedSlider" min="0" max="100" value="50">
+                        </div>
+                        <div class="control-group">
+                            <label>颜色</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="colorPicker" value="#00ffff">
+                                <span id="colorValue">#00ffff</span>
+                            </div>
+                        </div>
+                        <div class="control-group music-control-group" id="musicControlGroup" style="display: none;">
+                            <label>🎵 音乐联动控制</label>
+                            <div class="music-visualizer">
+                                <canvas id="spectrumCanvas" width="400" height="100"></canvas>
+                            </div>
+                            <div class="music-buttons">
+                                <button id="startMusicBtn" class="btn btn-primary">
+                                    <span>🎤 开始采集音频</span>
+                                </button>
+                                <button id="stopMusicBtn" class="btn btn-danger" style="display: none;">
+                                    <span>⏹ 停止采集</span>
+                                </button>
+                            </div>
+                            <div class="music-settings">
+                                <div class="setting-row">
+                                    <label>灵敏度: <span id="sensitivityValue">70</span>%</label>
+                                    <input type="range" id="sensitivitySlider" min="10" max="150" value="70">
+                                </div>
+                                <div class="setting-row">
+                                    <label>平滑度: <span id="smoothingValue">50</span>%</label>
+                                    <input type="range" id="smoothingSlider" min="0" max="100" value="50">
+                                </div>
+                                <div class="setting-row">
+                                    <label>色彩模式</label>
+                                    <select id="colorModeSelect">
+                                        <option value="rainbow">彩虹渐变</option>
+                                        <option value="pulse">脉冲单色</option>
+                                        <option value="gradient">频谱渐变</option>
+                                        <option value="bass">重低音增强</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="music-status" id="musicStatus">
+                                <span class="status-indicator offline"></span>
+                                <span>等待开始采集...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="macroTab" class="tab-pane">
+                    <div class="macro-controls">
+                        <div class="macro-list">
+                            <h3>宏列表</h3>
+                            <div id="macroList" class="macro-items"></div>
+                            <button id="addMacroBtn" class="btn btn-secondary">+ 新建宏</button>
+                        </div>
+                        <div class="macro-editor" id="macroEditor">
+                            <div class="editor-header">
+                                <input type="text" id="macroName" placeholder="宏名称" class="macro-name-input">
+                                <button id="recordMacroBtn" class="btn btn-primary">
+                                    <span>⏺ 开始录制</span>
+                                </button>
+                                <button id="stopRecordBtn" class="btn btn-danger" style="display: none;">
+                                    <span>⏹ 停止录制</span>
+                                </button>
+                            </div>
+                            <div class="recording-status" id="recordingStatus" style="display: none;">
+                                <span class="recording-indicator"></span>
+                                正在录制... 按键盘按键
+                            </div>
+                            <div class="macro-steps" id="macroSteps">
+                                <p class="empty-hint">点击"开始录制"或手动添加按键步骤</p>
+                            </div>
+                            <div class="editor-actions">
+                                <button id="addStepBtn" class="btn btn-secondary">+ 添加按键</button>
+                                <button id="clearMacroBtn" class="btn btn-danger">清空</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="console">
+            <div class="console-header">
+                <span>控制台</span>
+                <button id="clearConsoleBtn" class="btn-small">清空</button>
+            </div>
+            <div id="consoleOutput" class="console-output"></div>
+        </div>
+    </div>
+
+    <script src="webusb.js"></script>
+    <script src="keycodes.js"></script>
+    <script src="keyboard.js"></script>
+    <script src="music.js"></script>
+    <script src="rgb.js"></script>
+    <script src="macro.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

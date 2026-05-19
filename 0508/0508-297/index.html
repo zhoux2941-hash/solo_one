@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGPU 高精度布料模拟系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div id="ui-panel">
+        <h2>布料模拟参数</h2>
+        
+        <div class="section">
+            <h3>网格设置</h3>
+            <div class="control">
+                <label>分辨率: <span id="resolution-value">50</span>x<span id="resolution-value2">50</span></label>
+                <input type="range" id="resolution" min="10" max="200" value="50">
+            </div>
+            <button id="reset-cloth">重置布料</button>
+        </div>
+        
+        <div class="section">
+            <h3>物理参数</h3>
+            <div class="control">
+                <label>结构刚度: <span id="structural-value">0.95</span></label>
+                <input type="range" id="structural-stiffness" min="0" max="1" step="0.01" value="0.95">
+            </div>
+            <div class="control">
+                <label>剪切刚度: <span id="shear-value">0.8</span></label>
+                <input type="range" id="shear-stiffness" min="0" max="1" step="0.01" value="0.8">
+            </div>
+            <div class="control">
+                <label>弯曲刚度: <span id="bend-value">0.5</span></label>
+                <input type="range" id="bend-stiffness" min="0" max="1" step="0.01" value="0.5">
+            </div>
+            <div class="control">
+                <label>阻尼系数: <span id="damping-value">0.98</span></label>
+                <input type="range" id="damping" min="0.9" max="0.999" step="0.001" value="0.98">
+            </div>
+            <div class="control">
+                <label>重力: <span id="gravity-value">-9.8</span></label>
+                <input type="range" id="gravity" min="-20" max="0" step="0.1" value="-9.8">
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3>撕扯效果</h3>
+            <label>
+                <input type="checkbox" id="enable-tearing" checked> 启用撕扯
+            </label>
+            <div class="control">
+                <label>撕裂阈值: <span id="tear-threshold-value">1.5</span></label>
+                <input type="range" id="tear-threshold" min="1.1" max="3.0" step="0.05" value="1.5">
+            </div>
+            <div class="control">
+                <label>撕裂阻尼: <span id="tear-damping-value">0.3</span></label>
+                <input type="range" id="tear-damping" min="0.0" max="1.0" step="0.05" value="0.3">
+            </div>
+            <button id="reset-tearing">修复布料</button>
+        </div>
+        
+        <div class="section">
+            <h3>风力设置</h3>
+            <div class="control">
+                <label>风力大小: <span id="wind-strength-value">5.0</span></label>
+                <input type="range" id="wind-strength" min="0" max="50" step="0.1" value="5.0">
+            </div>
+            <div class="control">
+                <label>涡流强度: <span id="turbulence-value">2.0</span></label>
+                <input type="range" id="turbulence" min="0" max="10" step="0.1" value="2.0">
+            </div>
+            <div class="control">
+                <label>风速: <span id="wind-speed-value">1.0</span></label>
+                <input type="range" id="wind-speed" min="0" max="5" step="0.1" value="1.0">
+            </div>
+            <label>
+                <input type="checkbox" id="enable-wind" checked> 启用风力
+            </label>
+        </div>
+        
+        <div class="section">
+            <h3>碰撞设置</h3>
+            <label>
+                <input type="checkbox" id="enable-self-collision" checked> 启用自碰撞
+            </label>
+            <label>
+                <input type="checkbox" id="enable-shape-collision" checked> 启用形状碰撞
+            </label>
+            <div class="control">
+                <label>碰撞距离: <span id="collision-distance-value">0.02</span></label>
+                <input type="range" id="collision-distance" min="0.005" max="0.1" step="0.001" value="0.02">
+            </div>
+            <div class="control">
+                <label>碰撞刚度: <span id="collision-stiffness-value">0.95</span></label>
+                <input type="range" id="collision-stiffness" min="0" max="1" step="0.01" value="0.95">
+            </div>
+            <div class="control">
+                <label>CCD迭代: <span id="ccd-iterations-value">3</span></label>
+                <input type="range" id="ccd-iterations" min="1" max="10" step="1" value="3">
+            </div>
+            <select id="collision-shape">
+                <option value="sphere">球体</option>
+                <option value="box">立方体</option>
+            </select>
+        </div>
+        
+        <div class="section">
+            <h3>渲染设置</h3>
+            <div class="control">
+                <label>金属度: <span id="metallic-value">0.1</span></label>
+                <input type="range" id="metallic" min="0" max="1" step="0.01" value="0.1">
+            </div>
+            <div class="control">
+                <label>粗糙度: <span id="roughness-value">0.7</span></label>
+                <input type="range" id="roughness" min="0" max="1" step="0.01" value="0.7">
+            </div>
+            <label>
+                <input type="checkbox" id="enable-shadows" checked> 启用阴影
+            </label>
+            <label>
+                <input type="checkbox" id="enable-normal-map" checked> 启用法线贴图
+            </label>
+        </div>
+        
+        <div class="section">
+            <h3>相机控制</h3>
+            <select id="camera-mode">
+                <option value="orbit">轨道控制</option>
+                <option value="firstperson">第一人称</option>
+            </select>
+            <div class="info">
+                <p>轨道: 左键旋转, 右键平移, 滚轮缩放</p>
+                <p>第一人称: WASD移动, 鼠标转向, Shift加速</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3>性能</h3>
+            <p>FPS: <span id="fps">0</span></p>
+            <p>顶点数: <span id="vertex-count">0</span></p>
+            <p>约束数: <span id="constraint-count">0</span></p>
+        </div>
+    </div>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>

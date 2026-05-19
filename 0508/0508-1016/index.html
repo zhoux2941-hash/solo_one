@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC 实时导播台</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎬 WebRTC 实时导播台</h1>
+            <div class="header-actions">
+                <button id="addCameraBtn" class="btn btn-primary">📷 添加摄像头</button>
+                <button id="addScreenBtn" class="btn btn-secondary">🖥️ 屏幕共享</button>
+                <button id="monitorBtn" class="btn btn-info">👁️ 监控窗口</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="preview-section">
+                <h2>📹 输入源预览</h2>
+                <div id="previewContainer" class="preview-grid">
+                    <div class="empty-slot" data-slot="0">
+                        <span>空槽位 1</span>
+                    </div>
+                    <div class="empty-slot" data-slot="1">
+                        <span>空槽位 2</span>
+                    </div>
+                    <div class="empty-slot" data-slot="2">
+                        <span>空槽位 3</span>
+                    </div>
+                    <div class="empty-slot" data-slot="3">
+                        <span>空槽位 4</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <h2>🎯 主输出画面</h2>
+                <div class="output-container">
+                    <div id="outputWrapper" class="output-wrapper">
+                        <canvas id="outputCanvas" class="output-canvas"></canvas>
+                        <div id="pipContainer" class="pip-container hidden">
+                            <video id="pipVideo" autoplay playsinline muted></video>
+                            <div class="pip-controls">
+                                <button id="pipCloseBtn" class="pip-btn" title="关闭画中画">✕</button>
+                                <button id="pipSwapBtn" class="pip-btn" title="交换画面">⇄</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="output-controls">
+                        <div class="control-group">
+                            <label>
+                                <input type="checkbox" id="transitionEnabled" checked>
+                                淡入淡出过渡
+                            </label>
+                            <label class="slider-label">
+                                过渡时长:
+                                <input type="range" id="transitionDuration" min="100" max="2000" value="500" step="100">
+                                <span id="transitionValue">500ms</span>
+                            </label>
+                        </div>
+
+                        <div class="control-group">
+                            <label>
+                                <input type="checkbox" id="autoSwitchEnabled">
+                                🔄 自动切换
+                            </label>
+                            <label class="slider-label">
+                                灵敏度:
+                                <input type="range" id="autoSwitchSensitivity" min="1" max="100" value="50">
+                                <span id="sensitivityValue">50</span>
+                            </label>
+                        </div>
+                        
+                        <div class="control-group">
+                            <button id="pipBtn" class="btn btn-secondary">🖼️ 画中画</button>
+                            <button id="recordBtn" class="btn btn-success">⏺️ 开始录制</button>
+                            <button id="streamBtn" class="btn btn-warning">📡 开始推流</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div id="statusBar" class="status-bar">
+            <div class="status-item">
+                <span class="status-label">状态:</span>
+                <span id="statusText" class="status-value">就绪</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">当前输出:</span>
+                <span id="currentSource" class="status-value">无</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">活跃输入:</span>
+                <span id="activeCount" class="status-value">0 / 4</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="deviceModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>选择摄像头</h3>
+            <select id="cameraSelect"></select>
+            <div class="modal-actions">
+                <button id="cancelCameraBtn" class="btn btn-secondary">取消</button>
+                <button id="confirmCameraBtn" class="btn btn-primary">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/videoSourceManager.js"></script>
+    <script src="js/switcher.js"></script>
+    <script src="js/autoSwitcher.js"></script>
+    <script src="js/pipManager.js"></script>
+    <script src="js/recorder.js"></script>
+    <script src="js/monitor.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

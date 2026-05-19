@@ -1,0 +1,68 @@
+server:
+  port: 8080
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 25
+    max-connections: 10000
+    accept-count: 100
+    connection-timeout: 60000
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,text/css,application/javascript
+
+spring:
+  application:
+    name: music-platform
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+      file-size-threshold: 2MB
+
+  datasource:
+    url: jdbc:h2:file:./data/musicdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+    database-platform: org.hibernate.dialect.H2Dialect
+    open-in-view: false
+
+jwt:
+  secret: music-platform-secret-key-for-jwt-token-2024-music-platform-secret-key
+  expiration: 86400000
+
+file:
+  upload:
+    path: ./uploads/music
+    cover-path: ./uploads/covers
+
+logging:
+  level:
+    root: INFO
+    com.music: INFO
+    org.springframework.web: WARN
+    org.hibernate: WARN

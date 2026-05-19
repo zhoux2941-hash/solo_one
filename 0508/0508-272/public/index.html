@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工控烧录调试工具</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <div class="login-container" id="loginContainer">
+            <div class="login-box">
+                <h2>工控烧录调试工具</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" id="username" value="admin">
+                    </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input type="password" id="password" value="admin123">
+                    </div>
+                    <button type="submit" class="btn btn-primary">登录</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="main-container" id="mainContainer" style="display: none;">
+            <div class="sidebar">
+                <div class="logo">
+                    <h3>烧录工具</h3>
+                </div>
+                <nav class="menu">
+                    <div class="menu-item active" data-page="dashboard">
+                        <span>控制台</span>
+                    </div>
+                    <div class="menu-item" data-page="firmware">
+                        <span>固件管理</span>
+                    </div>
+                    <div class="menu-item" data-page="flash">
+                        <span>批量烧录</span>
+                    </div>
+                    <div class="menu-item" data-page="debug">
+                        <span>串口调试</span>
+                    </div>
+                    <div class="menu-item" data-page="history">
+                        <span>历史记录</span>
+                    </div>
+                    <div class="menu-item" data-page="logs">
+                        <span>操作日志</span>
+                    </div>
+                    <div class="menu-item" data-page="users">
+                        <span>用户管理</span>
+                    </div>
+                </nav>
+                <div class="user-info">
+                    <span id="currentUser">管理员</span>
+                    <button class="btn-logout" id="btnLogout">退出</button>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="page" id="page-dashboard">
+                    <h1>控制台</h1>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="statFirmwareCount">0</div>
+                            <div class="stat-label">固件总数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statDeviceCount">0</div>
+                            <div class="stat-label">在线设备</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statTaskCount">0</div>
+                            <div class="stat-label">今日任务</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statSuccessRate">0%</div>
+                            <div class="stat-label">成功率</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>快速操作</h2>
+                        <div class="quick-actions">
+                            <button class="btn btn-primary" onclick="navigateTo('flash')">开始烧录</button>
+                            <button class="btn btn-success" onclick="navigateTo('firmware')">上传固件</button>
+                            <button class="btn btn-info" onclick="navigateTo('debug')">串口调试</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="page" id="page-firmware" style="display: none;">
+                    <h1>固件管理</h1>
+                    <div class="card">
+                        <div class="flex justify-between mb-4">
+                            <h2>固件列表</h2>
+                            <button class="btn btn-primary" id="btnUploadFirmware">上传固件</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                            <thead>
+                                <tr>
+                                    <th>文件名</th>
+                                    <th>版本</th>
+                                    <th>硬件型号</th>
+                                    <th>大小</th>
+                                    <th>起始地址</th>
+                                    <th>上传时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="firmwareTableBody"></tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="page" id="page-flash" style="display: none;">
+                    <h1>批量烧录</h1>
+                    <div class="card">
+                        <h2>选择固件</h2>
+                        <select id="flashFirmwareSelect" class="form-control">
+                            <option value="">请选择固件</option>
+                        </select>
+                    </div>
+                    <div class="card">
+                        <div class="flex justify-between mb-4 align-center">
+                            <h2>选择设备 <span id="selectedPortsCount" style="color: #666; font-size: 14px; font-weight: normal;">已选择 0 个设备</span></h2>
+                            <button class="btn btn-sm btn-outline" id="btnRefreshPorts">刷新端口</button>
+                        </div>
+                        <div class="ports-grid" id="portsGrid"></div>
+                    </div>
+                    <div class="card">
+                        <button class="btn btn-primary btn-lg" id="btnStartFlash">开始烧录</button>
+                        <button class="btn btn-danger btn-lg" id="btnCancelFlash" style="display: none; margin-left: 10px;">取消烧录</button>
+                    </div>
+                    <div class="card" id="flashStatusCard" style="display: none;">
+                        <h2>烧录进度</h2>
+                        <div id="flashStatusContainer"></div>
+                    </div>
+                </div>
+
+                <div class="page" id="page-debug" style="display: none;">
+                    <h1>串口调试</h1>
+                    <div class="card">
+                        <div class="flex gap-4 mb-4">
+                            <div style="flex: 1;">
+                                <label>选择串口</label>
+                                <select id="debugPortSelect" class="form-control">
+                                    <option value="">请选择串口</option>
+                                </select>
+                            </div>
+                            <div style="width: 150px;">
+                                <label>波特率</label>
+                                <select id="debugBaudRate" class="form-control">
+                                    <option value="9600">9600</option>
+                                    <option value="19200">19200</option>
+                                    <option value="38400">38400</option>
+                                    <option value="57600">57600</option>
+                                    <option value="115200" selected>115200</option>
+                                    <option value="230400">230400</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; align-items: flex-end; gap: 10px;">
+                                <button class="btn btn-success" id="btnConnectPort">连接</button>
+                                <button class="btn btn-danger" id="btnDisconnectPort" style="display: none;">断开</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>通信数据</h2>
+                        <div class="log-container" id="debugLogContainer"></div>
+                        <div class="mt-4">
+                            <div class="flex gap-2">
+                                <input type="text" id="debugSendData" class="form-control" placeholder="输入要发送的数据..." style="flex: 1;">
+                                <button class="btn btn-primary" id="btnSendData">发送</button>
+                                <button class="btn btn-outline" id="btnClearLog">清空</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="page" id="page-history" style="display: none;">
+                    <h1>历史记录</h1>
+                    <div class="card">
+                        <h2>烧录任务记录</h2>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>任务ID</th>
+                                        <th>固件</th>
+                                        <th>版本</th>
+                                        <th>总数</th>
+                                        <th>成功</th>
+                                        <th>失败</th>
+                                        <th>状态</th>
+                                        <th>时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="page" id="page-logs" style="display: none;">
+                    <h1>操作日志</h1>
+                    <div class="card">
+                        <h2>系统操作记录</h2>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>时间</th>
+                                        <th>用户</th>
+                                        <th>模块</th>
+                                        <th>操作</th>
+                                        <th>详情</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="page" id="page-users" style="display: none;">
+                    <h1>用户管理</h1>
+                    <div class="card">
+                        <div class="flex justify-between mb-4">
+                            <h2>用户列表</h2>
+                            <button class="btn btn-primary" id="btnAddUser">添加用户</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>用户名</th>
+                                        <th>姓名</th>
+                                        <th>角色</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="uploadFirmwareModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>上传固件</h3>
+                <span class="close" onclick="closeModal('uploadFirmwareModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>选择固件文件 (BIN/HEX)</label>
+                    <input type="file" id="firmwareFile" accept=".bin,.hex">
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea id="firmwareDescription" class="form-control" rows="3" placeholder="固件描述信息..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('uploadFirmwareModal')">取消</button>
+                <button class="btn btn-primary" id="btnConfirmUpload">上传</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="addUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加用户</h3>
+                <span class="close" onclick="closeModal('addUserModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="newUsername" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="newPassword" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>姓名</label>
+                    <input type="text" id="newRealName" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>角色</label>
+                    <select id="newRole" class="form-control">
+                        <option value="operator">操作员</option>
+                        <option value="admin">管理员</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addUserModal')">取消</button>
+                <button class="btn btn-primary" id="btnConfirmAddUser">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

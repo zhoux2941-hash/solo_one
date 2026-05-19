@@ -1,0 +1,13 @@
+{
+  "name": "oms-enterprise",
+  "version": "1.0.0",
+  "description": "企业级订单管理系统",
+  "scripts": {
+    "dev:frontend": "cd frontend/main-app && npm install && npm run dev",
+    "install:all": "cd backend && mvn clean install && cd ../frontend/main-app && npm install",
+    "build:all": "cd backend && mvn clean package && cd ../frontend/main-app && npm run build"
+  },
+  "keywords": ["oms", "order-management", "enterprise"],
+  "author": "",
+  "license": "MIT"
+}

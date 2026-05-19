@@ -1,0 +1,53 @@
+{
+  "name": "industrial-firmware-flasher",
+  "version": "1.0.0",
+  "description": "工控行业纯离线桌面烧录调试工具",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win"
+  },
+  "keywords": [
+    "firmware",
+    "flasher",
+    "industrial",
+    "serial",
+    "electron"
+  ],
+  "author": "Industrial Tool Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "serialport": "^12.0.0",
+    "@serialport/parser-readline": "^12.0.0",
+    "cors": "^2.8.5",
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.7.2",
+    "intel-hex": "^1.1.2",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "uuid": "^9.0.1",
+    "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.industrial.flasher",
+    "productName": "工控烧录调试工具",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

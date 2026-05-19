@@ -1,0 +1,21 @@
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
+add_executable(test_gesture_recognizer test_gesture_recognizer.cpp)
+target_link_libraries(test_gesture_recognizer PRIVATE hand_tracking_sdk)
+add_test(NAME test_gesture_recognizer COMMAND test_gesture_recognizer)
+
+add_executable(test_performance test_performance.cpp)
+target_link_libraries(test_performance PRIVATE hand_tracking_sdk)
+add_test(NAME test_performance COMMAND test_performance)
+
+add_executable(test_quantization test_quantization.cpp)
+target_link_libraries(test_quantization PRIVATE hand_tracking_sdk)
+add_test(NAME test_quantization COMMAND test_quantization)
+
+add_executable(test_stability test_stability.cpp)
+target_link_libraries(test_stability PRIVATE hand_tracking_sdk)
+add_test(NAME test_stability COMMAND test_stability)
+
+add_executable(test_multi_user_tracking test_multi_user_tracking.cpp)
+target_link_libraries(test_multi_user_tracking PRIVATE hand_tracking_sdk)
+add_test(NAME test_multi_user_tracking COMMAND test_multi_user_tracking)

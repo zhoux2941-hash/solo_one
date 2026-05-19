@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心率带运动分析</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>❤️ 心率运动分析</h1>
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-dot disconnected"></span>
+                <span id="statusText">未连接</span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="card">
+                    <h2>连接设备</h2>
+                    <button class="btn btn-primary" id="scanBtn">扫描心率带</button>
+                    <button class="btn btn-danger" id="disconnectBtn" disabled>断开连接</button>
+                    <div class="device-info" id="deviceInfo"></div>
+                </div>
+
+                <div class="card hr-display">
+                    <div class="hr-value" id="hrValue">--</div>
+                    <div class="hr-label">心率 (BPM)</div>
+                    <div class="hr-zone" id="hrZone">--</div>
+                </div>
+
+                <div class="card">
+                    <h3>心率变异性 (HRV)</h3>
+                    <div class="hrv-value" id="hrvValue">--</div>
+                    <div class="hrv-label">RMSSD (ms)</div>
+                </div>
+
+                <div class="card">
+                    <h3>运动控制</h3>
+                    <button class="btn btn-success" id="startWorkoutBtn" disabled>开始运动</button>
+                    <button class="btn btn-warning" id="endWorkoutBtn" disabled>结束运动</button>
+                    <div class="workout-stats" id="workoutStats">
+                        <div class="stat-item">
+                            <span class="stat-label">运动时长</span>
+                            <span class="stat-value" id="duration">00:00:00</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">平均心率</span>
+                            <span class="stat-value" id="avgHr">--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">最大心率</span>
+                            <span class="stat-value" id="maxHr">--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">卡路里</span>
+                            <span class="stat-value" id="calories">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card recovery-card" id="recoveryCard" style="display: none;">
+                    <h3>💪 恢复时间建议</h3>
+                    <div class="recovery-info">
+                        <div class="recovery-stat">
+                            <span class="recovery-label">预计完全恢复</span>
+                            <span class="recovery-value" id="recoveryTime">--</span>
+                        </div>
+                        <div class="recovery-stat">
+                            <span class="recovery-label">心率下降速度</span>
+                            <span class="recovery-value" id="recoveryRate">--</span>
+                        </div>
+                        <div class="recovery-stat">
+                            <span class="recovery-label">当前恢复进度</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="recoveryProgress"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="recovery-tip" id="recoveryTip">正在监测心率恢复...</div>
+                </div>
+
+                <div class="card">
+                    <h3>语音播报</h3>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="voiceEnabled" checked>
+                        启用语音播报
+                    </label>
+                    <div class="voice-settings">
+                        <label>播报间隔：</label>
+                        <select id="voiceInterval">
+                            <option value="60">每分钟</option>
+                            <option value="120">每2分钟</option>
+                            <option value="300">每5分钟</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="card">
+                    <h2>运动区间</h2>
+                    <div class="zones-container">
+                        <div class="zone-item zone-warmup" data-zone="warmup">
+                            <span class="zone-name">热身</span>
+                            <span class="zone-range">50-60%</span>
+                        </div>
+                        <div class="zone-item zone-fatburn" data-zone="fatburn">
+                            <span class="zone-name">燃脂</span>
+                            <span class="zone-range">60-70%</span>
+                        </div>
+                        <div class="zone-item zone-cardio" data-zone="cardio">
+                            <span class="zone-name">有氧</span>
+                            <span class="zone-range">70-80%</span>
+                        </div>
+                        <div class="zone-item zone-anaerobic" data-zone="anaerobic">
+                            <span class="zone-name">无氧</span>
+                            <span class="zone-range">80-90%</span>
+                        </div>
+                        <div class="zone-item zone-max" data-zone="max">
+                            <span class="zone-name">极限</span>
+                            <span class="zone-range">90-100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card chart-card">
+                    <h2>心率曲线 (最近30分钟)</h2>
+                    <canvas id="hrChart"></canvas>
+                </div>
+
+                <div class="card">
+                    <h2>运动记录</h2>
+                    <button class="btn btn-secondary" id="loadRecordsBtn">加载记录</button>
+                    <div class="records-list" id="recordsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

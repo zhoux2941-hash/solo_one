@@ -1,0 +1,28 @@
+# eBPF 微服务监控 - 自适应采样配置
+# 采样率会根据 QPS、错误率、延迟自动调整
+
+# 初始采样率 (1/N)
+initial_sample_rate: 100
+
+# 自适应采样阈值配置
+adaptive_sampling:
+  # QPS 阈值
+  low_qps_threshold: 1000       # 低于此 QPS: 全采样 (rate=1)
+  medium_qps_threshold: 10000    # 低于此 QPS: 10% 采样 (rate=10)
+                                  # 高于此 QPS: 1% 采样 (rate=100)
+  
+  # 错误率阈值 - 错误率超过此值时增加采样密度
+  high_error_rate_threshold: 5   # 5% 错误率
+  
+  # 高延迟阈值 - 超过此延迟的请求强制采样 (纳秒)
+  high_latency_threshold: 1000000000  # 1秒
+
+# 探针启用开关
+probes:
+  http_parsing: true
+  tcp_stats: true
+  syscall_stats: true
+  memory_stats: true
+
+# 聚合间隔
+aggregation_interval: 5s

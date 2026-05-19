@@ -1,0 +1,13 @@
+{
+  "name": "paxoskv",
+  "version": "1.0.0",
+  "description": "Distributed Key-Value Store based on Paxos consensus algorithm",
+  "dependencies": [
+    "grpc",
+    "protobuf",
+    "rocksdb",
+    "spdlog",
+    "gtest",
+    "openssl"
+  ]
+}

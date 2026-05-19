@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.military.equipment.mapper.SysMenuMapper">
+
+    <select id="selectMenusByRoleIds" resultType="com.military.equipment.entity.SysMenu">
+        SELECT DISTINCT m.* FROM sys_menu m
+        INNER JOIN sys_role_menu rm ON m.id = rm.menu_id
+        WHERE rm.role_id IN
+        <foreach collection="roleIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND m.deleted = 0 AND rm.deleted = 0 AND m.status = 1
+        ORDER BY m.sort_order
+    </select>
+
+</mapper>

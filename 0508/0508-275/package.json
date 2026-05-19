@@ -1,0 +1,17 @@
+{
+  "name": "molecule-visualizer",
+  "version": "1.0.0",
+  "description": "3D分子结构可视化工具",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.160.0",
+    "three-stdlib": "^2.28.9"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

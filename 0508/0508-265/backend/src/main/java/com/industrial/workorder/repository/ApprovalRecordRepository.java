@@ -1,0 +1,13 @@
+package com.industrial.workorder.repository;
+
+import com.industrial.workorder.entity.ApprovalRecord;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface ApprovalRecordRepository extends JpaRepository<ApprovalRecord, Long> {
+    List<ApprovalRecord> findByWorkOrderIdOrderByApprovalTimeDesc(Long workOrderId);
+    List<ApprovalRecord> findByApproverId(Long approverId);
+}

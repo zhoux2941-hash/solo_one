@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebTransport 3D Streaming Demo</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <div id="canvas-container"></div>
+        
+        <div id="ui-overlay">
+            <header>
+                <h1>WebTransport 3D Streaming</h1>
+                <div id="status-text" class="status">Initializing...</div>
+            </header>
+            
+            <div id="progress-container">
+                <div id="progress-bar">
+                    <div id="progress-fill"></div>
+                </div>
+                <div id="progress-text">0%</div>
+            </div>
+            
+            <div id="stats-panel">
+                <h3>Statistics</h3>
+                <div id="stats"></div>
+                <div id="perf-stats"></div>
+            </div>
+            
+            <div id="controls-info">
+                <h3>Controls</h3>
+                <ul>
+                    <li>Left Mouse + Drag: Rotate</li>
+                    <li>Right Mouse + Drag: Pan</li>
+                    <li>Scroll: Zoom</li>
+                </ul>
+            </div>
+            
+            <div id="feature-list">
+                <h3>Features</h3>
+                <ul>
+                    <li>✓ WebTransport QUIC Protocol</li>
+                    <li>✓ Progressive Mesh Streaming</li>
+                    <li>✓ Server-side LOD Decision</li>
+                    <li>✓ Bandwidth Adaptive</li>
+                    <li>✓ Resume After Disconnect</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div id="loading-overlay" class="hidden">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <div id="loading-text">Connecting...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package com.antifraud.grpc;
+
+option java_multiple_files = true;
+option java_package = "com.antifraud.grpc";
+option java_outer_classname = "RuleServiceProto";
+
+service RuleService {
+    rpc UpdateRule(UpdateRuleRequest) returns (UpdateRuleResponse);
+    rpc GetRule(GetRuleRequest) returns (GetRuleResponse);
+    rpc ListRules(ListRulesRequest) returns (ListRulesResponse);
+    rpc DeleteRule(DeleteRuleRequest) returns (DeleteRuleResponse);
+    rpc EnableRule(EnableRuleRequest) returns (EnableRuleResponse);
+    rpc DisableRule(DisableRuleRequest) returns (DisableRuleResponse);
+}
+
+message RuleConfig {
+    int64 time_window_seconds = 1;
+    int32 min_ip_count = 2;
+    double large_transaction_threshold = 3;
+    string time_unit = 4;
+    string window_type = 5;
+    int32 session_gap_minutes = 6;
+}
+
+message FraudRule {
+    string rule_id = 1;
+    string rule_name = 2;
+    bool enabled = 3;
+    string rule_type = 4;
+    RuleConfig config = 5;
+    int64 version = 6;
+    int64 last_update_time = 7;
+}
+
+message UpdateRuleRequest {
+    FraudRule rule = 1;
+}
+
+message UpdateRuleResponse {
+    bool success = 1;
+    string message = 2;
+    FraudRule updated_rule = 3;
+}
+
+message GetRuleRequest {
+    string rule_id = 1;
+}
+
+message GetRuleResponse {
+    FraudRule rule = 1;
+    bool exists = 2;
+}
+
+message ListRulesRequest {
+    bool enabled_only = 1;
+}
+
+message ListRulesResponse {
+    repeated FraudRule rules = 1;
+}
+
+message DeleteRuleRequest {
+    string rule_id = 1;
+}
+
+message DeleteRuleResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message EnableRuleRequest {
+    string rule_id = 1;
+}
+
+message EnableRuleResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message DisableRuleRequest {
+    string rule_id = 1;
+}
+
+message DisableRuleResponse {
+    bool success = 1;
+    string message = 2;
+}

@@ -1,0 +1,26 @@
+{
+  "name": "webtransport-3d-streaming",
+  "version": "1.0.0",
+  "description": "WebTransport-based 3D Model Streaming System with Progressive Mesh and LOD",
+  "main": "server/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/server.js",
+    "process-model": "node tools/model-processor.js",
+    "dev": "node server/server.js"
+  },
+  "dependencies": {
+    "@fails-components/webtransport": "^1.0.0",
+    "express": "^4.22.2",
+    "gltf-pipeline": "^4.1.0",
+    "sharp": "^0.33.0",
+    "three": "^0.160.0",
+    "ws": "^8.20.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

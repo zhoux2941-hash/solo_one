@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自行车传感器数据采集工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚴 自行车传感器数据采集工具</h1>
+            <div class="header-actions">
+                <button id="connectBtn" class="btn btn-primary">连接传感器</button>
+                <button id="startRideBtn" class="btn btn-success" disabled>开始骑行</button>
+                <button id="stopRideBtn" class="btn btn-danger" disabled>结束骑行</button>
+                <button id="historyBtn" class="btn btn-info">历史记录</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="data-panel">
+                <div class="sensor-status">
+                    <h3>传感器状态</h3>
+                    <div class="status-item">
+                        <span class="label">速度传感器:</span>
+                        <span id="speedSensorStatus" class="status disconnected">未连接</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">踏频传感器:</span>
+                        <span id="cadenceSensorStatus" class="status disconnected">未连接</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">功率计:</span>
+                        <span id="powerSensorStatus" class="status disconnected">未连接</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">心率带:</span>
+                        <span id="heartRateSensorStatus" class="status disconnected">未连接</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">GPS:</span>
+                        <span id="gpsStatus" class="status disconnected">未定位</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">GPS精度:</span>
+                        <span id="gpsAccuracy">-- m</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">轨迹质量:</span>
+                        <span id="trackQuality" class="status disconnected">--</span>
+                    </div>
+                </div>
+
+                <div class="real-time-data">
+                    <h3>实时数据</h3>
+                    <div class="data-grid">
+                        <div class="data-card">
+                            <div class="data-value" id="speedValue">0.0</div>
+                            <div class="data-unit">km/h</div>
+                            <div class="data-label">速度</div>
+                        </div>
+                        <div class="data-card">
+                            <div class="data-value" id="cadenceValue">0</div>
+                            <div class="data-unit">rpm</div>
+                            <div class="data-label">踏频</div>
+                        </div>
+                        <div class="data-card">
+                            <div class="data-value" id="powerValue">0</div>
+                            <div class="data-unit">W</div>
+                            <div class="data-label">功率</div>
+                        </div>
+                        <div class="data-card">
+                            <div class="data-value" id="heartRateValue">--</div>
+                            <div class="data-unit">bpm</div>
+                            <div class="data-label">心率</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ride-stats">
+                    <h3>骑行统计</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">骑行时间:</span>
+                            <span class="stat-value" id="rideTime">00:00:00</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">总里程:</span>
+                            <span class="stat-value" id="totalDistance">0.00 km</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">平均速度:</span>
+                            <span class="stat-value" id="avgSpeed">0.0 km/h</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">最大速度:</span>
+                            <span class="stat-value" id="maxSpeed">0.0 km/h</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">消耗卡路里:</span>
+                            <span class="stat-value" id="calories">0 kcal</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">平均踏频:</span>
+                            <span class="stat-value" id="avgCadence">0 rpm</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">平均功率:</span>
+                            <span class="stat-value" id="avgPower">0 W</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">平均心率:</span>
+                            <span class="stat-value" id="avgHeartRate">-- bpm</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="map-panel">
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sensorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>选择传感器</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="sensor-list">
+                    <button class="sensor-btn" data-type="speed">
+                        <span class="sensor-icon">⚡</span>
+                        连接速度传感器 (CSC)
+                    </button>
+                    <button class="sensor-btn" data-type="cadence">
+                        <span class="sensor-icon">🔄</span>
+                        连接踏频传感器 (CSC)
+                    </button>
+                    <button class="sensor-btn" data-type="power">
+                        <span class="sensor-icon">💪</span>
+                        连接功率计
+                    </button>
+                    <button class="sensor-btn" data-type="heartRate">
+                        <span class="sensor-icon">❤️</span>
+                        连接心率带
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="historyModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2>📜 历史骑行记录（最近7天）</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="historyList" class="history-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="playbackModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2>骑行回放</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="playback-controls">
+                    <button id="playBtn" class="btn btn-primary">播放</button>
+                    <button id="pauseBtn" class="btn btn-warning">暂停</button>
+                    <button id="speedUpBtn" class="btn btn-info">2x</button>
+                    <span id="playbackTime">00:00 / 00:00</span>
+                </div>
+                <div class="playback-content">
+                    <div class="playback-data">
+                        <div class="data-grid">
+                            <div class="data-card">
+                                <div class="data-value" id="playbackSpeed">0.0</div>
+                                <div class="data-unit">km/h</div>
+                                <div class="data-label">速度</div>
+                            </div>
+                            <div class="data-card">
+                                <div class="data-value" id="playbackCadence">0</div>
+                                <div class="data-unit">rpm</div>
+                                <div class="data-label">踏频</div>
+                            </div>
+                            <div class="data-card">
+                                <div class="data-value" id="playbackPower">0</div>
+                                <div class="data-unit">W</div>
+                                <div class="data-label">功率</div>
+                            </div>
+                            <div class="data-card">
+                                <div class="data-value" id="playbackHeartRate">--</div>
+                                <div class="data-unit">bpm</div>
+                                <div class="data-label">心率</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="playbackMap" class="playback-map"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="storage.js"></script>
+    <script src="bluetooth.js"></script>
+    <script src="map.js"></script>
+    <script src="utils.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

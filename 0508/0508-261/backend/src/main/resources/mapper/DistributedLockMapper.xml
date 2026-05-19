@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fulfillment.order.mapper.DistributedLockMapper">
+
+    <insert id="insertLock">
+        INSERT INTO t_distributed_lock (lock_key, holder, lock_time, expire_time, version)
+        VALUES (#{lockKey}, #{holder}, #{lockTime}, #{expireTime}, 0)
+    </insert>
+
+    <update id="updateLock">
+        UPDATE t_distributed_lock
+        SET holder = #{newHolder}, lock_time = #{lockTime}, expire_time = #{expireTime}, version = version + 1
+        WHERE lock_key = #{lockKey} AND holder = #{oldHolder} AND version = #{version}
+    </update>
+
+    <update id="tryAcquireLock">
+        UPDATE t_distributed_lock
+        SET holder = #{holder}, lock_time = #{lockTime}, expire_time = #{expireTime}, version = version + 1
+        WHERE lock_key = #{lockKey}
+        AND (expire_time &lt;= #{now} OR holder = #{holder})
+    </update>
+
+    <update id="releaseLock">
+        UPDATE t_distributed_lock
+        SET holder = '', expire_time = DATE_SUB(NOW(), INTERVAL 1 SECOND)
+        WHERE lock_key = #{lockKey} AND holder = #{holder}
+    </update>
+
+    <delete id="deleteExpiredLocks">
+        DELETE FROM t_distributed_lock WHERE expire_time &lt;= #{now}
+    </delete>
+
+    <select id="getLockHolder" resultType="java.lang.String">
+        SELECT holder FROM t_distributed_lock WHERE lock_key = #{lockKey}
+    </select>
+
+</mapper>

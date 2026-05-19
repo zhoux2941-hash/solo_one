@@ -1,0 +1,817 @@
+{
+  "modelId": "input",
+  "lodLevels": 4,
+  "totalChunks": 68,
+  "totalSize": 481504,
+  "chunks": {
+    "g0_p0_l0_v0": {
+      "id": "g0_p0_l0_v0",
+      "size": 10467,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startVertex": 0,
+      "vertexCount": 1000
+    },
+    "g0_p0_l0_v1000": {
+      "id": "g0_p0_l0_v1000",
+      "size": 11266,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startVertex": 1000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l0_v2000": {
+      "id": "g0_p0_l0_v2000",
+      "size": 11274,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startVertex": 2000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l0_v3000": {
+      "id": "g0_p0_l0_v3000",
+      "size": 11341,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startVertex": 3000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l0_v4000": {
+      "id": "g0_p0_l0_v4000",
+      "size": 11339,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startVertex": 4000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l0_v5000": {
+      "id": "g0_p0_l0_v5000",
+      "size": 11306,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startVertex": 5000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l0_v6000": {
+      "id": "g0_p0_l0_v6000",
+      "size": 11327,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startVertex": 6000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l0_v7000": {
+      "id": "g0_p0_l0_v7000",
+      "size": 11305,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startVertex": 7000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l0_v8000": {
+      "id": "g0_p0_l0_v8000",
+      "size": 11336,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startVertex": 8000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l0_v9000": {
+      "id": "g0_p0_l0_v9000",
+      "size": 11222,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startVertex": 9000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l0_v10000": {
+      "id": "g0_p0_l0_v10000",
+      "size": 2386,
+      "originalSize": 6432,
+      "type": "vertices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startVertex": 10000,
+      "vertexCount": 201
+    },
+    "g0_p0_l0_i0": {
+      "id": "g0_p0_l0_i0",
+      "size": 2587,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 0,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i3000": {
+      "id": "g0_p0_l0_i3000",
+      "size": 2584,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 3000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i6000": {
+      "id": "g0_p0_l0_i6000",
+      "size": 2586,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 6000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i9000": {
+      "id": "g0_p0_l0_i9000",
+      "size": 2585,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 9000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i12000": {
+      "id": "g0_p0_l0_i12000",
+      "size": 2585,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 12000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i15000": {
+      "id": "g0_p0_l0_i15000",
+      "size": 2585,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 15000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i18000": {
+      "id": "g0_p0_l0_i18000",
+      "size": 2586,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 18000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i21000": {
+      "id": "g0_p0_l0_i21000",
+      "size": 2583,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 21000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i24000": {
+      "id": "g0_p0_l0_i24000",
+      "size": 2584,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 24000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i27000": {
+      "id": "g0_p0_l0_i27000",
+      "size": 2586,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 27000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i30000": {
+      "id": "g0_p0_l0_i30000",
+      "size": 2585,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 30000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i33000": {
+      "id": "g0_p0_l0_i33000",
+      "size": 2587,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 33000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i36000": {
+      "id": "g0_p0_l0_i36000",
+      "size": 2584,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 36000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i39000": {
+      "id": "g0_p0_l0_i39000",
+      "size": 2584,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 39000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i42000": {
+      "id": "g0_p0_l0_i42000",
+      "size": 2580,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 42000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i45000": {
+      "id": "g0_p0_l0_i45000",
+      "size": 2583,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 45000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i48000": {
+      "id": "g0_p0_l0_i48000",
+      "size": 2583,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 48000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i51000": {
+      "id": "g0_p0_l0_i51000",
+      "size": 2582,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 51000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i54000": {
+      "id": "g0_p0_l0_i54000",
+      "size": 2582,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 54000,
+      "indexCount": 3000
+    },
+    "g0_p0_l0_i57000": {
+      "id": "g0_p0_l0_i57000",
+      "size": 2582,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l0",
+      "lodLevel": 0,
+      "startIndex": 57000,
+      "indexCount": 3000
+    },
+    "g0_p0_l1_v0": {
+      "id": "g0_p0_l1_v0",
+      "size": 10728,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startVertex": 0,
+      "vertexCount": 1000
+    },
+    "g0_p0_l1_v1000": {
+      "id": "g0_p0_l1_v1000",
+      "size": 11246,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startVertex": 1000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l1_v2000": {
+      "id": "g0_p0_l1_v2000",
+      "size": 11304,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startVertex": 2000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l1_v3000": {
+      "id": "g0_p0_l1_v3000",
+      "size": 11362,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startVertex": 3000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l1_v4000": {
+      "id": "g0_p0_l1_v4000",
+      "size": 11336,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startVertex": 4000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l1_v5000": {
+      "id": "g0_p0_l1_v5000",
+      "size": 11316,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startVertex": 5000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l1_v6000": {
+      "id": "g0_p0_l1_v6000",
+      "size": 11362,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startVertex": 6000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l1_v7000": {
+      "id": "g0_p0_l1_v7000",
+      "size": 11306,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startVertex": 7000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l1_v8000": {
+      "id": "g0_p0_l1_v8000",
+      "size": 11376,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startVertex": 8000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l1_v9000": {
+      "id": "g0_p0_l1_v9000",
+      "size": 11253,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startVertex": 9000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l1_v10000": {
+      "id": "g0_p0_l1_v10000",
+      "size": 2376,
+      "originalSize": 6400,
+      "type": "vertices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startVertex": 10000,
+      "vertexCount": 200
+    },
+    "g0_p0_l1_i0": {
+      "id": "g0_p0_l1_i0",
+      "size": 4395,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startIndex": 0,
+      "indexCount": 3000
+    },
+    "g0_p0_l1_i3000": {
+      "id": "g0_p0_l1_i3000",
+      "size": 4383,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startIndex": 3000,
+      "indexCount": 3000
+    },
+    "g0_p0_l1_i6000": {
+      "id": "g0_p0_l1_i6000",
+      "size": 4391,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startIndex": 6000,
+      "indexCount": 3000
+    },
+    "g0_p0_l1_i9000": {
+      "id": "g0_p0_l1_i9000",
+      "size": 4403,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startIndex": 9000,
+      "indexCount": 3000
+    },
+    "g0_p0_l1_i12000": {
+      "id": "g0_p0_l1_i12000",
+      "size": 4413,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startIndex": 12000,
+      "indexCount": 3000
+    },
+    "g0_p0_l1_i15000": {
+      "id": "g0_p0_l1_i15000",
+      "size": 4418,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startIndex": 15000,
+      "indexCount": 3000
+    },
+    "g0_p0_l1_i18000": {
+      "id": "g0_p0_l1_i18000",
+      "size": 2969,
+      "originalSize": 8004,
+      "type": "indices",
+      "geometryId": "g0_p0_l1",
+      "lodLevel": 1,
+      "startIndex": 18000,
+      "indexCount": 2001
+    },
+    "g0_p0_l2_v0": {
+      "id": "g0_p0_l2_v0",
+      "size": 11260,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l2",
+      "lodLevel": 2,
+      "startVertex": 0,
+      "vertexCount": 1000
+    },
+    "g0_p0_l2_v1000": {
+      "id": "g0_p0_l2_v1000",
+      "size": 11599,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l2",
+      "lodLevel": 2,
+      "startVertex": 1000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l2_v2000": {
+      "id": "g0_p0_l2_v2000",
+      "size": 11470,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l2",
+      "lodLevel": 2,
+      "startVertex": 2000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l2_v3000": {
+      "id": "g0_p0_l2_v3000",
+      "size": 11431,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l2",
+      "lodLevel": 2,
+      "startVertex": 3000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l2_v4000": {
+      "id": "g0_p0_l2_v4000",
+      "size": 11198,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l2",
+      "lodLevel": 2,
+      "startVertex": 4000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l2_v5000": {
+      "id": "g0_p0_l2_v5000",
+      "size": 11470,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l2",
+      "lodLevel": 2,
+      "startVertex": 5000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l2_v6000": {
+      "id": "g0_p0_l2_v6000",
+      "size": 11428,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l2",
+      "lodLevel": 2,
+      "startVertex": 6000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l2_v7000": {
+      "id": "g0_p0_l2_v7000",
+      "size": 11649,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l2",
+      "lodLevel": 2,
+      "startVertex": 7000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l2_v8000": {
+      "id": "g0_p0_l2_v8000",
+      "size": 6897,
+      "originalSize": 18368,
+      "type": "vertices",
+      "geometryId": "g0_p0_l2",
+      "lodLevel": 2,
+      "startVertex": 8000,
+      "vertexCount": 574
+    },
+    "g0_p0_l2_i0": {
+      "id": "g0_p0_l2_i0",
+      "size": 4201,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l2",
+      "lodLevel": 2,
+      "startIndex": 0,
+      "indexCount": 3000
+    },
+    "g0_p0_l2_i3000": {
+      "id": "g0_p0_l2_i3000",
+      "size": 4193,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l2",
+      "lodLevel": 2,
+      "startIndex": 3000,
+      "indexCount": 3000
+    },
+    "g0_p0_l2_i6000": {
+      "id": "g0_p0_l2_i6000",
+      "size": 3605,
+      "originalSize": 10296,
+      "type": "indices",
+      "geometryId": "g0_p0_l2",
+      "lodLevel": 2,
+      "startIndex": 6000,
+      "indexCount": 2574
+    },
+    "g0_p0_l3_v0": {
+      "id": "g0_p0_l3_v0",
+      "size": 13628,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l3",
+      "lodLevel": 3,
+      "startVertex": 0,
+      "vertexCount": 1000
+    },
+    "g0_p0_l3_v1000": {
+      "id": "g0_p0_l3_v1000",
+      "size": 13652,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l3",
+      "lodLevel": 3,
+      "startVertex": 1000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l3_v2000": {
+      "id": "g0_p0_l3_v2000",
+      "size": 13680,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l3",
+      "lodLevel": 3,
+      "startVertex": 2000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l3_v3000": {
+      "id": "g0_p0_l3_v3000",
+      "size": 13836,
+      "originalSize": 32000,
+      "type": "vertices",
+      "geometryId": "g0_p0_l3",
+      "lodLevel": 3,
+      "startVertex": 3000,
+      "vertexCount": 1000
+    },
+    "g0_p0_l3_v4000": {
+      "id": "g0_p0_l3_v4000",
+      "size": 80,
+      "originalSize": 64,
+      "type": "vertices",
+      "geometryId": "g0_p0_l3",
+      "lodLevel": 3,
+      "startVertex": 4000,
+      "vertexCount": 2
+    },
+    "g0_p0_l3_i0": {
+      "id": "g0_p0_l3_i0",
+      "size": 4201,
+      "originalSize": 12000,
+      "type": "indices",
+      "geometryId": "g0_p0_l3",
+      "lodLevel": 3,
+      "startIndex": 0,
+      "indexCount": 3000
+    },
+    "g0_p0_l3_i3000": {
+      "id": "g0_p0_l3_i3000",
+      "size": 1437,
+      "originalSize": 4008,
+      "type": "indices",
+      "geometryId": "g0_p0_l3",
+      "lodLevel": 3,
+      "startIndex": 3000,
+      "indexCount": 1002
+    }
+  },
+  "bounds": {
+    "min": [
+      -5,
+      -5,
+      -5
+    ],
+    "max": [
+      5,
+      5,
+      5
+    ],
+    "center": [
+      0,
+      0,
+      0
+    ],
+    "size": 10
+  },
+  "textures": [],
+  "geometries": [
+    {
+      "id": "g0_p0_l0",
+      "lodLevel": 0,
+      "vertexChunks": [
+        "g0_p0_l0_v0",
+        "g0_p0_l0_v1000",
+        "g0_p0_l0_v2000",
+        "g0_p0_l0_v3000",
+        "g0_p0_l0_v4000",
+        "g0_p0_l0_v5000",
+        "g0_p0_l0_v6000",
+        "g0_p0_l0_v7000",
+        "g0_p0_l0_v8000",
+        "g0_p0_l0_v9000",
+        "g0_p0_l0_v10000"
+      ],
+      "indexChunks": [
+        "g0_p0_l0_i0",
+        "g0_p0_l0_i3000",
+        "g0_p0_l0_i6000",
+        "g0_p0_l0_i9000",
+        "g0_p0_l0_i12000",
+        "g0_p0_l0_i15000",
+        "g0_p0_l0_i18000",
+        "g0_p0_l0_i21000",
+        "g0_p0_l0_i24000",
+        "g0_p0_l0_i27000",
+        "g0_p0_l0_i30000",
+        "g0_p0_l0_i33000",
+        "g0_p0_l0_i36000",
+        "g0_p0_l0_i39000",
+        "g0_p0_l0_i42000",
+        "g0_p0_l0_i45000",
+        "g0_p0_l0_i48000",
+        "g0_p0_l0_i51000",
+        "g0_p0_l0_i54000",
+        "g0_p0_l0_i57000"
+      ],
+      "vertexCount": 10201,
+      "indexCount": 60000
+    },
+    {
+      "id": "g0_p0_l1",
+      "lodLevel": 1,
+      "vertexChunks": [
+        "g0_p0_l1_v0",
+        "g0_p0_l1_v1000",
+        "g0_p0_l1_v2000",
+        "g0_p0_l1_v3000",
+        "g0_p0_l1_v4000",
+        "g0_p0_l1_v5000",
+        "g0_p0_l1_v6000",
+        "g0_p0_l1_v7000",
+        "g0_p0_l1_v8000",
+        "g0_p0_l1_v9000",
+        "g0_p0_l1_v10000"
+      ],
+      "indexChunks": [
+        "g0_p0_l1_i0",
+        "g0_p0_l1_i3000",
+        "g0_p0_l1_i6000",
+        "g0_p0_l1_i9000",
+        "g0_p0_l1_i12000",
+        "g0_p0_l1_i15000",
+        "g0_p0_l1_i18000"
+      ],
+      "vertexCount": 10200,
+      "indexCount": 20001
+    },
+    {
+      "id": "g0_p0_l2",
+      "lodLevel": 2,
+      "vertexChunks": [
+        "g0_p0_l2_v0",
+        "g0_p0_l2_v1000",
+        "g0_p0_l2_v2000",
+        "g0_p0_l2_v3000",
+        "g0_p0_l2_v4000",
+        "g0_p0_l2_v5000",
+        "g0_p0_l2_v6000",
+        "g0_p0_l2_v7000",
+        "g0_p0_l2_v8000"
+      ],
+      "indexChunks": [
+        "g0_p0_l2_i0",
+        "g0_p0_l2_i3000",
+        "g0_p0_l2_i6000"
+      ],
+      "vertexCount": 8574,
+      "indexCount": 8574
+    },
+    {
+      "id": "g0_p0_l3",
+      "lodLevel": 3,
+      "vertexChunks": [
+        "g0_p0_l3_v0",
+        "g0_p0_l3_v1000",
+        "g0_p0_l3_v2000",
+        "g0_p0_l3_v3000",
+        "g0_p0_l3_v4000"
+      ],
+      "indexChunks": [
+        "g0_p0_l3_i0",
+        "g0_p0_l3_i3000"
+      ],
+      "vertexCount": 4002,
+      "indexCount": 4002
+    }
+  ]
+}

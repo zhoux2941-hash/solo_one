@@ -1,0 +1,150 @@
+log_level: info
+
+bpf:
+  bpf_obj_path: ./bpf/escaper_detector.bpf.o
+
+elasticsearch:
+  enabled: false
+  urls:
+    - http://localhost:9200
+  username: ""
+  password: ""
+  index: container-escaper-alerts
+
+container:
+  runtime: auto
+  docker_socket: /var/run/docker.sock
+  containerd_socket: /run/containerd/containerd.sock
+
+rules:
+  - name: host_proc_mount
+    enabled: true
+    event_type: mount
+    severity: high
+    description: "Attempt to mount host proc filesystem detected"
+    match_paths:
+      - "/proc"
+    whitelist_paths:
+      - "/proc/self"
+      - "/proc/thread-self"
+
+  - name: docker_socket_access
+    enabled: true
+    event_type: mount
+    severity: critical
+    description: "Access to Docker socket detected"
+    match_paths:
+      - "/var/run/docker.sock"
+
+  - name: containerd_socket_access
+    enabled: true
+    event_type: mount
+    severity: critical
+    description: "Access to containerd socket detected"
+    match_paths:
+      - "/run/containerd"
+
+  - name: cgroup_release_agent
+    enabled: true
+    event_type: cgroup
+    severity: critical
+    description: "Modification to cgroup release_agent detected"
+    match_paths:
+      - "release_agent"
+      - "notify_on_release"
+
+  - name: dangerous_unshare
+    enabled: true
+    event_type: unshare
+    severity: high
+    description: "Unshare with dangerous namespace flags detected"
+    whitelist_comms:
+      - "systemd"
+      - "docker"
+      - "containerd"
+
+  - name: privileged_container_creation
+    enabled: true
+    event_type: privileged
+    severity: critical
+    description: "Privileged container operation detected"
+    whitelist_comms:
+      - "runc"
+      - "docker-runc"
+      - "containerd-shim"
+
+  - name: cve_2022_0492
+    enabled: true
+    event_type: cve_2022_0492
+    severity: critical
+    description: "Potential CVE-2022-0492 exploit attempt detected"
+
+  - name: suspicious_rename
+    enabled: true
+    event_type: rename
+    severity: high
+    description: "Suspicious rename operation detected (potential path bypass)"
+    match_paths:
+      - "/proc"
+      - "/sys"
+      - "docker.sock"
+      - "containerd"
+    whitelist_comms:
+      - "systemd"
+      - "bash"
+      - "sh"
+
+  - name: suspicious_symlink
+    enabled: true
+    event_type: symlink
+    severity: high
+    description: "Suspicious symlink creation detected"
+    match_paths:
+      - "/proc"
+      - "/sys"
+      - "/var/run/docker.sock"
+
+  - name: path_bypass_attempt
+    enabled: true
+    event_type: path_bypass_attempt
+    severity: critical
+    description: "Path bypass attempt detected using rename or symlink"
+
+  - name: suspicious_execve
+    enabled: true
+    event_type: execve
+    severity: high
+    description: "Execution from suspicious path detected"
+    match_paths:
+      - "/proc/self/exe"
+      - "/dev/shm"
+      - "/tmp"
+    whitelist_comms:
+      - "bash"
+      - "sh"
+      - "systemd"
+
+  - name: self_protection
+    enabled: true
+    event_type: self_protection
+    severity: critical
+    description: "Attack on detector itself detected"
+    match_paths:
+      - "kill_protected_process"
+      - "ptrace_protected_process"
+      - "bpf_unload_attempt"
+      - "bpf_prog_unload_attempt"
+
+whitelist:
+  container_ids: []
+  images:
+    - "k8s.gcr.io/pause"
+  comms: []
+
+blacklist:
+  container_ids: []
+  images:
+    - "malware"
+  comms:
+    - "nmap"
+    - "masscan"

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebTransport 3D协作编辑器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
+        
+        #app { display: flex; height: 100vh; }
+        
+        .sidebar {
+            width: 280px;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #313244;
+        }
+        
+        .panel { padding: 16px; border-bottom: 1px solid #313244; }
+        .panel-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #89b4fa; }
+        
+        input, select, button {
+            width: 100%;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        input, select {
+            background: #313244;
+            color: #cdd6f4;
+            border: 1px solid #45475a;
+        }
+        
+        input:focus, select:focus { outline: none; border-color: #89b4fa; }
+        
+        button {
+            background: #89b4fa;
+            color: #1e1e2e;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        
+        button:hover { background: #b4befe; }
+        button:disabled { background: #585b70; cursor: not-allowed; }
+        
+        .btn-danger { background: #f38ba8; }
+        .btn-danger:hover { background: #eba0ac; }
+        
+        .primitive-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .primitive-btn {
+            background: #a6e3a1;
+            color: #1e1e2e;
+        }
+        
+        .primitive-btn:hover { background: #94e2d5; }
+        
+        .color-picker {
+            width: 100%;
+            height: 40px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        
+        .status-bar {
+            margin-top: auto;
+            padding: 12px 16px;
+            background: #181825;
+            font-size: 12px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        
+        .online { color: #a6e3a1; }
+        .offline { color: #f38ba8; }
+        
+        #viewport { flex: 1; position: relative; background: #11111b; }
+        
+        .connection-status {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            z-index: 100;
+        }
+        
+        .connected { background: #a6e3a1; color: #1e1e2e; }
+        .disconnected { background: #f38ba8; color: #1e1e2e; }
+        
+        .user-cursor {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: rgba(137, 180, 250, 0.9);
+            color: #1e1e2e;
+            white-space: nowrap;
+        }
+        
+        .transform-tools {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .transform-btn {
+            flex: 1;
+            padding: 6px;
+            font-size: 12px;
+        }
+        
+        .transform-btn.active {
+            background: #f9e2af;
+            color: #1e1e2e;
+        }
+        
+        .object-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .object-item {
+            padding: 8px;
+            background: #313244;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .object-item:hover { background: #45475a; }
+        .object-item.selected { background: #89b4fa; color: #1e1e2e; }
+        
+        .delete-icon {
+            color: #f38ba8;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+        
+        .users-list {
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        
+        .user-item {
+            padding: 6px 8px;
+            background: #313244;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #a6e3a1;
+        }
+        
+        .group-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .group-btn {
+            background: #cba6f7;
+            color: #1e1e2e;
+            font-size: 12px;
+        }
+        
+        .group-btn:hover { background: #f5c2e7; }
+        
+        .group-item {
+            padding: 8px;
+            background: #585b70;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .group-item:hover { background: #6c7086; }
+        .group-item.selected { background: #cba6f7; color: #1e1e2e; }
+        
+        .group-children {
+            margin-left: 16px;
+            border-left: 2px solid #585b70;
+            padding-left: 8px;
+        }
+        
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 0;
+        }
+        
+        .selection-info {
+            font-size: 11px;
+            color: #a6adc8;
+            margin-bottom: 8px;
+        }
+        
+        .object-name {
+            flex: 1;
+            margin-left: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="sidebar">
+            <div class="panel">
+                <div class="panel-title">🏠 房间</div>
+                <input type="text" id="roomId" placeholder="房间ID" value="default-room">
+                <input type="text" id="userName" placeholder="你的名字" value="User">
+                <button id="joinBtn">加入房间</button>
+                <button id="leaveBtn" disabled>离开房间</button>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">📦 创建图元</div>
+                <div class="primitive-buttons">
+                    <button class="primitive-btn" data-type="cube">立方体</button>
+                    <button class="primitive-btn" data-type="sphere">球体</button>
+                    <button class="primitive-btn" data-type="cylinder">圆柱体</button>
+                    <button class="primitive-btn" data-type="plane">平面</button>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">✋ 变换工具</div>
+                <div class="transform-tools">
+                    <button class="transform-btn active" data-mode="translate">移动</button>
+                    <button class="transform-btn" data-mode="rotate">旋转</button>
+                    <button class="transform-btn" data-mode="scale">缩放</button>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">📁 分组管理</div>
+                <div class="selection-info" id="selectionInfo">未选择任何对象</div>
+                <div class="group-buttons">
+                    <button class="group-btn" id="createGroupBtn" disabled>创建组</button>
+                    <button class="group-btn" id="ungroupBtn" disabled>解散组</button>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">🎨 属性</div>
+                <input type="color" id="colorPicker" class="color-picker" value="#89b4fa">
+                <button id="applyColor" disabled>应用颜色</button>
+                <button id="deleteObject" class="btn-danger" disabled>删除选中</button>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">📋 场景对象 (按住Ctrl多选)</div>
+                <div class="object-list" id="objectList"></div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">👥 在线用户</div>
+                <div class="users-list" id="usersList"></div>
+            </div>
+            
+            <div class="status-bar">
+                <div class="status-item">
+                    <span>连接状态:</span>
+                    <span id="connectionStatus" class="offline">未连接</span>
+                </div>
+                <div class="status-item">
+                    <span>延迟:</span>
+                    <span id="latency">-- ms</span>
+                </div>
+                <div class="status-item">
+                    <span>同步状态:</span>
+                    <span id="syncStatus">离线</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="viewport">
+            <div id="connectionBadge" class="connection-status disconnected">未连接</div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/TransformControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

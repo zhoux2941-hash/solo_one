@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPH 实时流体模拟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            overflow: hidden;
+            background: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        canvas {
+            display: block;
+        }
+        
+        #ui-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            min-width: 280px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        #ui-panel h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #00ffff;
+        }
+        
+        .ui-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .ui-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .ui-section h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 3px;
+            font-size: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        select, input[type="range"] {
+            width: 100%;
+            padding: 6px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 4px;
+        }
+        
+        select option {
+            background: #333;
+            color: white;
+        }
+        
+        label {
+            display: block;
+            font-size: 12px;
+            margin: 8px 0 3px;
+            color: #ccc;
+        }
+        
+        .stats {
+            font-size: 11px;
+            color: #00ff00;
+            margin-top: 10px;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            max-width: 300px;
+        }
+        
+        #instructions h4 {
+            margin-bottom: 8px;
+            color: #ffd700;
+        }
+        
+        #instructions ul {
+            margin-left: 15px;
+        }
+        
+        #instructions li {
+            margin: 3px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="ui-panel">
+        <h2>🌊 SPH 流体模拟</h2>
+        
+        <div class="ui-section">
+            <h3>粒子控制</h3>
+            <button id="add-particles">添加粒子 (1000)</button>
+            <button id="reset">重置场景</button>
+            <label>粒子数量: <span id="particle-count">0</span> / 65536</label>
+        </div>
+        
+        <div class="ui-section">
+            <h3>障碍物</h3>
+            <button id="add-sphere">添加球体障碍</button>
+            <button id="add-box">添加立方体障碍</button>
+            <button id="clear-obstacles">清除障碍</button>
+        </div>
+        
+        <div class="ui-section">
+            <h3>力场</h3>
+            <button id="apply-wind">施加风力</button>
+            <button id="apply-vortex">施加漩涡</button>
+            <button id="stop-force">停止力场</button>
+        </div>
+        
+        <div class="ui-section">
+            <h3>可视化</h3>
+            <label>着色模式:</label>
+            <select id="color-mode">
+                <option value="velocity">按速度着色</option>
+                <option value="pressure">按压强着色</option>
+                <option value="density">按密度着色</option>
+                <option value="normal">法线着色</option>
+            </select>
+            
+            <label>渲染模式:</label>
+            <select id="render-mode">
+                <option value="ssfr">SSFR 流体渲染</option>
+                <option value="points">粒子点渲染</option>
+            </select>
+        </div>
+        
+        <div class="ui-section">
+            <h3>物理参数</h3>
+            <label>粘度系数: <span id="viscosity-val">0.1</span></label>
+            <input type="range" id="viscosity" min="0" max="0.5" step="0.01" value="0.1">
+            
+            <label>表面张力: <span id="surface-tension-val">0.01</span></label>
+            <input type="range" id="surface-tension" min="0" max="0.1" step="0.001" value="0.01">
+            
+            <label>粒子寿命 (0=永久): <span id="lifetime-val">0</span>s</label>
+            <input type="range" id="lifetime" min="0" max="10" step="0.5" value="0">
+        </div>
+        
+        <div class="ui-section">
+            <h3>拖尾效果</h3>
+            <button id="toggle-trails">开启拖尾</button>
+            
+            <label>拖尾长度: <span id="trail-length-val">30</span></label>
+            <input type="range" id="trail-length" min="5" max="100" step="5" value="30">
+            
+            <label>拖尾宽度: <span id="trail-width-val">0.05</span></label>
+            <input type="range" id="trail-width" min="0.01" max="0.2" step="0.01" value="0.05">
+        </div>
+        
+        <div class="stats">
+            <div>FPS: <span id="fps">0</span></div>
+            <div>Compute Time: <span id="compute-time">0</span>ms</div>
+        </div>
+    </div>
+    
+    <div id="instructions">
+        <h4>操作说明</h4>
+        <ul>
+            <li>鼠标左键拖拽旋转视角</li>
+            <li>鼠标滚轮缩放</li>
+            <li>右键拖拽平移</li>
+            <li>点击场景添加粒子</li>
+        </ul>
+    </div>
+    
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

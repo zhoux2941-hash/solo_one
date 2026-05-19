@@ -1,0 +1,171 @@
+syntax = "proto3";
+
+package distkv;
+
+option go_package = "distkv/api/proto";
+
+service RaftService {
+  rpc RequestVote(RequestVoteRequest) returns (RequestVoteResponse);
+  rpc AppendEntries(AppendEntriesRequest) returns (AppendEntriesResponse);
+  rpc InstallSnapshot(InstallSnapshotRequest) returns (InstallSnapshotResponse);
+}
+
+service KVService {
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc Put(PutRequest) returns (PutResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+  rpc CAS(CASRequest) returns (CASResponse);
+  rpc BeginTxn(BeginTxnRequest) returns (BeginTxnResponse);
+  rpc TxnPut(TxnPutRequest) returns (TxnPutResponse);
+  rpc TxnGet(TxnGetRequest) returns (TxnGetResponse);
+  rpc TxnCommit(TxnCommitRequest) returns (TxnCommitResponse);
+  rpc TxnAbort(TxnAbortRequest) returns (TxnAbortResponse);
+}
+
+service ClusterService {
+  rpc GetStatus(GetStatusRequest) returns (GetStatusResponse);
+  rpc GetClusterStatus(GetClusterStatusRequest) returns (GetClusterStatusResponse);
+}
+
+message RequestVoteRequest {
+  uint64 term = 1;
+  string candidate_id = 2;
+  uint64 last_log_index = 3;
+  uint64 last_log_term = 4;
+}
+
+message RequestVoteResponse {
+  uint64 term = 1;
+  bool vote_granted = 2;
+}
+
+message LogEntry {
+  uint64 term = 1;
+  uint64 index = 2;
+  bytes command = 3;
+}
+
+message AppendEntriesRequest {
+  uint64 term = 1;
+  string leader_id = 2;
+  uint64 prev_log_index = 3;
+  uint64 prev_log_term = 4;
+  repeated LogEntry entries = 5;
+  uint64 leader_commit = 6;
+}
+
+message AppendEntriesResponse {
+  uint64 term = 1;
+  bool success = 2;
+  uint64 conflict_index = 3;
+  uint64 conflict_term = 4;
+}
+
+message InstallSnapshotRequest {
+  uint64 term = 1;
+  string leader_id = 2;
+  uint64 last_included_index = 3;
+  uint64 last_included_term = 4;
+  uint64 offset = 5;
+  bytes data = 6;
+  bool done = 7;
+}
+
+message InstallSnapshotResponse {
+  uint64 term = 1;
+}
+
+message GetRequest {
+  string key = 1;
+}
+
+message GetResponse {
+  bytes value = 1;
+  bool found = 2;
+}
+
+message PutRequest {
+  string key = 1;
+  bytes value = 2;
+}
+
+message PutResponse {
+  bool success = 1;
+}
+
+message DeleteRequest {
+  string key = 1;
+}
+
+message DeleteResponse {
+  bool success = 1;
+}
+
+message CASRequest {
+  string key = 1;
+  bytes old_value = 2;
+  bytes new_value = 3;
+}
+
+message CASResponse {
+  bool success = 1;
+}
+
+message BeginTxnRequest {}
+
+message BeginTxnResponse {
+  string txn_id = 1;
+}
+
+message TxnPutRequest {
+  string txn_id = 1;
+  string key = 2;
+  bytes value = 3;
+}
+
+message TxnPutResponse {}
+
+message TxnGetRequest {
+  string txn_id = 1;
+  string key = 2;
+}
+
+message TxnGetResponse {
+  bytes value = 1;
+}
+
+message TxnCommitRequest {
+  string txn_id = 1;
+}
+
+message TxnCommitResponse {
+  bool success = 1;
+}
+
+message TxnAbortRequest {
+  string txn_id = 1;
+}
+
+message TxnAbortResponse {}
+
+message GetStatusRequest {}
+
+message GetStatusResponse {
+  string node_id = 1;
+  uint64 current_term = 2;
+  bool is_leader = 3;
+}
+
+message NodeStatus {
+  string node_id = 1;
+  uint64 current_term = 2;
+  bool is_leader = 3;
+  bool alive = 4;
+}
+
+message GetClusterStatusRequest {}
+
+message GetClusterStatusResponse {
+  repeated NodeStatus nodes = 1;
+  string leader_id = 2;
+}

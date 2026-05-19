@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebNN 实时视频超分辨率</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>WebCodecs + WebNN 实时视频超分辨率</h1>
+      <p class="subtitle">ESPCN 模型 · GPU 加速 · 2x/3x 超分</p>
+    </header>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>视频源:</label>
+        <select id="videoSource">
+          <option value="camera">摄像头</option>
+          <option value="file">本地视频文件</option>
+        </select>
+        <input type="file" id="fileInput" accept="video/*" style="display: none;">
+      </div>
+
+      <div class="control-group">
+        <label>超分倍数:</label>
+        <select id="scaleFactor">
+          <option value="2">2x 超分</option>
+          <option value="3">3x 超分</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>推理后端:</label>
+        <select id="backend">
+          <option value="webnn">WebNN (GPU)</option>
+          <option value="webgl">WebGL</option>
+          <option value="cpu">CPU</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>模型:</label>
+        <select id="modelSelect">
+          <option value="espcn-2x">ESPCN 2x (标准)</option>
+          <option value="espcn-3x">ESPCN 3x (标准)</option>
+          <option value="espcn-2x-lite">ESPCN 2x Lite (极速)</option>
+          <option value="espcn-2x-pro">ESPCN 2x Pro (高质量)</option>
+        </select>
+        <button id="loadModelBtn" class="btn-small" title="加载模型">加载</button>
+        <button id="reloadModelBtn" class="btn-small" title="重新加载模型">↻</button>
+      </div>
+
+      <div class="control-group">
+        <label>
+          <input type="checkbox" id="temporalFilterToggle" checked>
+          时域降噪
+        </label>
+      </div>
+
+      <div class="control-group">
+        <label>降噪强度:</label>
+        <input type="range" id="filterStrength" min="0" max="100" value="70" style="width: 100px;">
+        <span id="filterStrengthValue">70%</span>
+      </div>
+
+      <div class="control-group">
+        <button id="startBtn" class="btn-primary">开始</button>
+        <button id="stopBtn" class="btn-secondary" disabled>停止</button>
+      </div>
+    </div>
+
+    <div class="video-container">
+      <div class="video-panel">
+        <h3>原始视频</h3>
+        <video id="originalVideo" autoplay muted playsinline></video>
+        <canvas id="originalCanvas" style="display: none;"></canvas>
+      </div>
+
+      <div class="video-panel">
+        <h3>超分输出</h3>
+        <canvas id="outputCanvas"></canvas>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric-card">
+        <span class="metric-label">FPS</span>
+        <span class="metric-value" id="fps">--</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">PSNR</span>
+        <span class="metric-value" id="psnr">-- dB</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">推理时间</span>
+        <span class="metric-value" id="inferenceTime">-- ms</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">分辨率</span>
+        <span class="metric-value" id="resolution">--</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">帧缓存</span>
+        <span class="metric-value" id="bufferStatus">--</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">运动级别</span>
+        <span class="metric-value" id="motionLevel">--</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">滤波强度</span>
+        <span class="metric-value" id="filterStrengthDisplay">--</span>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <span id="statusText">就绪</span>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

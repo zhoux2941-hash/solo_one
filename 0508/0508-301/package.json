@@ -1,0 +1,14 @@
+{
+  "name": "webrtc-whiteboard",
+  "version": "1.0.0",
+  "description": "WebRTC P2P Whiteboard Collaboration System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.22.2",
+    "ws": "^8.20.1"
+  }
+}

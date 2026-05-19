@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAudio 波表合成器</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="synthesizer">
+        <header class="header">
+            <h1>🎹 WebAudio 波表合成器</h1>
+            <div class="controls">
+                <button id="initBtn" class="btn-primary">启动音频引擎</button>
+                <button id="recordBtn" class="btn-record">● 录制</button>
+                <button id="stopRecordBtn" class="btn-stop" disabled>■ 停止</button>
+                <select id="exportFormat" class="format-select" disabled>
+                    <option value="wav">WAV (无损)</option>
+                    <option value="webm">WebM (高压缩)</option>
+                    <option value="mp3">MP3 (通用)</option>
+                    <option value="flac">FLAC (无损压缩)</option>
+                </select>
+                <button id="exportBtn" class="btn-export" disabled>⬇ 导出</button>
+                <span id="recordingIndicator" class="recording-indicator hidden">● 正在录制...</span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <section class="oscillators-section">
+                <h2>振荡器 (最多4个)</h2>
+                <div class="oscillators" id="oscillators">
+                </div>
+            </section>
+
+            <section class="effects-section">
+                <h2>效果链</h2>
+                <div class="effects">
+                    <div class="effect-module" id="filterModule">
+                        <h3>低通滤波</h3>
+                        <div class="effect-controls">
+                            <label>
+                                <input type="checkbox" id="filterEnabled" checked>
+                                启用
+                            </label>
+                            <div class="slider-group">
+                                <label>截止频率: <span id="filterFreqValue">1000</span> Hz</label>
+                                <input type="range" id="filterFreq" min="20" max="20000" value="1000" step="1">
+                            </div>
+                            <div class="slider-group">
+                                <label>Q值: <span id="filterQValue">1</span></label>
+                                <input type="range" id="filterQ" min="0.1" max="20" value="1" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="effect-module" id="distortionModule">
+                        <h3>失真</h3>
+                        <div class="effect-controls">
+                            <label>
+                                <input type="checkbox" id="distortionEnabled">
+                                启用
+                            </label>
+                            <div class="slider-group">
+                                <label>失真量: <span id="distortionValue">50</span></label>
+                                <input type="range" id="distortion" min="0" max="100" value="50" step="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="effect-module" id="delayModule">
+                        <h3>延迟</h3>
+                        <div class="effect-controls">
+                            <label>
+                                <input type="checkbox" id="delayEnabled">
+                                启用
+                            </label>
+                            <div class="slider-group">
+                                <label>延迟时间: <span id="delayTimeValue">300</span> ms</label>
+                                <input type="range" id="delayTime" min="10" max="1000" value="300" step="1">
+                            </div>
+                            <div class="slider-group">
+                                <label>反馈: <span id="delayFeedbackValue">30</span>%</label>
+                                <input type="range" id="delayFeedback" min="0" max="90" value="30" step="1">
+                            </div>
+                            <div class="slider-group">
+                                <label>混合: <span id="delayMixValue">30</span>%</label>
+                                <input type="range" id="delayMix" min="0" max="100" value="30" step="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="effect-module" id="reverbModule">
+                        <h3>混响</h3>
+                        <div class="effect-controls">
+                            <label>
+                                <input type="checkbox" id="reverbEnabled">
+                                启用
+                            </label>
+                            <div class="slider-group">
+                                <label>衰减时间: <span id="reverbDecayValue">2</span> s</label>
+                                <input type="range" id="reverbDecay" min="0.1" max="5" value="2" step="0.1">
+                            </div>
+                            <div class="slider-group">
+                                <label>混合: <span id="reverbMixValue">30</span>%</label>
+                                <input type="range" id="reverbMix" min="0" max="100" value="30" step="1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="master-section">
+                <h2>主控制</h2>
+                <div class="master-controls">
+                    <div class="slider-group">
+                        <label>主音量: <span id="masterVolumeValue">70</span>%</label>
+                        <input type="range" id="masterVolume" min="0" max="100" value="70" step="1">
+                    </div>
+                </div>
+            </section>
+
+            <section class="keyboard-section">
+                <h2>虚拟键盘</h2>
+                <p class="keyboard-hint">使用鼠标点击或电脑键盘 (A-K, W-U) 演奏</p>
+                <div class="keyboard" id="keyboard">
+                </div>
+            </section>
+        </div>
+
+        <footer class="footer">
+            <p>支持波形: 正弦波 | 方波 | 锯齿波 | 三角波 | 白噪声 | ADSR包络 | 低通滤波 | 失真 | 延迟 | 混响 | WAV导出</p>
+        </footer>
+    </div>
+
+    <script src="synthesizer.js"></script>
+</body>
+</html>

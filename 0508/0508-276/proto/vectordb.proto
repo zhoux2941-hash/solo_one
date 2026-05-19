@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package vectordb;
+
+option cc_generic_services = true;
+
+enum IndexType {
+  INDEX_TYPE_UNSPECIFIED = 0;
+  INDEX_TYPE_HNSW = 1;
+  INDEX_TYPE_IVF_PQ = 2;
+}
+
+enum DistanceMetric {
+  DISTANCE_UNSPECIFIED = 0;
+  DISTANCE_EUCLIDEAN = 1;
+  DISTANCE_COSINE = 2;
+}
+
+message Vector {
+  uint64 id = 1;
+  repeated float values = 2;
+}
+
+message InsertRequest {
+  string collection = 1;
+  repeated Vector vectors = 2;
+}
+
+message InsertResponse {
+  bool success = 1;
+  uint32 inserted_count = 2;
+  string message = 3;
+}
+
+message DeleteRequest {
+  string collection = 1;
+  repeated uint64 ids = 2;
+}
+
+message DeleteResponse {
+  bool success = 1;
+  uint32 deleted_count = 2;
+  string message = 3;
+}
+
+message UpdateRequest {
+  string collection = 1;
+  repeated Vector vectors = 2;
+}
+
+message UpdateResponse {
+  bool success = 1;
+  uint32 updated_count = 2;
+  string message = 3;
+}
+
+message SearchRequest {
+  string collection = 1;
+  Vector query_vector = 2;
+  uint32 top_k = 3;
+}
+
+message SearchResult {
+  uint64 id = 1;
+  float distance = 2;
+}
+
+message SearchResponse {
+  bool success = 1;
+  repeated SearchResult results = 2;
+  string message = 3;
+}
+
+message CreateCollectionRequest {
+  string name = 1;
+  uint32 dimension = 2;
+  IndexType index_type = 3;
+  DistanceMetric distance_metric = 4;
+  uint32 shard_count = 5;
+}
+
+message CreateCollectionResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message DropCollectionRequest {
+  string name = 1;
+}
+
+message DropCollectionResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+service VectorDBService {
+  rpc CreateCollection(CreateCollectionRequest) returns (CreateCollectionResponse);
+  rpc DropCollection(DropCollectionRequest) returns (DropCollectionResponse);
+  rpc Insert(InsertRequest) returns (InsertResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+  rpc Update(UpdateRequest) returns (UpdateResponse);
+  rpc Search(SearchRequest) returns (SearchResponse);
+}

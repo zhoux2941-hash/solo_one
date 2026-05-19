@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P2P CDN - 低热度资源优化演示</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: white;
+      margin-bottom: 10px;
+      font-size: 32px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 40px;
+      font-size: 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .card h2 {
+      color: #1a1a2e;
+      margin-bottom: 20px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .feature {
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 12px;
+      border-left: 4px solid #667eea;
+    }
+
+    .feature h3 {
+      color: #1e293b;
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+
+    .feature p {
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    input {
+      flex: 1;
+      min-width: 250px;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .result {
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 20px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 13px;
+      word-break: break-all;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .stat-item {
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .stat-label {
+      color: #64748b;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      color: #1e293b;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .stat-highlight {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
+
+    .stat-highlight .stat-label,
+    .stat-highlight .stat-value {
+      color: white;
+    }
+
+    .peer-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .peer-low {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .peer-medium {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+
+    .peer-high {
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .log {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 12px;
+      max-height: 250px;
+      overflow-y: auto;
+      margin-top: 20px;
+    }
+
+    .log-entry {
+      margin: 4px 0;
+      padding: 4px 0;
+      border-bottom: 1px solid #334155;
+    }
+
+    .log-p2p {
+      color: #10b981;
+    }
+
+    .log-cdn {
+      color: #f59e0b;
+    }
+
+    .log-info {
+      color: #60a5fa;
+    }
+
+    .log-race {
+      color: #a855f7;
+    }
+
+    .demo-section {
+      text-align: center;
+    }
+
+    .demo-image {
+      max-width: 100%;
+      border-radius: 8px;
+      margin: 20px 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .admin-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .admin-link a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 24px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      display: inline-block;
+      transition: all 0.2s;
+    }
+
+    .admin-link a:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .strategy-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .strategy-race {
+      background: #ede9fe;
+      color: #7c3aed;
+    }
+
+    .strategy-fast {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .strategy-normal {
+      background: #d1fae5;
+      color: #059669;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 P2P CDN 低热度资源优化</h1>
+    <p class="subtitle">智能检测在线节点数，自动切换最优下载策略</p>
+
+    <div class="card">
+      <h2>🎯 优化功能</h2>
+      <div class="feature-list">
+        <div class="feature">
+          <h3>📊 实时节点检测</h3>
+          <p>下载前自动检测在线节点数量，30秒缓存减少重复查询</p>
+        </div>
+        <div class="feature">
+          <h3>🏃 竞速下载模式</h3>
+          <p>低节点时 P2P 和 CDN 同时下载，取最快完成的结果</p>
+        </div>
+        <div class="feature">
+          <h3>⚡ 智能超时调整</h3>
+          <p>节点 < 3 时，P2P 超时从 5 秒缩短为 1.5 秒，快速回退</p>
+        </div>
+        <div class="feature">
+          <h3>🔥 渐进式预热</h3>
+          <p>前 2 个分片优先使用 CDN，加速首屏加载，后续使用 P2P</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🧪 资源下载测试</h2>
+      <div class="input-group">
+        <input type="text" id="infoHashInput" placeholder="输入资源 InfoHash（可从管理面板获取）">
+        <button class="btn btn-primary" id="fetchBtn">开始下载测试</button>
+      </div>
+      
+      <div id="peerStatusContainer" style="display: none; margin-bottom: 16px;">
+        <span>当前在线节点：</span>
+        <span id="peerStatus" class="peer-status peer-low">检测中...</span>
+        <span id="strategyBadge" class="strategy-badge"></span>
+      </div>
+
+      <div class="result" id="fetchResult" style="display: none;"></div>
+      
+      <div class="stats-grid" id="statsGrid" style="display: none;">
+        <div class="stat-item">
+          <div class="stat-label">下载来源</div>
+          <div class="stat-value" id="downloadSource">-</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">文件大小</div>
+          <div class="stat-value" id="fileSize">-</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">耗时</div>
+          <div class="stat-value" id="downloadTime">-</div>
+        </div>
+        <div class="stat-item stat-highlight">
+          <div class="stat-label">竞速获胜</div>
+          <div class="stat-value" id="raceWinner">-</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🖼️ 分片下载演示</h2>
+      <p style="color: #64748b; margin-bottom: 16px; font-size: 14px;">
+        前 2 个分片使用 CDN 加速（预热模式），后续分片根据节点数自动选择
+      </p>
+      <div class="input-group">
+        <input type="text" id="pieceHashInput" placeholder="输入资源 InfoHash">
+        <button class="btn btn-secondary" id="fetchPieceBtn">下载第 0 分片</button>
+        <button class="btn btn-secondary" id="fetchPiece1Btn">下载第 1 分片</button>
+        <button class="btn btn-secondary" id="fetchPiece2Btn">下载第 2 分片</button>
+      </div>
+      <div id="imageContainer"></div>
+    </div>
+
+    <div class="card">
+      <h2>📋 操作日志</h2>
+      <div class="log" id="logContainer"></div>
+    </div>
+
+    <div class="admin-link">
+      <a href="/admin/" target="_blank">🔧 打开管理面板上传测试资源</a>
+    </div>
+  </div>
+
+  <script src="/sdk/p2p-cdn-sdk.js"></script>
+  <script>
+    const sdk = new P2PCDNSDK({
+      debug: true,
+      minPeersForP2P: 3,
+      p2pTimeoutLowPeers: 1500,
+      enableRace: true,
+      enableProgressiveWarmup: true
+    });
+
+    function log(message, type = 'info') {
+      const container = document.getElementById('logContainer');
+      const entry = document.createElement('div');
+      entry.className = `log-entry log-${type}`;
+      const time = new Date().toLocaleTimeString();
+      entry.textContent = `[${time}] ${message}`;
+      container.insertBefore(entry, container.firstChild);
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function updatePeerDisplay(peerCount) {
+      const container = document.getElementById('peerStatusContainer');
+      const status = document.getElementById('peerStatus');
+      const badge = document.getElementById('strategyBadge');
+      
+      container.style.display = 'block';
+      
+      if (peerCount < 3) {
+        status.className = 'peer-status peer-low';
+        status.textContent = `${peerCount} 节点 (低热度)`;
+        badge.className = 'strategy-badge strategy-race';
+        badge.textContent = '竞速模式';
+      } else if (peerCount < 6) {
+        status.className = 'peer-status peer-medium';
+        status.textContent = `${peerCount} 节点 (中等)`;
+        badge.className = 'strategy-badge strategy-normal';
+        badge.textContent = '标准模式';
+      } else {
+        status.className = 'peer-status peer-high';
+        status.textContent = `${peerCount} 节点 (高热度)`;
+        badge.className = 'strategy-badge strategy-normal';
+        badge.textContent = 'P2P 优先';
+      }
+    }
+
+    document.getElementById('fetchBtn').addEventListener('click', async () => {
+      const infoHash = document.getElementById('infoHashInput').value.trim();
+      if (!infoHash) {
+        alert('请输入 InfoHash');
+        return;
+      }
+
+      const resultDiv = document.getElementById('fetchResult');
+      const statsGrid = document.getElementById('statsGrid');
+      
+      resultDiv.style.display = 'block';
+      resultDiv.textContent = '正在检测在线节点...';
+      
+      log(`开始下载测试: ${infoHash}`, 'info');
+      
+      const startTime = Date.now();
+      
+      try {
+        const peerCount = await sdk.getPeerCount(infoHash);
+        updatePeerDisplay(peerCount);
+        log(`检测到 ${peerCount} 个在线节点`, peerCount >= 3 ? 'p2p' : 'cdn');
+        
+        resultDiv.textContent = '正在下载资源...';
+        
+        const buffer = await sdk.fetchResource(infoHash);
+        const endTime = Date.now();
+        
+        const stats = sdk.getStats(infoHash);
+        const source = stats.p2pHits > stats.cdnHits ? 'P2P' : 'CDN';
+        
+        resultDiv.textContent = `下载成功！大小: ${formatBytes(buffer.byteLength)}`;
+        
+        document.getElementById('downloadSource').textContent = source;
+        document.getElementById('fileSize').textContent = formatBytes(buffer.byteLength);
+        document.getElementById('downloadTime').textContent = `${endTime - startTime}ms`;
+        document.getElementById('raceWinner').textContent = stats.raceWins?.p2p > stats.raceWins?.cdn ? 'P2P' : 
+                                                          stats.raceWins?.cdn > stats.raceWins?.p2p ? 'CDN' : '-';
+        
+        statsGrid.style.display = 'grid';
+        
+        log(`下载完成，来源: ${source}, 耗时: ${endTime - startTime}ms`, source === 'P2P' ? 'p2p' : 'cdn');
+      } catch (error) {
+        resultDiv.textContent = `下载失败: ${error.message}`;
+        log(`下载失败: ${error.message}`, 'cdn');
+      }
+    });
+
+    async function fetchPiece(infoHash, pieceIndex) {
+      log(`请求第 ${pieceIndex} 分片`, 'info');
+      
+      try {
+        const buffer = await sdk.fetchPiece(infoHash, pieceIndex);
+        const stats = sdk.getStats(infoHash);
+        const source = stats.p2pHits > stats.cdnHits ? 'P2P' : 'CDN';
+        
+        log(`分片 ${pieceIndex} 下载完成，来源: ${source}, 大小: ${formatBytes(buffer.byteLength)}`, 
+            source === 'P2P' ? 'p2p' : 'cdn');
+        
+        if (pieceIndex < 2) {
+          log(`⚠️ 分片 ${pieceIndex} 使用 CDN 预热模式`, 'info');
+        }
+        
+        alert(`分片 ${pieceIndex} 下载成功！\n来源: ${source}\n大小: ${formatBytes(buffer.byteLength)}`);
+      } catch (error) {
+        log(`分片 ${pieceIndex} 下载失败: ${error.message}`, 'cdn');
+        alert(`分片下载失败: ${error.message}`);
+      }
+    }
+
+    document.getElementById('fetchPieceBtn').addEventListener('click', () => {
+      const infoHash = document.getElementById('pieceHashInput').value.trim();
+      if (!infoHash) {
+        alert('请输入 InfoHash');
+        return;
+      }
+      fetchPiece(infoHash, 0);
+    });
+
+    document.getElementById('fetchPiece1Btn').addEventListener('click', () => {
+      const infoHash = document.getElementById('pieceHashInput').value.trim();
+      if (!infoHash) {
+        alert('请输入 InfoHash');
+        return;
+      }
+      fetchPiece(infoHash, 1);
+    });
+
+    document.getElementById('fetchPiece2Btn').addEventListener('click', () => {
+      const infoHash = document.getElementById('pieceHashInput').value.trim();
+      if (!infoHash) {
+        alert('请输入 InfoHash');
+        return;
+      }
+      fetchPiece(infoHash, 2);
+    });
+
+    log('P2P CDN SDK 已初始化，低热度资源优化已启用');
+    log('• 节点 < 3 时启用竞速下载模式');
+    log('• 前 2 个分片使用 CDN 预热加速');
+    log('• 低节点时 P2P 超时缩短为 1.5 秒');
+  </script>
+</body>
+</html>

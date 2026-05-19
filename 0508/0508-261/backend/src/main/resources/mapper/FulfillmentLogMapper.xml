@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fulfillment.order.mapper.FulfillmentLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.fulfillment.order.entity.FulfillmentLog">
+        <id column="id" property="id"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="user_id" property="userId"/>
+        <result column="operation_type" property="operationType"/>
+        <result column="operation_desc" property="operationDesc"/>
+        <result column="operator" property="operator"/>
+        <result column="before_status" property="beforeStatus"/>
+        <result column="after_status" property="afterStatus"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_fulfillment_log (order_no, user_id, operation_type, operation_desc, operator, before_status, after_status)
+        VALUES (#{orderNo}, #{userId}, #{operationType}, #{operationDesc}, #{operator}, #{beforeStatus}, #{afterStatus})
+    </insert>
+
+    <select id="selectByOrderNo" resultMap="BaseResultMap">
+        SELECT * FROM t_fulfillment_log WHERE order_no = #{orderNo} ORDER BY created_at DESC
+    </select>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT * FROM t_fulfillment_log WHERE user_id = #{userId} ORDER BY created_at DESC
+    </select>
+
+</mapper>
