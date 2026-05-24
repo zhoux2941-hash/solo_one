@@ -1,0 +1,32 @@
+# SSL证书
+cert.pem
+key.pem
+
+# Go二进制
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 测试二进制
+*.test
+
+# 输出目录
+/out/
+
+# 依赖
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 日志
+*.log
+
+# 临时文件
+*.tmp
+*.temp
+.DS_Store

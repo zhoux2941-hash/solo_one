@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能体脂秤数据同步工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>智能体脂秤数据同步</h1>
+            <div class="user-selector">
+                <select id="userSelect">
+                    <option value="">选择用户</option>
+                </select>
+                <button id="addUserBtn" class="btn btn-secondary">添加用户</button>
+            </div>
+        </header>
+
+        <div id="userModal" class="modal">
+            <div class="modal-content">
+                <h3>添加用户</h3>
+                <input type="text" id="newUserName" placeholder="用户名">
+                <div class="modal-buttons">
+                    <button id="saveUserBtn" class="btn btn-primary">保存</button>
+                    <button id="cancelUserBtn" class="btn btn-secondary">取消</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="panel connection-panel">
+                <h2>蓝牙连接</h2>
+                <div class="connection-status">
+                    <span id="connectionStatus" class="status disconnected">未连接</span>
+                </div>
+                <button id="connectBtn" class="btn btn-primary btn-large">连接体脂秤</button>
+                <div id="syncProgress" class="sync-progress hidden">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <span>正在同步数据...</span>
+                </div>
+            </div>
+
+            <div class="panel data-panel">
+                <h2>当前测量数据</h2>
+                <div class="data-grid">
+                    <div class="data-item">
+                        <span class="label">体重</span>
+                        <span class="value" id="weightValue">--</span>
+                        <span class="unit">kg</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">体脂率</span>
+                        <span class="value" id="fatValue">--</span>
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">肌肉量</span>
+                        <span class="value" id="muscleValue">--</span>
+                        <span class="unit">kg</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">水分率</span>
+                        <span class="value" id="waterValue">--</span>
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">骨量</span>
+                        <span class="value" id="boneValue">--</span>
+                        <span class="unit">kg</span>
+                    </div>
+                    <div class="data-item">
+                    <span class="label">基础代谢</span>
+                    <span class="value" id="bmrValue">--</span>
+                    <span class="unit">kcal</span>
+                </div>
+                <div class="data-item highlight">
+                    <span class="label">代谢年龄</span>
+                    <span class="value" id="metabolicAgeValue">--</span>
+                    <span class="unit">岁</span>
+                </div>
+            </div>
+                <div class="timestamp">
+                    <span>测量时间: </span>
+                    <span id="measureTime">--</span>
+                </div>
+            </div>
+
+            <div class="panel goal-panel">
+                <h2>目标设置</h2>
+                <div class="goal-input">
+                    <label>目标体重 (kg):</label>
+                    <input type="number" id="targetWeight" step="0.1" min="30" max="200">
+                    <button id="saveGoalBtn" class="btn btn-primary">保存</button>
+                </div>
+                <div class="goal-progress">
+                    <div class="goal-item">
+                        <span class="goal-label">当前体重</span>
+                        <span class="goal-value" id="currentWeightGoal">-- kg</span>
+                    </div>
+                    <div class="goal-item">
+                        <span class="goal-label">目标体重</span>
+                        <span class="goal-value" id="targetWeightGoal">-- kg</span>
+                    </div>
+                    <div class="goal-item highlight">
+                        <span class="goal-label">差距</span>
+                        <span class="goal-value" id="weightDiff">-- kg</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel charts-panel">
+                <h2>数据趋势</h2>
+                <div class="chart-container">
+                    <canvas id="weightChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="fatChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="ageChart"></canvas>
+                </div>
+            </div>
+
+            <div class="panel history-panel">
+                <h2>历史记录</h2>
+                <div class="history-table-container">
+                    <table id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>体重</th>
+                                <th>体脂率</th>
+                                <th>代谢年龄</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="bluetooth.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

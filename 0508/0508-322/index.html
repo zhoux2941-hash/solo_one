@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>无人机FPV图传与控制系统</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛸 无人机FPV控制系统</h1>
+            <div class="connection-status">
+                <span id="connectionIndicator" class="status-indicator disconnected"></span>
+                <span id="connectionText">未连接</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-container">
+                    <video id="droneVideo" autoplay playsinline muted></video>
+                    <div id="videoOverlay" class="video-overlay">
+                        <div class="latency-display">
+                            <span>延迟: <span id="latencyValue">--</span> ms</span>
+                        </div>
+                    </div>
+                    <div id="noVideo" class="no-video">
+                        <span>等待视频连接...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <div class="data-panel">
+                    <h3>📊 飞行数据</h3>
+                    <div class="data-grid">
+                        <div class="data-item">
+                            <span class="data-label">高度</span>
+                            <span class="data-value" id="altitude">0.0</span>
+                            <span class="data-unit">m</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">速度</span>
+                            <span class="data-value" id="speed">0.0</span>
+                            <span class="data-unit">m/s</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">电池</span>
+                            <span class="data-value" id="battery">--</span>
+                            <span class="data-unit">V</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">卫星</span>
+                            <span class="data-value" id="satellites">0</span>
+                            <span class="data-unit">颗</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="takeoffBtn" class="action-btn takeoff">🚀 起飞</button>
+                    <button id="landBtn" class="action-btn land">🪂 降落</button>
+                    <button id="returnBtn" class="action-btn return">🏠 返航</button>
+                </div>
+
+                <div class="follow-panel">
+                    <h3>📍 跟随模式</h3>
+                    <div class="follow-controls">
+                        <button id="followBtn" class="follow-btn">🔘 开始跟随</button>
+                        <div class="follow-settings">
+                            <label>目标高度: <span id="followAltitude">2.0</span>m</label>
+                            <input type="range" id="altitudeSlider" min="1" max="5" step="0.5" value="2">
+                        </div>
+                        <div class="follow-settings">
+                            <label>跟随距离: <span id="followDistance">3.0</span>m</label>
+                            <input type="range" id="distanceSlider" min="1" max="10" step="0.5" value="3">
+                        </div>
+                    </div>
+                    <div class="position-info">
+                        <div>手机位置: <span id="phonePos">--</span></div>
+                        <div>距离误差: <span id="posError">--</span>m</div>
+                    </div>
+                </div>
+
+                <div class="connection-panel">
+                    <button id="connectBtn" class="connect-btn">🔗 连接无人机</button>
+                    <button id="disconnectBtn" class="disconnect-btn" disabled>⏹ 断开连接</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="joystick-section">
+            <div class="joystick-wrapper">
+                <div class="joystick-label">油门/偏航</div>
+                <div id="leftJoystick" class="joystick-container">
+                    <div class="joystick-base">
+                        <div class="joystick-stick" id="leftStick"></div>
+                    </div>
+                </div>
+                <div class="joystick-values">
+                    <span>油门: <span id="throttleValue">0</span></span>
+                    <span>偏航: <span id="yawValue">0</span></span>
+                </div>
+            </div>
+
+            <div class="joystick-wrapper">
+                <div class="joystick-label">俯仰/横滚</div>
+                <div id="rightJoystick" class="joystick-container">
+                    <div class="joystick-base">
+                        <div class="joystick-stick" id="rightStick"></div>
+                    </div>
+                </div>
+                <div class="joystick-values">
+                    <span>俯仰: <span id="pitchValue">0</span></span>
+                    <span>横滚: <span id="rollValue">0</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="joystick.js"></script>
+    <script src="webrtc.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

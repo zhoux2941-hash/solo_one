@@ -1,0 +1,6 @@
+ryu==4.34
+eventlet==0.33.3
+Flask==2.3.3
+networkx==3.1
+psutil==5.9.5
+requests==2.31.0

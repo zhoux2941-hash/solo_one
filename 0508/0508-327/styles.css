@@ -1,0 +1,386 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    opacity: 0.9;
+    font-size: 1rem;
+}
+
+section {
+    padding: 25px 30px;
+    border-bottom: 1px solid #eee;
+}
+
+section:last-child {
+    border-bottom: none;
+}
+
+section h2 {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.connection-section .device-selector {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.connection-section select {
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    min-width: 200px;
+    transition: border-color 0.3s;
+}
+
+.connection-section select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #5a6268;
+}
+
+.icon {
+    font-size: 1.2rem;
+}
+
+.status {
+    margin-top: 15px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.status.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status.info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    transition: transform 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card.highlight {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-unit {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    margin-top: 5px;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.chart-btn {
+    padding: 8px 20px;
+    border: 2px solid #667eea;
+    background: white;
+    color: #667eea;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.chart-btn.active {
+    background: #667eea;
+    color: white;
+}
+
+.chart-btn:hover {
+    background: #667eea;
+    color: white;
+}
+
+.chart-container {
+    background: #fafafa;
+    border-radius: 15px;
+    padding: 20px;
+    height: 400px;
+}
+
+.range-info {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.normal-range {
+    background: #d4edda;
+    color: #155724;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-header h2 {
+    margin-bottom: 0;
+}
+
+.table-container {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid #eee;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+thead {
+    background: #f8f9fa;
+}
+
+th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+td:first-child {
+    min-width: 160px;
+}
+
+td:nth-child(2) {
+    min-width: 100px;
+}
+
+td:nth-child(3) {
+    min-width: 80px;
+}
+
+td:nth-child(4) {
+    min-width: 80px;
+}
+
+tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.status-normal {
+    color: #28a745;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-high {
+    color: #dc3545;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-low {
+    color: #ffc107;
+    font-weight: 600;
+    display: inline-block;
+}
+
+[class*="tag-"] {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+    line-height: 1.3;
+}
+
+.tag-before {
+    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+    color: #d35400;
+}
+
+.tag-after {
+    background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+    color: white;
+}
+
+.tag-none {
+    background: linear-gradient(135deg, #b2bec3 0%, #636e72 100%);
+    color: white;
+}
+
+.privacy-notice {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 15px 30px;
+}
+
+.privacy-notice p {
+    color: #856404;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    section {
+        padding: 20px 15px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+    }
+    
+    .connection-section .device-selector {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+}

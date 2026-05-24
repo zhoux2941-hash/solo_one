@@ -1,0 +1,382 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f5f5;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    padding: 8px 16px;
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.toolbar-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.toolbar-btn:hover {
+    background: #f0f0f0;
+    border-color: #bbb;
+}
+
+.toolbar-btn.active {
+    background: #e3f2fd;
+    border-color: #2196f3;
+    color: #1976d2;
+}
+
+.color-picker {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 2px;
+}
+
+.separator {
+    width: 1px;
+    height: 24px;
+    background: #ddd;
+    margin: 0 8px;
+}
+
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.status {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status.connected {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status.disconnected {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.user-count {
+    font-size: 13px;
+    color: #666;
+}
+
+.formula-bar {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    padding: 4px 8px;
+    border-bottom: 1px solid #e0e0e0;
+    gap: 8px;
+}
+
+.cell-label {
+    min-width: 60px;
+    padding: 6px 12px;
+    background: #f5f5f5;
+    border-radius: 4px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+}
+
+.formula-input {
+    flex: 1;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    outline: none;
+}
+
+.formula-input:focus {
+    border-color: #2196f3;
+}
+
+.spreadsheet-container {
+    flex: 1;
+    overflow: auto;
+    background: #fff;
+}
+
+.spreadsheet {
+    display: inline-block;
+    position: relative;
+}
+
+.row-header,
+.col-header,
+.cell {
+    border: 1px solid #e0e0e0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    user-select: none;
+}
+
+.row-header,
+.col-header {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #555;
+    position: sticky;
+    z-index: 10;
+}
+
+.col-header {
+    top: 0;
+    min-width: 100px;
+    height: 30px;
+}
+
+.row-header {
+    left: 0;
+    width: 50px;
+    min-height: 25px;
+}
+
+.corner-header {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 20;
+    background: #f0f0f0;
+    border: 1px solid #e0e0e0;
+    width: 50px;
+    height: 30px;
+    display: inline-flex;
+}
+
+.cell {
+    justify-content: flex-start;
+    padding: 0 8px;
+    min-width: 100px;
+    min-height: 25px;
+    cursor: cell;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.cell.selected {
+    border: 2px solid #2196f3;
+    background: #e3f2fd;
+}
+
+.cell.editing {
+    background: #fff;
+    z-index: 5;
+}
+
+.cell-input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    padding: 0 8px;
+    background: transparent;
+}
+
+.resize-handle-col {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 5px;
+    height: 100%;
+    cursor: col-resize;
+    background: transparent;
+}
+
+.resize-handle-col:hover {
+    background: #2196f3;
+}
+
+.resize-handle-row {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    cursor: row-resize;
+    background: transparent;
+}
+
+.resize-handle-row:hover {
+    background: #2196f3;
+}
+
+.row {
+    display: flex;
+    position: relative;
+}
+
+.header-row {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 15;
+    background: #f8f9fa;
+}
+
+.col-header-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.filter-btn {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    margin-right: 2px;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover {
+    background: #e3f2fd;
+}
+
+.filter-btn.active {
+    background: #2196f3;
+    color: white;
+}
+
+.filter-dropdown {
+    position: absolute;
+    top: 32px;
+    left: 0;
+    min-width: 180px;
+    max-height: 300px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1000;
+    overflow-y: auto;
+    display: none;
+}
+
+.filter-dropdown.show {
+    display: block;
+}
+
+.filter-header {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    font-weight: 600;
+    font-size: 12px;
+    background: #f8f9fa;
+    position: sticky;
+    top: 0;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 4px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.filter-action-btn {
+    flex: 1;
+    padding: 4px 8px;
+    font-size: 11px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-action-btn:hover {
+    background: #f0f0f0;
+}
+
+.filter-action-btn.primary {
+    background: #2196f3;
+    color: white;
+    border-color: #2196f3;
+}
+
+.filter-action-btn.primary:hover {
+    background: #1976d2;
+}
+
+.filter-item {
+    padding: 6px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    transition: background 0.15s;
+}
+
+.filter-item:hover {
+    background: #f5f5f5;
+}
+
+.filter-item input {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+.row.hidden {
+    display: none;
+}
+
+.sort-indicator {
+    font-size: 10px;
+    margin-left: 4px;
+    color: #2196f3;
+}

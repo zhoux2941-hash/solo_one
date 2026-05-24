@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebUSB SDR频谱分析仪</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📻 WebUSB SDR频谱分析仪</h1>
+            <div class="status">
+                <span id="deviceStatus" class="status-disconnected">未连接</span>
+                <button id="connectBtn" class="btn btn-primary">连接设备</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <aside class="controls">
+                <div class="control-group">
+                    <h3>📡 设备设置</h3>
+                    <div class="control-item">
+                        <label>中心频率 (MHz)</label>
+                        <input type="number" id="centerFreq" min="24" max="1700" value="100" step="1">
+                    </div>
+                    <div class="control-item">
+                        <label>采样率 (MSps)</label>
+                        <select id="sampleRate">
+                            <option value="0.25">0.25</option>
+                            <option value="0.5">0.5</option>
+                            <option value="1.0">1.0</option>
+                            <option value="1.5">1.5</option>
+                            <option value="2.0">2.0</option>
+                            <option value="2.4" selected>2.4</option>
+                        </select>
+                    </div>
+                    <div class="control-item">
+                        <label>增益 (dB)</label>
+                        <input type="range" id="gain" min="0" max="49.6" value="20" step="0.1">
+                        <span id="gainValue">20 dB</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>📊 频谱设置</h3>
+                    <div class="control-item">
+                        <label>显示带宽 (MHz)</label>
+                        <input type="range" id="displayBW" min="0.1" max="2.4" value="2.4" step="0.1">
+                        <span id="displayBWValue">2.4 MHz</span>
+                    </div>
+                    <div class="control-item">
+                        <label>平均帧数</label>
+                        <input type="range" id="avgFrames" min="1" max="30" value="5" step="1">
+                        <span id="avgFramesValue">5</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>🎵 解调设置</h3>
+                    <div class="control-item">
+                        <label>解调模式</label>
+                        <select id="demodMode">
+                            <option value="off">关闭</option>
+                            <option value="am">AM</option>
+                            <option value="fm">FM</option>
+                        </select>
+                    </div>
+                    <div class="control-item">
+                        <label>解调带宽 (kHz)</label>
+                        <select id="demodBW">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="15" selected>15</option>
+                            <option value="30">30</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="150">150</option>
+                        </select>
+                    </div>
+                    <div class="control-item">
+                        <label>FM立体声 <span id="stereoStatus" class="stereo-indicator mono" title="单声道模式">M</span></label>
+                        <input type="checkbox" id="stereoEnabled" checked>
+                        <span>启用</span>
+                    </div>
+                    <div class="control-item">
+                        <label>音量</label>
+                        <input type="range" id="volume" min="0" max="1" value="0.5" step="0.01">
+                        <span id="volumeValue">50%</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>📍 峰值检测</h3>
+                    <div class="peak-info">
+                        <div class="peak-item">
+                            <span class="peak-label">峰值频率:</span>
+                            <span id="peakFreq">-- MHz</span>
+                        </div>
+                        <div class="peak-item">
+                            <span class="peak-label">峰值强度:</span>
+                            <span id="peakPower">-- dBm</span>
+                        </div>
+                    </div>
+                    <button id="tuneToPeak" class="btn btn-secondary">调谐到峰值</button>
+                </div>
+
+                <div class="control-group">
+                    <h3>📈 性能</h3>
+                    <div class="perf-info">
+                        <div class="perf-item">
+                            <span class="perf-label">帧率:</span>
+                            <span id="fps">0 fps</span>
+                        </div>
+                        <div class="perf-item">
+                            <span class="perf-label">数据率:</span>
+                            <span id="dataRate">0 MB/s</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="display">
+                <div class="spectrum-container">
+                    <h3>频谱显示</h3>
+                    <canvas id="spectrumCanvas" class="spectrum-canvas"></canvas>
+                    <div class="spectrum-overlay">
+                        <span id="freqLeft">-- MHz</span>
+                        <span id="freqCenter">-- MHz</span>
+                        <span id="freqRight">-- MHz</span>
+                    </div>
+                </div>
+
+                <div class="waterfall-container">
+                    <h3>瀑布图</h3>
+                    <canvas id="waterfallCanvas" class="waterfall-canvas"></canvas>
+                </div>
+
+                <div class="demod-container" id="demodContainer" style="display: none;">
+                    <h3>解调音频</h3>
+                    <canvas id="audioCanvas" class="audio-canvas"></canvas>
+                </div>
+            </main>
+        </div>
+
+        <footer>
+            <p>基于WebUSB的RTL-SDR频谱分析仪 | 支持RTL2832U设备</p>
+        </footer>
+    </div>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>

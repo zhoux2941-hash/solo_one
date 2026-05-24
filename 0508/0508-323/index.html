@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebUSB验钞机控制工具</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💵 WebUSB验钞机控制工具</h1>
+            <div class="device-status">
+                <span id="deviceStatus" class="status disconnected">未连接设备</span>
+                <button id="connectBtn" class="btn btn-primary">连接设备</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="grid-layout">
+                <section class="control-panel">
+                    <h2>设备控制</h2>
+                    <div class="control-group">
+                        <div class="control-item">
+                            <span class="label">紫外灯</span>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="uvLightToggle" disabled>
+                                <label for="uvLightToggle" class="toggle-label"></label>
+                            </div>
+                            <span id="uvLightStatus" class="status-text">关闭</span>
+                        </div>
+                        <div class="control-item">
+                            <span class="label">磁检模块</span>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="magneticCheckToggle" disabled>
+                                <label for="magneticCheckToggle" class="toggle-label"></label>
+                            </div>
+                            <span id="magneticCheckStatus" class="status-text">关闭</span>
+                        </div>
+                    </div>
+                    <div class="mode-selector">
+                        <span class="label">检测模式:</span>
+                        <div class="mode-buttons">
+                            <button id="singleModeBtn" class="btn btn-mode active" disabled>单次检测</button>
+                            <button id="batchModeBtn" class="btn btn-mode" disabled>批量检测</button>
+                        </div>
+                    </div>
+                    <button id="detectBtn" class="btn btn-detect" disabled>开始检测</button>
+                </section>
+
+                <section class="detection-result">
+                    <h2>检测结果</h2>
+                    <div class="result-display">
+                        <div class="result-item">
+                            <span class="result-label">检测结果</span>
+                            <span id="detectionResult" class="result-value waiting">等待检测</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">纸币面额</span>
+                            <span id="denomination" class="result-value">--</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">检测方式</span>
+                            <span id="detectionMethod" class="result-value">--</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">置信度</span>
+                            <span id="confidence" class="result-value">--</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">检测时间</span>
+                            <span id="detectionTime" class="result-value">--</span>
+                        </div>
+                    </div>
+                    <div class="indicator">
+                        <div id="resultIndicator" class="indicator-light"></div>
+                    </div>
+                    <div id="suspiciousFeatures" class="suspicious-features hidden">
+                        <h4>⚠️ 可疑特征检测</h4>
+                        <div id="featuresList" class="features-list"></div>
+                    </div>
+                </section>
+            </div>
+
+            <section class="history-section">
+                <div class="section-header">
+                    <h2>验钞历史</h2>
+                    <button id="clearHistoryBtn" class="btn btn-small">清空历史</button>
+                </div>
+                <div class="history-table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>检测时间</th>
+                                <th>面额</th>
+                                <th>结果</th>
+                                <th>检测方式</th>
+                                <th>置信度</th>
+                                <th>可疑特征</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody">
+                            <tr>
+                                <td colspan="7" class="empty-state">暂无检测记录</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="statistics-section">
+                <h2>统计报表</h2>
+                <div class="statistics-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">总检测数</div>
+                        <div class="stat-value" id="totalCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">真钞</div>
+                        <div class="stat-value real" id="realCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">假钞</div>
+                        <div class="stat-value fake" id="fakeCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">疑币</div>
+                        <div class="stat-value suspicious" id="suspiciousCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">假钞率</div>
+                        <div class="stat-value" id="fakeRate">0%</div>
+                    </div>
+                </div>
+                <div class="denomination-stats">
+                    <h3>面额分布</h3>
+                    <div class="denomination-grid">
+                        <div class="denomination-item">
+                            <span class="denomination-label">100元</span>
+                            <span class="denomination-count" id="count100">0</span>
+                        </div>
+                        <div class="denomination-item">
+                            <span class="denomination-label">50元</span>
+                            <span class="denomination-count" id="count50">0</span>
+                        </div>
+                        <div class="denomination-item">
+                            <span class="denomination-label">20元</span>
+                            <span class="denomination-count" id="count20">0</span>
+                        </div>
+                        <div class="denomination-item">
+                            <span class="denomination-label">10元</span>
+                            <span class="denomination-count" id="count10">0</span>
+                        </div>
+                        <div class="denomination-item">
+                            <span class="denomination-label">5元</span>
+                            <span class="denomination-count" id="count5">0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

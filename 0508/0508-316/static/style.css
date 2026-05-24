@@ -1,0 +1,616 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+#loginScreen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.login-box {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    width: 400px;
+}
+
+.login-box h1 {
+    text-align: center;
+    color: #667eea;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-small {
+    padding: 5px 10px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+#gameScreen {
+    min-height: 100vh;
+}
+
+.game-container {
+    display: grid;
+    grid-template-columns: 250px 1fr 300px;
+    gap: 15px;
+    padding: 15px;
+    height: 100vh;
+}
+
+.sidebar-left, .sidebar-right {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    overflow-y: auto;
+}
+
+.sidebar-left h3, .sidebar-right h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+.room-info {
+    margin-bottom: 20px;
+}
+
+.room-info p {
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.room-info button {
+    margin-top: 5px;
+}
+
+.player-list ul {
+    list-style: none;
+}
+
+.player-list li {
+    padding: 10px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.player-list li.drawer {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.player-list li .score {
+    font-weight: bold;
+}
+
+.game-info {
+    margin-top: 20px;
+}
+
+.game-info p {
+    margin-bottom: 10px;
+    color: #555;
+}
+
+#currentWord {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #764ba2;
+    text-align: center;
+    padding: 10px;
+    background: #f0f0f0;
+    border-radius: 8px;
+}
+
+#timer {
+    font-size: 2em;
+    font-weight: bold;
+    color: #e74c3c;
+    text-align: center;
+}
+
+.main-area {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.canvas-container {
+    flex: 1;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+#drawingCanvas {
+    background: white;
+    border-radius: 10px;
+    cursor: crosshair;
+}
+
+#drawingCanvas.disabled {
+    cursor: not-allowed;
+}
+
+.toolbar {
+    background: white;
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+}
+
+.tool-group {
+    display: flex;
+    gap: 10px;
+}
+
+.tool-btn {
+    padding: 10px 20px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.tool-btn:hover {
+    border-color: #667eea;
+}
+
+.tool-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+}
+
+.color-group {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.color-picker, .line-width {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.color-picker input {
+    width: 40px;
+    height: 40px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.line-width input {
+    width: 100px;
+}
+
+.colors-preset {
+    display: flex;
+    gap: 8px;
+}
+
+.color-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s;
+    border: 2px solid transparent;
+}
+
+.color-btn:hover {
+    transform: scale(1.2);
+}
+
+.color-btn.active {
+    border-color: #333;
+}
+
+.chat-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#chatMessages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.chat-message {
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.chat-message .sender {
+    font-weight: bold;
+    color: #667eea;
+    margin-right: 8px;
+}
+
+.chat-message.system {
+    background: #fff3cd;
+    color: #856404;
+    text-align: center;
+}
+
+.chat-message.correct {
+    background: #d4edda;
+    color: #155724;
+    text-align: center;
+    font-weight: bold;
+}
+
+.chat-input {
+    display: flex;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 2px solid #f0f0f0;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 10px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.chat-input input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.chat-input button {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+#startBtn {
+    margin-top: 20px;
+    padding: 12px;
+}
+
+.avatar-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.avatar-option {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    border: 2px solid #e0e0e0;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f8f9fa;
+}
+
+.avatar-option:hover {
+    transform: scale(1.1);
+    border-color: #667eea;
+}
+
+.avatar-option.active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+}
+
+.skin-selector {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.skin-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    padding: 8px;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+.skin-option:hover {
+    border-color: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+.skin-option.active {
+    border-color: #667eea;
+    background: #f0f4ff;
+}
+
+.skin-preview {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.skin-option span {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+.brush-pattern-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brush-pattern-group label {
+    color: #666;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.pattern-selector {
+    display: flex;
+    gap: 5px;
+}
+
+.pattern-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s;
+}
+
+.pattern-btn:hover {
+    border-color: #667eea;
+    transform: scale(1.1);
+}
+
+.pattern-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+}
+
+.emoji-btn {
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s;
+}
+
+.emoji-btn:hover {
+    border-color: #667eea;
+    background: #f0f4ff;
+}
+
+.emoji-picker {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 5px;
+}
+
+.emoji-item {
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.emoji-item:hover {
+    background: #f0f4ff;
+    transform: scale(1.2);
+}
+
+.player-avatar {
+    font-size: 20px;
+    margin-right: 8px;
+}
+
+.chat-message .avatar {
+    font-size: 16px;
+    margin-right: 5px;
+}
+
+body.skin-sunset {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+body.skin-sunset .btn-primary,
+body.skin-sunset .tool-btn.active,
+body.skin-sunset .pattern-btn.active {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+body.skin-sunset .sidebar-left h3,
+body.skin-sunset .sidebar-right h3,
+body.skin-sunset .login-box h1,
+body.skin-sunset .chat-message .sender {
+    color: #f5576c;
+}
+
+body.skin-sunset .player-list li.drawer {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+body.skin-forest {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+body.skin-forest .btn-primary,
+body.skin-forest .tool-btn.active,
+body.skin-forest .pattern-btn.active {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+body.skin-forest .sidebar-left h3,
+body.skin-forest .sidebar-right h3,
+body.skin-forest .login-box h1,
+body.skin-forest .chat-message .sender {
+    color: #11998e;
+}
+
+body.skin-forest .player-list li.drawer {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+body.skin-ocean {
+    background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+}
+
+body.skin-ocean .btn-primary,
+body.skin-ocean .tool-btn.active,
+body.skin-ocean .pattern-btn.active {
+    background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+}
+
+body.skin-ocean .sidebar-left h3,
+body.skin-ocean .sidebar-right h3,
+body.skin-ocean .login-box h1,
+body.skin-ocean .chat-message .sender {
+    color: #2193b0;
+}
+
+body.skin-ocean .player-list li.drawer {
+    background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+}
+
+@media (max-width: 1200px) {
+    .game-container {
+        grid-template-columns: 200px 1fr 250px;
+    }
+    
+    .toolbar {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 900px) {
+    .game-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr auto;
+        height: auto;
+    }
+    
+    .sidebar-left, .sidebar-right {
+        max-height: 300px;
+    }
+}

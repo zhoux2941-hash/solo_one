@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>远程手术协作系统</title>
+  <link rel="stylesheet" href="styles/common.css">
+</head>
+<body>
+  <div class="landing-container">
+    <h1>🏥 远程手术协作系统</h1>
+    <p class="subtitle">Surgical Collaboration System</p>
+    <div class="role-selection">
+      <button onclick="window.location.href='surgeon.html'" class="role-btn surgeon">
+        <span class="role-icon">🔪</span>
+        <span class="role-title">主刀端</span>
+        <span class="role-desc">采集手术画面，接收专家标注</span>
+      </button>
+      <button onclick="window.location.href='expert.html'" class="role-btn expert">
+        <span class="role-icon">👨‍⚕️</span>
+        <span class="role-title">专家端</span>
+        <span class="role-desc">观看手术画面，提供实时标注</span>
+      </button>
+    </div>
+  </div>
+</body>
+</html>

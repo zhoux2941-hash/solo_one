@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer base {
+  body {
+    @apply bg-museum-50 text-museum-900 min-h-screen;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-museum-600 text-white px-4 py-2 rounded-lg font-medium
+           hover:bg-museum-700 transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-museum-500 focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-museum-700 border border-museum-200 px-4 py-2 rounded-lg font-medium
+           hover:bg-museum-50 transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-museum-500 focus:ring-offset-2;
+  }
+  
+  .btn-warning {
+    @apply bg-amber-500 text-white px-4 py-2 rounded-lg font-medium
+           hover:bg-amber-600 transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2;
+  }
+  
+  .btn-success {
+    @apply bg-forest-600 text-white px-4 py-2 rounded-lg font-medium
+           hover:bg-forest-700 transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-forest-500 focus:ring-offset-2;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-museum-card border border-museum-100;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-museum-hover hover:-translate-y-0.5;
+  }
+  
+  .input-field {
+    @apply w-full px-3 py-2 border border-museum-200 rounded-lg
+           focus:outline-none focus:ring-2 focus:ring-museum-500 focus:border-transparent
+           transition-all duration-200;
+  }
+  
+  .status-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+}
+
+@layer utilities {
+  .content-auto {
+    content-visibility: auto;
+  }
+  
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #89bbc4 transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #89bbc4;
+    border-radius: 3px;
+  }
+}

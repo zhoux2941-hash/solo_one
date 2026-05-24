@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLC数据采集工具 - WebSerial Modbus RTU</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PLC数据采集工具</h1>
+            <div class="connection-status">
+                <span id="statusIndicator" class="status-indicator disconnected"></span>
+                <span id="statusText">未连接</span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <aside class="sidebar">
+            <section class="panel">
+                <h2>串口连接</h2>
+                <div class="form-group">
+                    <label>波特率:</label>
+                    <select id="baudRate">
+                        <option value="9600">9600</option>
+                        <option value="19200">19200</option>
+                        <option value="38400">38400</option>
+                        <option value="57600">57600</option>
+                        <option value="115200" selected>115200</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>数据位:</label>
+                    <select id="dataBits">
+                        <option value="7">7</option>
+                        <option value="8" selected>8</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>停止位:</label>
+                    <select id="stopBits">
+                        <option value="1" selected>1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>校验位:</label>
+                    <select id="parity">
+                        <option value="none" selected>无</option>
+                        <option value="even">偶校验</option>
+                        <option value="odd">奇校验</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>从站地址:</label>
+                    <input type="number" id="slaveAddress" value="1" min="1" max="247">
+                </div>
+                <button id="connectBtn" class="btn primary">连接串口</button>
+                <button id="disconnectBtn" class="btn danger" disabled>断开连接</button>
+            </section>
+
+            <section class="panel">
+                <h2>数据记录</h2>
+                <div class="form-group">
+                    <label>记录间隔 (秒):</label>
+                    <input type="number" id="recordInterval" value="5" min="1" max="60">
+                </div>
+                <button id="startRecordBtn" class="btn success" disabled>开始记录</button>
+                <button id="stopRecordBtn" class="btn warning" disabled>停止记录</button>
+                <button id="exportDataBtn" class="btn info" disabled>导出数据</button>
+                <button id="clearDataBtn" class="btn danger" disabled>清除数据</button>
+            </section>
+
+            <section class="panel">
+                <h2>趋势曲线设置</h2>
+                <div class="form-group">
+                    <label>时间范围:</label>
+                    <select id="timeRange">
+                        <option value="300000">最近5分钟</option>
+                        <option value="900000">最近15分钟</option>
+                        <option value="1800000">最近30分钟</option>
+                        <option value="3600000" selected>最近1小时</option>
+                        <option value="7200000">最近2小时</option>
+                        <option value="14400000">最近4小时</option>
+                        <option value="28800000">最近8小时</option>
+                        <option value="86400000">最近24小时</option>
+                        <option value="0">全部数据</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>自动刷新:</label>
+                    <select id="autoRefresh">
+                        <option value="0">关闭</option>
+                        <option value="5000">5秒</option>
+                        <option value="10000" selected>10秒</option>
+                        <option value="30000">30秒</option>
+                        <option value="60000">60秒</option>
+                    </select>
+                </div>
+                <button id="refreshChartBtn" class="btn primary">刷新图表</button>
+                <button id="resetZoomBtn" class="btn info">重置缩放</button>
+            </section>
+
+            <section class="panel">
+                <h2>添加监控点</h2>
+                <div class="form-group">
+                    <label>数据类型:</label>
+                    <select id="dataType">
+                        <option value="holding">保持寄存器 (4x)</option>
+                        <option value="input">输入寄存器 (3x)</option>
+                        <option value="coil">线圈 (0x)</option>
+                        <option value="discrete">离散输入 (1x)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>寄存器地址:</label>
+                    <input type="number" id="registerAddress" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>名称:</label>
+                    <input type="text" id="registerName" placeholder="输入名称">
+                </div>
+                <div class="form-group" id="dataTypeGroup">
+                    <label>数据格式:</label>
+                    <select id="dataFormat">
+                        <option value="uint16">UInt16</option>
+                        <option value="int16">Int16</option>
+                        <option value="uint32">UInt32</option>
+                        <option value="int32">Int32</option>
+                        <option value="float">Float (单精度)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>缩放系数:</label>
+                    <input type="number" id="scaleFactor" value="1" step="0.001">
+                </div>
+                <div class="form-group">
+                    <label>偏移量:</label>
+                    <input type="number" id="offset" value="0" step="0.001">
+                </div>
+                <button id="addMonitorBtn" class="btn primary">添加监控</button>
+            </section>
+
+            <section class="panel">
+                <h2>写入控制</h2>
+                <div class="form-group">
+                    <label>类型:</label>
+                    <select id="writeType">
+                        <option value="holding">保持寄存器</option>
+                        <option value="coil">线圈</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>地址:</label>
+                    <input type="number" id="writeAddress" value="0" min="0">
+                </div>
+                <div class="form-group" id="writeValueGroup">
+                    <label>数值:</label>
+                    <input type="number" id="writeValue" value="0">
+                </div>
+                <div class="form-group" id="writeCoilGroup" style="display:none;">
+                    <label>线圈状态:</label>
+                    <select id="writeCoilValue">
+                        <option value="true">ON</option>
+                        <option value="false">OFF</option>
+                    </select>
+                </div>
+                <button id="writeBtn" class="btn warning" disabled>写入</button>
+            </section>
+            </aside>
+
+            <main class="content">
+                <section class="panel">
+                    <h2>历史趋势曲线</h2>
+                    <div class="chart-controls">
+                        <div class="monitor-selector">
+                            <span>选择监控点:</span>
+                            <div id="monitorSelector" class="monitor-selector-list"></div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                    <div class="chart-hint">
+                        <small>提示：鼠标滚轮缩放，拖拽平移，双击重置视图</small>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2>实时数据仪表板</h2>
+                    <div class="dashboard" id="dashboard">
+                        <div class="empty-state">
+                            <p>暂无监控点，请从左侧添加要监控的寄存器</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2>监控点列表 (<span id="monitorCount">0</span>/50)</h2>
+                    <div class="monitor-list" id="monitorList"></div>
+                </section>
+
+                <section class="panel">
+                    <h2>通信日志</h2>
+                    <div class="log-container" id="logContainer"></div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="modbus.js"></script>
+    <script src="database.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

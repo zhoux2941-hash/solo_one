@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时协作电子表格</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <button id="boldBtn" class="toolbar-btn" title="加粗 (Ctrl+B)"><b>B</b></button>
+                <button id="italicBtn" class="toolbar-btn" title="斜体 (Ctrl+I)"><i>I</i></button>
+                <input type="color" id="bgColorPicker" class="color-picker" title="背景色">
+                <div class="separator"></div>
+                <button id="undoBtn" class="toolbar-btn" title="撤销 (Ctrl+Z)">↶</button>
+                <button id="redoBtn" class="toolbar-btn" title="重做 (Ctrl+Y)">↷</button>
+                <div class="separator"></div>
+                <button id="sortAscBtn" class="toolbar-btn" title="升序排序">A↑</button>
+                <button id="sortDescBtn" class="toolbar-btn" title="降序排序">Z↓</button>
+                <button id="clearSortBtn" class="toolbar-btn" title="清除排序">⟲</button>
+                <button id="clearFilterBtn" class="toolbar-btn" title="清除筛选">⊗</button>
+            </div>
+            <div class="toolbar-right">
+                <span id="connectionStatus" class="status disconnected">未连接</span>
+                <span id="userCount" class="user-count">在线: 0</span>
+            </div>
+        </div>
+        
+        <div class="formula-bar">
+            <span id="cellLabel" class="cell-label">A1</span>
+            <input type="text" id="formulaInput" class="formula-input" placeholder="输入值或公式 (例如: =SUM(A1:A5))">
+        </div>
+        
+        <div class="spreadsheet-container">
+            <div id="spreadsheet" class="spreadsheet"></div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

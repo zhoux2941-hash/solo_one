@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>专家端 - 远程手术协作系统</title>
+  <link rel="stylesheet" href="styles/common.css">
+</head>
+<body class="expert-mode">
+  <div class="container">
+    <div class="sidebar">
+      <div class="panel">
+        <div class="panel-title">🔗 连接设置</div>
+        <div class="input-group">
+          <label>房间号</label>
+          <input type="text" id="roomIdInput" placeholder="输入房间号">
+        </div>
+        <button id="joinRoomBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem;">
+          🚀 加入房间
+        </button>
+        <div class="status-item">
+          <span class="status-dot" id="connectionDot"></span>
+          <span id="connectionStatus">未连接</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">✏️ 标注工具</div>
+        <div class="toolbar" style="margin-bottom: 0.75rem;">
+          <button class="tool-btn active" data-tool="arrow" title="箭头">➡️</button>
+          <button class="tool-btn" data-tool="circle" title="圆圈">⭕</button>
+          <button class="tool-btn" data-tool="text" title="文字">📝</button>
+          <button class="tool-btn" data-tool="measure" title="测量">📏</button>
+        </div>
+        <div class="input-group" style="margin-bottom: 0.5rem;">
+          <label>颜色</label>
+          <div class="color-picker">
+            <div class="color-option active" style="background: #ff0000;" data-color="#ff0000"></div>
+            <div class="color-option" style="background: #00ff00;" data-color="#00ff00"></div>
+            <div class="color-option" style="background: #0000ff;" data-color="#0000ff"></div>
+            <div class="color-option" style="background: #ffff00;" data-color="#ffff00"></div>
+            <div class="color-option" style="background: #ff00ff;" data-color="#ff00ff"></div>
+            <div class="color-option" style="background: #00ffff;" data-color="#00ffff"></div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>线宽</label>
+          <input type="range" id="lineWidthRange" min="1" max="10" value="3">
+        </div>
+        <button id="clearAnnotationsBtn" class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;">
+          🗑️ 清除所有标注
+        </button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">📐 测量标定</div>
+        <div class="input-group">
+          <label>已知距离 (mm)</label>
+          <input type="number" id="calibrationDistance" value="10" min="1">
+        </div>
+        <button id="startCalibrationBtn" class="btn btn-success" style="width: 100%; margin-bottom: 0.5rem;">
+          🎯 开始标定
+        </button>
+        <div class="connection-info" id="calibrationStatus">未标定</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">📊 测量结果</div>
+        <div class="measurement-display" id="measurementDisplay">
+          <div class="measurement-item">
+            <span>暂无测量数据</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">📊 性能统计</div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-value" id="latencyValue">--</div>
+            <div class="stat-label">端到端延迟</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" id="syncValue">--</div>
+            <div class="stat-label">同步误差</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" id="bitrateValue">--</div>
+            <div class="stat-label">比特率</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" id="fpsValue">--</div>
+            <div class="stat-label">帧率</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">🎤 语音通话</div>
+        <div class="audio-indicator">
+          <div class="audio-bars" id="audioIndicator">
+            <div class="audio-bar"></div>
+            <div class="audio-bar"></div>
+            <div class="audio-bar"></div>
+            <div class="audio-bar"></div>
+            <div class="audio-bar"></div>
+          </div>
+          <span id="audioStatus">未开启</span>
+        </div>
+        <button id="toggleAudioBtn" class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;">
+          🔊 开启语音
+        </button>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="video-container">
+        <div class="video-wrapper">
+          <video id="remoteVideo" autoplay playsinline></video>
+          <canvas id="annotationCanvas" class="annotation-canvas"></canvas>
+          <div id="calibrationOverlay" class="hidden">
+            <div class="calibration-hint">🎯 在画面上点击并拖动来设置标定参考线</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="control-bar">
+        <div class="status-bar">
+          <div class="status-item">
+            <span>👨‍⚕️ 专家端</span>
+          </div>
+          <div class="status-item">
+            <span id="videoResolution">--</span>
+          </div>
+          <div class="status-item">
+            <span id="annotationCount">标注: 0</span>
+          </div>
+          <div class="status-item">
+            <span id="currentTool">当前工具: 箭头</span>
+          </div>
+        </div>
+        <div class="controls">
+          <button id="syncBtn" class="btn btn-secondary">
+            🔄 时间同步
+          </button>
+          <button onclick="window.location.href='index.html'" class="btn btn-secondary">
+            🏠 返回首页
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/expert.js"></script>
+</body>
+</html>

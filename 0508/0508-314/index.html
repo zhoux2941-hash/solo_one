@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebNFC 标签读写工具</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>NFC 标签读写工具</h1>
+            <p class="subtitle">基于 WebNFC 的 NTAG / MIFARE Ultralight 标签管理</p>
+        </header>
+
+        <div class="status-bar" id="statusBar">
+            <span class="status-indicator" id="statusIndicator"></span>
+            <span id="statusText">准备就绪</span>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <h2>📱 NFC 操作</h2>
+                <div class="button-group">
+                    <button id="btnRead" class="btn btn-primary">
+                        <span class="btn-icon">🔍</span>
+                        开始读取
+                    </button>
+                    <button id="btnWrite" class="btn btn-success">
+                        <span class="btn-icon">✏️</span>
+                        写入数据
+                    </button>
+                    <button id="btnFormat" class="btn btn-warning">
+                        <span class="btn-icon">🗑️</span>
+                        格式化标签
+                    </button>
+                    <button id="btnStop" class="btn btn-danger" disabled>
+                        <span class="btn-icon">⏹️</span>
+                        停止操作
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📝 写入数据</h2>
+                <div class="form-group">
+                    <label>数据类型</label>
+                    <select id="writeType" class="form-control">
+                        <option value="text">纯文本</option>
+                        <option value="url">URL 链接</option>
+                        <option value="encrypted">🔐 加密文本 (AES-256)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>内容</label>
+                    <textarea id="writeContent" class="form-control" rows="3" placeholder="输入要写入的内容..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>语言 (文本类型)</label>
+                    <input type="text" id="textLang" class="form-control" value="zh" placeholder="例如: zh, en">
+                </div>
+                <div class="form-group" id="encryptKeyGroup" style="display: none;">
+                    <label>加密密钥</label>
+                    <input type="password" id="encryptKey" class="form-control" placeholder="设置解密密钥，至少4位">
+                    <small style="color: #6c757d; display: block; margin-top: 5px;">密钥将用于AES-256-GCM加密，忘记密钥无法恢复数据</small>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📋 标签信息</h2>
+                <div id="tagInfo" class="tag-info">
+                    <p class="empty-state">等待读取标签...</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🔍 NDEF 记录</h2>
+                <div id="ndefRecords" class="ndef-records">
+                    <p class="empty-state">暂无记录</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📦 批量读取</h2>
+                <div class="button-group">
+                    <button id="btnBatchStart" class="btn btn-info">
+                        <span class="btn-icon">📥</span>
+                        开始批量读取
+                    </button>
+                    <button id="btnBatchStop" class="btn btn-danger" disabled>
+                        <span class="btn-icon">⏹️</span>
+                        停止批量读取
+                    </button>
+                    <button id="btnBatchClear" class="btn btn-secondary">
+                        <span class="btn-icon">🗑️</span>
+                        清空列表
+                    </button>
+                </div>
+                <div class="batch-stats" id="batchStats">
+                    <span>已读取: <strong id="batchCount">0</strong> 个标签</span>
+                </div>
+                <div id="batchList" class="batch-list">
+                    <p class="empty-state">批量读取列表为空</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>💾 数据管理</h2>
+                <div class="button-group">
+                    <button id="btnExport" class="btn btn-primary">
+                        <span class="btn-icon">📤</span>
+                        导出 JSON
+                    </button>
+                    <label class="btn btn-secondary file-input-label">
+                        <span class="btn-icon">📥</span>
+                        导入 JSON
+                        <input type="file" id="importFile" accept=".json">
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="logs-section">
+            <h3>📜 操作日志</h3>
+            <div id="logs" class="logs"></div>
+        </div>
+
+        <footer>
+            <p>提示: 请使用支持 WebNFC 的浏览器（如 Chrome for Android）并启用 NFC 功能</p>
+        </footer>
+    </div>
+
+    <script src="nfc-manager.js"></script>
+    <script src="ndef-parser.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

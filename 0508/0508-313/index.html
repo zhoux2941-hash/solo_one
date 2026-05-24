@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时人声变调器 - WebAudio Phase Vocoder Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 28px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .canvas-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            background: #0a0a1a;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .canvas-label {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            color: #fff;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 15px;
+            z-index: 10;
+        }
+
+        .input-label {
+            background: rgba(0, 212, 255, 0.3);
+            border: 1px solid #00d4ff;
+        }
+
+        .output-label {
+            background: rgba(123, 44, 191, 0.3);
+            border: 1px solid #7b2cbf;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100px;
+            border-radius: 8px;
+            display: block;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 18px;
+            border-radius: 12px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .value-display {
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+            transition: transform 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: white;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-record {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            color: white;
+        }
+
+        .btn-record.recording {
+            animation: pulse 1s infinite;
+            background: linear-gradient(135deg, #ee5a5a, #cc4444);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+            color: white;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #7b2cbf, #5a2099);
+            color: white;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(238, 90, 90, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(238, 90, 90, 0); }
+        }
+
+        .latency-info {
+            text-align: center;
+            color: #888;
+            font-size: 11px;
+            margin-top: 15px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .latency-info span {
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        .perf-stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .perf-stats span {
+            background: rgba(255,255,255,0.05);
+            padding: 4px 10px;
+            border-radius: 10px;
+        }
+
+        .perf-stats .good { color: #4ade80; }
+        .perf-stats .warn { color: #fbbf24; }
+        .perf-stats .bad { color: #f87171; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 实时人声变调器 Pro</h1>
+        <div class="status" id="status">点击"开始"按钮启动变调器</div>
+
+        <div class="canvas-container">
+            <div class="canvas-wrapper">
+                <div class="canvas-label input-label">🎵 输入波形</div>
+                <canvas id="inputCanvas"></canvas>
+            </div>
+            <div class="canvas-wrapper">
+                <div class="canvas-label output-label">🎶 输出波形</div>
+                <canvas id="outputCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <div class="control-label">
+                    <span>🎹 变调 (半音)</span>
+                    <span class="value-display" id="pitchValue">0</span>
+                </div>
+                <input type="range" id="pitchSlider" min="-12" max="12" value="0" step="0.1" disabled>
+            </div>
+            <div class="control-group">
+                <div class="control-label">
+                    <span>� 音色保持</span>
+                    <span class="value-display" id="formantValue">80%</span>
+                </div>
+                <input type="range" id="formantSlider" min="0" max="100" value="80" disabled>
+            </div>
+            <div class="control-group">
+                <div class="control-label">
+                    <span>� 干湿混合</span>
+                    <span class="value-display" id="mixValue">100%</span>
+                </div>
+                <input type="range" id="mixSlider" min="0" max="100" value="100" disabled>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button class="btn-start" id="startBtn">▶️ 开始</button>
+            <button class="btn-record" id="recordBtn" disabled>⏺️ 录制</button>
+            <button class="btn-download" id="downloadBtn" disabled>💾 下载</button>
+        </div>
+
+        <div class="perf-stats" id="perfStats" style="display:none;">
+            <span>延迟: <span id="latencyDisplay">-</span></span>
+            <span>CPU: <span id="cpuDisplay">-</span></span>
+        </div>
+
+        <div class="latency-info">
+            共振峰修正相位声码器 | 目标延迟: <span>< 30ms</span> | 保持原始音色
+        </div>
+    </div>
+
+    <script>
+        let audioContext;
+        let mediaStreamSource;
+        let analyserInput;
+        let analyserOutput;
+        let gainDry;
+        let gainWet;
+        let gainMaster;
+        let highShelfFilter;
+        let lowShelfFilter;
+        let mediaRecorder;
+        let recordedChunks = [];
+        let isRecording = false;
+        let isRunning = false;
+        let pitchShiftNode;
+        let worker;
+
+        const BUFFER_SIZE = 256;
+        const FFT_SIZE = 1024;
+        const HOP_SIZE = 256;
+        const WINDOW_SIZE = 1024;
+
+        let lastProcessTime = 0;
+        let frameCount = 0;
+
+        const startBtn = document.getElementById('startBtn');
+        const recordBtn = document.getElementById('recordBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const pitchSlider = document.getElementById('pitchSlider');
+        const formantSlider = document.getElementById('formantSlider');
+        const mixSlider = document.getElementById('mixSlider');
+        const pitchValue = document.getElementById('pitchValue');
+        const formantValue = document.getElementById('formantValue');
+        const mixValue = document.getElementById('mixValue');
+        const statusEl = document.getElementById('status');
+        const inputCanvas = document.getElementById('inputCanvas');
+        const outputCanvas = document.getElementById('outputCanvas');
+        const inputCtx = inputCanvas.getContext('2d');
+        const outputCtx = outputCanvas.getContext('2d');
+        const perfStats = document.getElementById('perfStats');
+        const latencyDisplay = document.getElementById('latencyDisplay');
+        const cpuDisplay = document.getElementById('cpuDisplay');
+        let phaseVocoder = null;
+
+        function createHannWindow(size) {
+            const window = new Float32Array(size);
+            for (let i = 0; i < size; i++) {
+                window[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / (size - 1)));
+            }
+            return window;
+        }
+
+        class PhaseVocoder {
+            constructor(sampleRate) {
+                this.sampleRate = sampleRate;
+                this.windowSize = WINDOW_SIZE;
+                this.hopSize = HOP_SIZE;
+                this.fftSize = FFT_SIZE;
+                this.window = createHannWindow(this.windowSize);
+                
+                this.inputBuffer = new Float32Array(this.windowSize * 2);
+                this.outputBuffer = new Float32Array(this.windowSize * 2);
+                this.lastPhase = new Float32Array(this.fftSize / 2 + 1);
+                this.sumPhase = new Float32Array(this.fftSize / 2 + 1);
+                this.prevMagnitudes = new Float32Array(this.fftSize / 2 + 1);
+                this.smoothedMagnitudes = new Float32Array(this.fftSize / 2 + 1);
+                this.analysisBuffer = new Float32Array(this.fftSize);
+                this.synthesisBuffer = new Float32Array(this.fftSize);
+                
+                this.fftReal = new Float32Array(this.fftSize);
+                this.fftImag = new Float32Array(this.fftSize);
+                
+                this.cepstrumReal = new Float32Array(this.fftSize);
+                this.cepstrumImag = new Float32Array(this.fftSize);
+                this.originalEnvelope = new Float32Array(this.fftSize / 2 + 1);
+                this.smoothedEnvelope = new Float32Array(this.fftSize / 2 + 1);
+                this.prevEnvelope = new Float32Array(this.fftSize / 2 + 1);
+                
+                this.bufferIndex = 0;
+                this.synthesisIndex = 0;
+                
+                this.freqPerBin = this.sampleRate / this.fftSize;
+                this.expct = 2 * Math.PI * this.hopSize / this.fftSize;
+                
+                this.cepstralLifter = 60;
+                
+                this.formantStrength = 1.0;
+                
+                this.reset();
+            }
+
+            reset() {
+                this.lastPhase.fill(0);
+                this.sumPhase.fill(0);
+                this.prevMagnitudes.fill(0);
+                this.smoothedMagnitudes.fill(0);
+                this.originalEnvelope.fill(0);
+                this.smoothedEnvelope.fill(0);
+                this.prevEnvelope.fill(0);
+                this.inputBuffer.fill(0);
+                this.outputBuffer.fill(0);
+            }
+
+            setFormantStrength(strength) {
+                this.formantStrength = strength;
+            }
+
+            fft(real, imag, inverse) {
+                const n = real.length;
+                const m = Math.log2(n);
+                
+                for (let i = 0; i < n; i++) {
+                    let j = 0;
+                    for (let k = 0; k < m; k++) {
+                        j = (j << 1) | ((i >> k) & 1);
+                    }
+                    if (i < j) {
+                        const tr = real[i], ti = imag[i];
+                        real[i] = real[j]; imag[i] = imag[j];
+                        real[j] = tr; imag[j] = ti;
+                    }
+                }
+                
+                for (let s = 1; s <= m; s++) {
+                    const m2 = 1 << s;
+                    const mh = m2 >> 1;
+                    const wr = Math.cos(-Math.PI / mh);
+                    const wi = Math.sin(-Math.PI / mh);
+                    
+                    for (let j = 0; j < n; j += m2) {
+                        let xr = 1, xi = 0;
+                        for (let k = 0; k < mh; k++) {
+                            const idx1 = j + k;
+                            const idx2 = idx1 + mh;
+                            
+                            const tr = real[idx2] * xr - imag[idx2] * xi;
+                            const ti = real[idx2] * xi + imag[idx2] * xr;
+                            
+                            real[idx2] = real[idx1] - tr;
+                            imag[idx2] = imag[idx1] - ti;
+                            real[idx1] += tr;
+                            imag[idx1] += ti;
+                            
+                            const xrn = xr * wr - xi * wi;
+                            xi = xr * wi + xi * wr;
+                            xr = xrn;
+                        }
+                    }
+                }
+                
+                if (inverse) {
+                    const scale = 1 / n;
+                    for (let i = 0; i < n; i++) {
+                        real[i] *= scale;
+                        imag[i] *= -scale;
+                    }
+                }
+            }
+
+            estimateEnvelope(magnitudes) {
+                const n = this.fftSize;
+                const n2 = n / 2;
+                
+                for (let k = 0; k <= n2; k++) {
+                    const mag = Math.max(magnitudes[k], 1e-10);
+                    this.cepstrumReal[k] = Math.log(mag);
+                    this.cepstrumImag[k] = 0;
+                }
+                for (let k = n2 + 1; k < n; k++) {
+                    this.cepstrumReal[k] = this.cepstrumReal[n - k];
+                    this.cepstrumImag[k] = 0;
+                }
+                
+                this.fft(this.cepstrumReal, this.cepstrumImag, false);
+                
+                for (let k = 0; k < n; k++) {
+                    const quefrency = k;
+                    if (quefrency > this.cepstralLifter && quefrency < n - this.cepstralLifter) {
+                        this.cepstrumReal[k] = 0;
+                        this.cepstrumImag[k] = 0;
+                    }
+                }
+                
+                this.fft(this.cepstrumReal, this.cepstrumImag, true);
+                
+                for (let k = 0; k <= n2; k++) {
+                    this.originalEnvelope[k] = Math.exp(this.cepstrumReal[k]);
+                }
+                
+                for (let k = 0; k <= n2; k++) {
+                    this.smoothedEnvelope[k] = this.prevEnvelope[k] * 0.7 + this.originalEnvelope[k] * 0.3;
+                    this.prevEnvelope[k] = this.smoothedEnvelope[k];
+                }
+            }
+
+            applyFormantCorrection(magnitudes, alpha) {
+                const n2 = this.fftSize / 2;
+                const corrected = new Float32Array(magnitudes.length);
+                
+                for (let k = 0; k < magnitudes.length; k++) {
+                    const origBin = k / alpha;
+                    
+                    if (origBin >= 0 && origBin <= n2) {
+                        const binFloor = Math.floor(origBin);
+                        const binFrac = origBin - binFloor;
+                        
+                        let env0 = binFloor > 0 ? this.smoothedEnvelope[binFloor] : this.smoothedEnvelope[0];
+                        let env1 = binFloor + 1 <= n2 ? this.smoothedEnvelope[binFloor + 1] : this.smoothedEnvelope[n2];
+                        
+                        const origEnv = env0 * (1 - binFrac) + env1 * binFrac;
+                        const currentEnv = this.smoothedEnvelope[k] || 1e-10;
+                        
+                        const ratio = origEnv / Math.max(currentEnv, 1e-10);
+                        
+                        const strength = this.formantStrength;
+                        const correctedRatio = 1 + (ratio - 1) * strength;
+                        
+                        corrected[k] = magnitudes[k] * correctedRatio;
+                    } else {
+                        corrected[k] = magnitudes[k];
+                    }
+                }
+                
+                return corrected;
+            }
+
+            process(input, output, pitchShift) {
+                const alpha = Math.pow(2, pitchShift / 12);
+                const hopIn = this.hopSize;
+                const hopOut = Math.round(hopIn * alpha);
+                const n = this.fftSize;
+                const n2 = n / 2;
+                
+                for (let i = 0; i < input.length; i++) {
+                    this.inputBuffer[this.bufferIndex++] = input[i];
+                    
+                    if (this.bufferIndex >= this.windowSize) {
+                        for (let j = 0; j < this.windowSize; j++) {
+                            this.analysisBuffer[j] = this.inputBuffer[j] * this.window[j];
+                        }
+                        
+                        this.fftReal.set(this.analysisBuffer);
+                        this.fftImag.fill(0);
+                        this.fft(this.fftReal, this.fftImag, false);
+                        
+                        const magnitudes = this.smoothedMagnitudes;
+                        const phases = new Float32Array(n2 + 1);
+                        const rawMagnitudes = new Float32Array(n2 + 1);
+                        
+                        for (let k = 0; k <= n2; k++) {
+                            const re = this.fftReal[k];
+                            const im = this.fftImag[k];
+                            const mag = Math.sqrt(re * re + im * im);
+                            rawMagnitudes[k] = mag;
+                            magnitudes[k] = this.prevMagnitudes[k] * 0.4 + mag * 0.6;
+                            this.prevMagnitudes[k] = magnitudes[k];
+                            phases[k] = Math.atan2(im, re);
+                        }
+                        
+                        this.estimateEnvelope(rawMagnitudes);
+                        
+                        for (let k = 0; k <= n2; k++) {
+                            let phaseDiff = phases[k] - this.lastPhase[k];
+                            this.lastPhase[k] = phases[k];
+                            
+                            phaseDiff -= k * this.expct;
+                            
+                            const numPeriods = Math.round(phaseDiff / (2 * Math.PI));
+                            phaseDiff -= 2 * Math.PI * numPeriods;
+                            
+                            const trueFreq = k * this.freqPerBin + phaseDiff * this.freqPerBin / (2 * Math.PI);
+                            
+                            this.sumPhase[k] += hopOut * trueFreq / this.sampleRate * 2 * Math.PI;
+                        }
+                        
+                        this.fftReal.fill(0);
+                        this.fftImag.fill(0);
+                        
+                        const shiftedMagnitudes = new Float32Array(n2 + 1);
+                        
+                        for (let k = 0; k <= n2; k++) {
+                            const origBin = k * alpha;
+                            const binFloor = Math.floor(origBin);
+                            const binFrac = origBin - binFloor;
+                            
+                            if (binFloor < n2) {
+                                const mag0 = binFloor > 0 ? magnitudes[binFloor] : 0;
+                                const mag1 = binFloor + 1 <= n2 ? magnitudes[binFloor + 1] : 0;
+                                shiftedMagnitudes[k] = mag0 * (1 - binFrac) + mag1 * binFrac;
+                            } else {
+                                shiftedMagnitudes[k] = 0;
+                            }
+                        }
+                        
+                        const correctedMagnitudes = this.formantStrength > 0 
+                            ? this.applyFormantCorrection(shiftedMagnitudes, alpha)
+                            : shiftedMagnitudes;
+                        
+                        for (let k = 0; k <= n2; k++) {
+                            const origBin = k * alpha;
+                            const binFloor = Math.floor(origBin);
+                            const binFrac = origBin - binFloor;
+                            
+                            if (binFloor < n2) {
+                                const phase0 = this.sumPhase[Math.max(0, binFloor)];
+                                const phase1 = this.sumPhase[Math.min(n2, binFloor + 1)];
+                                const interpPhase = phase0 * (1 - binFrac) + phase1 * binFrac;
+                                
+                                this.fftReal[k] += correctedMagnitudes[k] * Math.cos(interpPhase);
+                                this.fftImag[k] += correctedMagnitudes[k] * Math.sin(interpPhase);
+                            }
+                        }
+                        
+                        const cutoffBin = Math.floor(n2 * 0.85);
+                        for (let k = cutoffBin; k <= n2; k++) {
+                            const fade = 1 - (k - cutoffBin) / (n2 - cutoffBin);
+                            this.fftReal[k] *= fade * fade;
+                            this.fftImag[k] *= fade * fade;
+                        }
+                        
+                        for (let k = 1; k < n2; k++) {
+                            this.fftReal[n - k] = this.fftReal[k];
+                            this.fftImag[n - k] = -this.fftImag[k];
+                        }
+                        
+                        this.fft(this.fftReal, this.fftImag, true);
+                        
+                        const norm = 1.0 / (n / hopIn / 1.8);
+                        for (let j = 0; j < n; j++) {
+                            this.synthesisBuffer[j] = this.fftReal[j] * this.window[j] * norm;
+                        }
+                        
+                        const overlapStart = this.synthesisIndex;
+                        for (let j = 0; j < hopOut; j++) {
+                            const idx = j + overlapStart;
+                            if (idx < this.outputBuffer.length) {
+                                const fade = j / hopOut;
+                                this.outputBuffer[idx] = this.outputBuffer[idx] * (1 - fade * 0.3) + this.synthesisBuffer[j] * fade;
+                            }
+                        }
+                        for (let j = hopOut; j < n; j++) {
+                            const idx = j + overlapStart;
+                            if (idx < this.outputBuffer.length) {
+                                this.outputBuffer[idx] = this.synthesisBuffer[j] * 0.7;
+                            }
+                        }
+                        
+                        for (let j = 0; j < this.windowSize - hopIn; j++) {
+                            this.inputBuffer[j] = this.inputBuffer[j + hopIn];
+                        }
+                        this.bufferIndex = this.windowSize - hopIn;
+                    }
+                }
+                
+                for (let i = 0; i < input.length; i++) {
+                    output[i] = this.outputBuffer[i];
+                }
+                
+                for (let i = 0; i < this.outputBuffer.length - input.length; i++) {
+                    this.outputBuffer[i] = this.outputBuffer[i + input.length];
+                }
+                for (let i = this.outputBuffer.length - input.length; i < this.outputBuffer.length; i++) {
+                    this.outputBuffer[i] = 0;
+                }
+                
+                return output;
+            }
+        }
+
+        function drawWaveform(ctx, canvas, analyser, color) {
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteTimeDomainData(dataArray);
+            
+            const width = canvas.offsetWidth;
+            const height = canvas.offsetHeight;
+            
+            ctx.fillStyle = '#0a0a1a';
+            ctx.fillRect(0, 0, width, height);
+            
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = color;
+            ctx.beginPath();
+            
+            const sliceWidth = width / bufferLength;
+            let x = 0;
+            
+            for (let i = 0; i < bufferLength; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = v * height / 2;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+                x += sliceWidth;
+            }
+            
+            ctx.lineTo(width, height / 2);
+            ctx.stroke();
+            
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 8;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        function resizeCanvases() {
+            const dpr = window.devicePixelRatio || 1;
+            inputCanvas.width = inputCanvas.offsetWidth * dpr;
+            inputCanvas.height = inputCanvas.offsetHeight * dpr;
+            outputCanvas.width = outputCanvas.offsetWidth * dpr;
+            outputCanvas.height = outputCanvas.offsetHeight * dpr;
+            inputCtx.scale(dpr, dpr);
+            outputCtx.scale(dpr, dpr);
+        }
+
+        function animate() {
+            if (isRunning) {
+                drawWaveform(inputCtx, inputCanvas, analyserInput, '#00d4ff');
+                drawWaveform(outputCtx, outputCanvas, analyserOutput, '#7b2cbf');
+            }
+            requestAnimationFrame(animate);
+        }
+
+        function updatePerfStats(processTime) {
+            frameCount++;
+            if (frameCount % 30 === 0) {
+                const latencyMs = (HOP_SIZE / audioContext.sampleRate) * 1000 * 3;
+                const cpuPercent = (processTime / (HOP_SIZE / audioContext.sampleRate * 1000)) * 100;
+                
+                latencyDisplay.textContent = latencyMs.toFixed(1) + 'ms';
+                latencyDisplay.className = latencyMs < 30 ? 'good' : latencyMs < 50 ? 'warn' : 'bad';
+                
+                cpuDisplay.textContent = cpuPercent.toFixed(0) + '%';
+                cpuDisplay.className = cpuPercent < 30 ? 'good' : cpuPercent < 60 ? 'warn' : 'bad';
+            }
+        }
+
+        async function startAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                    latencyHint: 'interactive',
+                    sampleRate: 48000
+                });
+
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: true,
+                        autoGainControl: false,
+                        sampleRate: 48000,
+                        channelCount: 1
+                    }
+                });
+
+                mediaStreamSource = audioContext.createMediaStreamSource(stream);
+
+                analyserInput = audioContext.createAnalyser();
+                analyserInput.fftSize = 512;
+                analyserInput.smoothingTimeConstant = 0.6;
+                
+                analyserOutput = audioContext.createAnalyser();
+                analyserOutput.fftSize = 512;
+                analyserOutput.smoothingTimeConstant = 0.6;
+
+                gainDry = audioContext.createGain();
+                gainWet = audioContext.createGain();
+                gainMaster = audioContext.createGain();
+
+                highShelfFilter = audioContext.createBiquadFilter();
+                highShelfFilter.type = 'highshelf';
+                highShelfFilter.frequency.value = 2000;
+                highShelfFilter.gain.value = 3;
+
+                lowShelfFilter = audioContext.createBiquadFilter();
+                lowShelfFilter.type = 'lowshelf';
+                lowShelfFilter.frequency.value = 300;
+                lowShelfFilter.gain.value = -2;
+
+                phaseVocoder = new PhaseVocoder(audioContext.sampleRate);
+                phaseVocoder.setFormantStrength(parseFloat(formantSlider.value) / 100);
+
+                pitchShiftNode = audioContext.createScriptProcessor(BUFFER_SIZE, 1, 1);
+                
+                const tempInput = new Float32Array(BUFFER_SIZE);
+                const tempOutput = new Float32Array(BUFFER_SIZE);
+
+                pitchShiftNode.onaudioprocess = function(e) {
+                    const startTime = performance.now();
+                    const inputData = e.inputBuffer.getChannelData(0);
+                    const outputData = e.outputBuffer.getChannelData(0);
+
+                    tempInput.set(inputData);
+                    
+                    const pitch = parseFloat(pitchSlider.value);
+                    phaseVocoder.process(tempInput, tempOutput, pitch);
+
+                    for (let i = 0; i < BUFFER_SIZE; i++) {
+                        outputData[i] = tempOutput[i];
+                    }
+
+                    const processTime = performance.now() - startTime;
+                    updatePerfStats(processTime);
+                };
+
+                mediaStreamSource.connect(analyserInput);
+                mediaStreamSource.connect(gainDry);
+                mediaStreamSource.connect(pitchShiftNode);
+                pitchShiftNode.connect(gainWet);
+
+                gainDry.connect(gainMaster);
+                gainWet.connect(highShelfFilter);
+                highShelfFilter.connect(lowShelfFilter);
+                lowShelfFilter.connect(gainMaster);
+                
+                gainMaster.connect(analyserOutput);
+                gainMaster.connect(audioContext.destination);
+
+                updateMix();
+
+                pitchSlider.disabled = false;
+                formantSlider.disabled = false;
+                mixSlider.disabled = false;
+                recordBtn.disabled = false;
+                startBtn.textContent = '⏹️ 停止';
+                startBtn.classList.remove('btn-start');
+                startBtn.classList.add('btn-stop');
+                perfStats.style.display = 'flex';
+                isRunning = true;
+                statusEl.textContent = '变调器运行中 - 请说话测试';
+                statusEl.style.color = '#00d4ff';
+
+                resizeCanvases();
+                animate();
+
+            } catch (err) {
+                console.error('Error:', err);
+                statusEl.textContent = '错误: ' + err.message;
+                statusEl.style.color = '#ff6b6b';
+            }
+        }
+
+        function stopAudio() {
+            if (audioContext) {
+                audioContext.close();
+            }
+            if (mediaStreamSource && mediaStreamSource.mediaStream) {
+                mediaStreamSource.mediaStream.getTracks().forEach(track => track.stop());
+            }
+            isRunning = false;
+            pitchSlider.disabled = true;
+            formantSlider.disabled = true;
+            mixSlider.disabled = true;
+            recordBtn.disabled = true;
+            perfStats.style.display = 'none';
+            phaseVocoder = null;
+            startBtn.textContent = '▶️ 开始';
+            startBtn.classList.remove('btn-stop');
+            startBtn.classList.add('btn-start');
+            statusEl.textContent = '点击"开始"按钮启动变调器';
+            statusEl.style.color = '#aaa';
+        }
+
+        function updateMix() {
+            const mix = parseInt(mixSlider.value) / 100;
+            if (gainDry && gainWet) {
+                gainDry.gain.setTargetAtTime(1 - mix, audioContext.currentTime, 0.01);
+                gainWet.gain.setTargetAtTime(mix, audioContext.currentTime, 0.01);
+            }
+        }
+
+        function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        function startRecording() {
+            if (!audioContext || !gainMaster) return;
+            
+            const dest = audioContext.createMediaStreamDestination();
+            gainMaster.connect(dest);
+            
+            mediaRecorder = new MediaRecorder(dest.stream, {
+                mimeType: 'audio/webm;codecs=opus',
+                audioBitsPerSecond: 128000
+            });
+            recordedChunks = [];
+
+            mediaRecorder.ondataavailable = function(e) {
+                if (e.data.size > 0) {
+                    recordedChunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onstop = function() {
+                downloadBtn.disabled = false;
+            };
+
+            mediaRecorder.start(1000);
+            isRecording = true;
+            recordBtn.textContent = '⏹️ 停止录制';
+            recordBtn.classList.add('recording');
+            statusEl.textContent = '录制中...';
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            isRecording = false;
+            recordBtn.textContent = '⏺️ 录制';
+            recordBtn.classList.remove('recording');
+            statusEl.textContent = '录制完成，可以下载';
+        }
+
+        function downloadRecording() {
+            if (recordedChunks.length === 0) return;
+
+            const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'pitch-shifted-audio-' + new Date().toISOString().slice(0, 10) + '.webm';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        startBtn.addEventListener('click', function() {
+            if (isRunning) {
+                stopAudio();
+            } else {
+                startAudio();
+            }
+        });
+
+        pitchSlider.addEventListener('input', function() {
+            pitchValue.textContent = parseFloat(this.value).toFixed(1);
+        });
+
+        formantSlider.addEventListener('input', function() {
+            formantValue.textContent = this.value + '%';
+            if (phaseVocoder) {
+                phaseVocoder.setFormantStrength(parseFloat(this.value) / 100);
+            }
+        });
+
+        mixSlider.addEventListener('input', function() {
+            mixValue.textContent = this.value + '%';
+            updateMix();
+        });
+
+        recordBtn.addEventListener('click', toggleRecording);
+        downloadBtn.addEventListener('click', downloadRecording);
+
+        window.addEventListener('resize', resizeCanvases);
+    </script>
+</body>
+</html>

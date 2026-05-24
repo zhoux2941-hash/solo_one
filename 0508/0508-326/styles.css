@@ -1,0 +1,389 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    color: #333;
+    font-size: 24px;
+}
+
+.user-selector {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.user-selector select {
+    padding: 10px 15px;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+
+.btn-large {
+    padding: 15px 30px;
+    font-size: 16px;
+    width: 100%;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.panel {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.panel h2 {
+    color: #333;
+    font-size: 18px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.connection-panel {
+    text-align: center;
+}
+
+.connection-status {
+    margin-bottom: 20px;
+}
+
+.status {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.status.connected {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status.disconnected {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.sync-progress {
+    margin-top: 20px;
+}
+
+.sync-progress.hidden {
+    display: none;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    width: 0%;
+    transition: width 0.3s ease;
+    animation: progress 2s ease-in-out infinite;
+}
+
+@keyframes progress {
+    0%, 100% { width: 0%; }
+    50% { width: 100%; }
+}
+
+.data-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.data-item {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.data-item.highlight {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.data-item.highlight .label,
+.data-item.highlight .value,
+.data-item.highlight .unit {
+    color: white;
+}
+
+.data-item .label {
+    display: block;
+    color: #666;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.data-item .value {
+    display: block;
+    color: #333;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.data-item .unit {
+    color: #999;
+    font-size: 12px;
+}
+
+.timestamp {
+    margin-top: 15px;
+    text-align: center;
+    color: #999;
+    font-size: 12px;
+}
+
+.goal-input {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.goal-input label {
+    color: #666;
+    font-size: 14px;
+}
+
+.goal-input input {
+    flex: 1;
+    padding: 10px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+}
+
+.goal-input input:focus {
+    border-color: #667eea;
+}
+
+.goal-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.goal-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: #f5f7fa;
+    border-radius: 8px;
+}
+
+.goal-item.highlight {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.goal-item.highlight .goal-label,
+.goal-item.highlight .goal-value {
+    color: white;
+}
+
+.goal-label {
+    color: #666;
+    font-size: 14px;
+}
+
+.goal-value {
+    color: #333;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.charts-panel {
+    grid-column: span 2;
+}
+
+.chart-container {
+    height: 300px;
+    margin-bottom: 20px;
+}
+
+.chart-container:last-child {
+    margin-bottom: 0;
+}
+
+.history-panel {
+    grid-column: span 2;
+}
+
+.history-table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #f5f7fa;
+}
+
+th {
+    padding: 12px 15px;
+    text-align: left;
+    color: #666;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+    font-size: 14px;
+}
+
+tbody tr:hover {
+    background: #f9f9f9;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h3 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    outline: none;
+}
+
+.modal-content input:focus {
+    border-color: #667eea;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .charts-panel,
+    .history-panel {
+        grid-column: span 1;
+    }
+    
+    header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .data-grid {
+        grid-template-columns: 1fr;
+    }
+}

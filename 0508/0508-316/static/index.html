@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draw & Guess - 你画我猜</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="loginScreen">
+        <div class="login-box">
+            <h1>🎨 你画我猜</h1>
+            <div class="form-group">
+                <label>玩家昵称</label>
+                <input type="text" id="playerName" placeholder="输入你的昵称" maxlength="20">
+            </div>
+            <div class="form-group">
+                <label>选择头像/表情</label>
+                <div class="avatar-selector" id="avatarSelector">
+                    <span class="avatar-option active" data-avatar="😀">😀</span>
+                    <span class="avatar-option" data-avatar="😎">😎</span>
+                    <span class="avatar-option" data-avatar="🤩">🤩</span>
+                    <span class="avatar-option" data-avatar="😸">😸</span>
+                    <span class="avatar-option" data-avatar="🐶">🐶</span>
+                    <span class="avatar-option" data-avatar="🦊">🦊</span>
+                    <span class="avatar-option" data-avatar="🐼">🐼</span>
+                    <span class="avatar-option" data-avatar="🦁">🦁</span>
+                    <span class="avatar-option" data-avatar="🐸">🐸</span>
+                    <span class="avatar-option" data-avatar="🐙">🐙</span>
+                    <span class="avatar-option" data-avatar="🦄">🦄</span>
+                    <span class="avatar-option" data-avatar="🐲">🐲</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>选择皮肤主题</label>
+                <div class="skin-selector" id="skinSelector">
+                    <div class="skin-option active" data-skin="default">
+                        <div class="skin-preview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"></div>
+                        <span>默认</span>
+                    </div>
+                    <div class="skin-option" data-skin="sunset">
+                        <div class="skin-preview" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"></div>
+                        <span>日落</span>
+                    </div>
+                    <div class="skin-option" data-skin="forest">
+                        <div class="skin-preview" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%)"></div>
+                        <span>森林</span>
+                    </div>
+                    <div class="skin-option" data-skin="ocean">
+                        <div class="skin-preview" style="background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)"></div>
+                        <span>海洋</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>房间ID (留空创建新房间)</label>
+                <input type="text" id="roomId" placeholder="输入房间ID或留空" maxlength="8">
+            </div>
+            <button id="joinBtn" class="btn-primary">加入游戏</button>
+        </div>
+    </div>
+
+    <div id="gameScreen" style="display: none;">
+        <div class="game-container">
+            <div class="sidebar-left">
+                <div class="room-info">
+                    <h3>房间信息</h3>
+                    <p>房间ID: <span id="roomIdDisplay"></span></p>
+                    <button id="copyRoomId" class="btn-small">复制</button>
+                </div>
+                <div class="player-list">
+                    <h3>玩家列表</h3>
+                    <ul id="players"></ul>
+                </div>
+                <div class="game-info">
+                    <h3>游戏状态</h3>
+                    <p id="gameStatus">等待开始...</p>
+                    <p id="currentWord"></p>
+                    <p id="timer"></p>
+                </div>
+                <button id="startBtn" class="btn-primary" style="display: none;">开始游戏</button>
+            </div>
+
+            <div class="main-area">
+                <div class="canvas-container">
+                    <canvas id="drawingCanvas"></canvas>
+                </div>
+                <div class="toolbar">
+                    <div class="tool-group">
+                        <button id="brushTool" class="tool-btn active">🖌️ 画笔</button>
+                        <button id="eraserTool" class="tool-btn">🧹 橡皮</button>
+                        <button id="clearBtn" class="tool-btn">🗑️ 清空</button>
+                    </div>
+                    <div class="brush-pattern-group">
+                        <label>笔刷花纹:</label>
+                        <div class="pattern-selector" id="patternSelector">
+                            <button class="pattern-btn active" data-pattern="solid" title="实心">●</button>
+                            <button class="pattern-btn" data-pattern="dotted" title="点状">⊙</button>
+                            <button class="pattern-btn" data-pattern="dashed" title="虚线">≡</button>
+                            <button class="pattern-btn" data-pattern="spray" title="喷枪">💨</button>
+                            <button class="pattern-btn" data-pattern="heart" title="爱心">❤</button>
+                            <button class="pattern-btn" data-pattern="star" title="星星">★</button>
+                        </div>
+                    </div>
+                    <div class="color-group">
+                        <div class="color-picker">
+                            <input type="color" id="colorPicker" value="#000000">
+                            <span>颜色</span>
+                        </div>
+                        <div class="line-width">
+                            <input type="range" id="lineWidth" min="1" max="30" value="5">
+                            <span id="lineWidthValue">5</span>
+                        </div>
+                    </div>
+                    <div class="colors-preset">
+                        <div class="color-btn" style="background: #000000" data-color="#000000"></div>
+                        <div class="color-btn" style="background: #FF0000" data-color="#FF0000"></div>
+                        <div class="color-btn" style="background: #FFA500" data-color="#FFA500"></div>
+                        <div class="color-btn" style="background: #FFFF00" data-color="#FFFF00"></div>
+                        <div class="color-btn" style="background: #008000" data-color="#008000"></div>
+                        <div class="color-btn" style="background: #0000FF" data-color="#0000FF"></div>
+                        <div class="color-btn" style="background: #800080" data-color="#800080"></div>
+                        <div class="color-btn" style="background: #FFFFFF; border: 1px solid #ccc" data-color="#FFFFFF"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-right">
+                <div class="chat-container">
+                    <h3>💬 聊天区</h3>
+                    <div id="chatMessages"></div>
+                    <div class="emoji-picker" id="emojiPicker" style="display: none;">
+                        <div class="emoji-grid">
+                            <span class="emoji-item">😀</span><span class="emoji-item">😃</span><span class="emoji-item">😄</span>
+                            <span class="emoji-item">😁</span><span class="emoji-item">😆</span><span class="emoji-item">😅</span>
+                            <span class="emoji-item">🤣</span><span class="emoji-item">😂</span><span class="emoji-item">🙂</span>
+                            <span class="emoji-item">😊</span><span class="emoji-item">😇</span><span class="emoji-item">🥰</span>
+                            <span class="emoji-item">😍</span><span class="emoji-item">🤩</span><span class="emoji-item">😘</span>
+                            <span class="emoji-item">😗</span><span class="emoji-item">😚</span><span class="emoji-item">😙</span>
+                            <span class="emoji-item">🥲</span><span class="emoji-item">😋</span><span class="emoji-item">😛</span>
+                            <span class="emoji-item">😜</span><span class="emoji-item">🤪</span><span class="emoji-item">😝</span>
+                            <span class="emoji-item">🤑</span><span class="emoji-item">🤗</span><span class="emoji-item">🤭</span>
+                            <span class="emoji-item">🤫</span><span class="emoji-item">🤔</span><span class="emoji-item">🤐</span>
+                            <span class="emoji-item">🤨</span><span class="emoji-item">😐</span><span class="emoji-item">😑</span>
+                            <span class="emoji-item">😶</span><span class="emoji-item">😏</span><span class="emoji-item">😒</span>
+                            <span class="emoji-item">🙄</span><span class="emoji-item">😬</span><span class="emoji-item">😮‍💨</span>
+                            <span class="emoji-item">🤥</span><span class="emoji-item">😌</span><span class="emoji-item">😔</span>
+                            <span class="emoji-item">😪</span><span class="emoji-item">🤤</span><span class="emoji-item">😴</span>
+                            <span class="emoji-item">👍</span><span class="emoji-item">👎</span><span class="emoji-item">👏</span>
+                            <span class="emoji-item">🙌</span><span class="emoji-item">🤝</span><span class="emoji-item">❤️</span>
+                            <span class="emoji-item">🧡</span><span class="emoji-item">💛</span><span class="emoji-item">💚</span>
+                            <span class="emoji-item">💙</span><span class="emoji-item">💜</span><span class="emoji-item">🖤</span>
+                            <span class="emoji-item">🤍</span><span class="emoji-item">🤎</span><span class="emoji-item">💔</span>
+                            <span class="emoji-item">❣️</span><span class="emoji-item">💕</span><span class="emoji-item">💞</span>
+                            <span class="emoji-item">💓</span><span class="emoji-item">💗</span><span class="emoji-item">💖</span>
+                            <span class="emoji-item">💘</span><span class="emoji-item">💝</span><span class="emoji-item">🔥</span>
+                            <span class="emoji-item">⭐</span><span class="emoji-item">✨</span><span class="emoji-item">🌟</span>
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <button id="emojiBtn" class="emoji-btn">😀</button>
+                        <input type="text" id="chatInput" placeholder="输入你的猜测..." maxlength="200">
+                        <button id="sendBtn">发送</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

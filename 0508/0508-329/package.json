@@ -1,0 +1,23 @@
+{
+  "name": "surgical-collaboration-system",
+  "version": "1.0.0",
+  "description": "远程手术协作系统 - 支持4K视频传输、实时标注、双向语音、影像测量",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "node server/signaling-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.14.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Switch WebHID Controller Tool</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 Switch WebHID 手柄工具</h1>
+            <div class="connection-status">
+                <span id="statusIndicator" class="status-indicator disconnected"></span>
+                <span id="statusText">未连接</span>
+            </div>
+        </header>
+
+        <div class="main-grid">
+            <section class="control-panel">
+                <h2>连接控制</h2>
+                <button id="connectBtn" class="btn btn-primary">连接手柄</button>
+                <button id="disconnectBtn" class="btn btn-danger" disabled>断开连接</button>
+                
+                <div class="device-info" id="deviceInfo" style="display: none;">
+                    <h3>设备信息</h3>
+                    <p><strong>名称:</strong> <span id="deviceName">-</span></p>
+                    <p><strong>VID:</strong> <span id="deviceVid">-</span></p>
+                    <p><strong>PID:</strong> <span id="devicePid">-</span></p>
+                </div>
+            </section>
+
+            <section class="controller-visualization">
+                <h2>按键状态</h2>
+                <div class="controller-layout">
+                    <div class="face-buttons">
+                        <div class="button-circle" id="btnX">X</div>
+                        <div class="button-row">
+                            <div class="button-circle" id="btnY">Y</div>
+                            <div class="button-circle" id="btnA">A</div>
+                            <div class="button-circle" id="btnB">B</div>
+                        </div>
+                    </div>
+                    
+                    <div class="dpad">
+                        <div class="dpad-btn" id="dpadUp">↑</div>
+                        <div class="dpad-row">
+                            <div class="dpad-btn" id="dpadLeft">←</div>
+                            <div class="dpad-center"></div>
+                            <div class="dpad-btn" id="dpadRight">→</div>
+                        </div>
+                        <div class="dpad-btn" id="dpadDown">↓</div>
+                    </div>
+
+                    <div class="shoulder-buttons">
+                        <div class="shoulder-btn" id="btnL">L</div>
+                        <div class="shoulder-btn" id="btnR">R</div>
+                    </div>
+                    
+                    <div class="trigger-buttons">
+                        <div class="trigger-btn" id="btnZL">ZL</div>
+                        <div class="trigger-btn" id="btnZR">ZR</div>
+                    </div>
+
+                    <div class="sticks">
+                        <div class="stick-container">
+                            <div class="stick" id="leftStick">
+                                <div class="stick-knob" id="leftStickKnob"></div>
+                            </div>
+                            <span class="stick-label">左摇杆</span>
+                        </div>
+                        <div class="stick-container">
+                            <div class="stick" id="rightStick">
+                                <div class="stick-knob" id="rightStickKnob"></div>
+                            </div>
+                            <span class="stick-label">右摇杆</span>
+                        </div>
+                    </div>
+
+                    <div class="misc-buttons">
+                        <div class="misc-btn" id="btnMinus">-</div>
+                        <div class="misc-btn" id="btnHome">🏠</div>
+                        <div class="misc-btn" id="btnCapture">📷</div>
+                        <div class="misc-btn" id="btnPlus">+</div>
+                    </div>
+
+                    <div class="stick-buttons">
+                        <div class="stick-btn" id="btnL3">L3</div>
+                        <div class="stick-btn" id="btnR3">R3</div>
+                    </div>
+                </div>
+
+                <div class="analog-values">
+                    <h3>模拟值</h3>
+                    <div class="value-row">
+                        <span>左摇杆 X:</span>
+                        <div class="value-bar">
+                            <div class="value-fill" id="leftStickXBar"></div>
+                        </div>
+                        <span id="leftStickXValue">0</span>
+                    </div>
+                    <div class="value-row">
+                        <span>左摇杆 Y:</span>
+                        <div class="value-bar">
+                            <div class="value-fill" id="leftStickYBar"></div>
+                        </div>
+                        <span id="leftStickYValue">0</span>
+                    </div>
+                    <div class="value-row">
+                        <span>右摇杆 X:</span>
+                        <div class="value-bar">
+                            <div class="value-fill" id="rightStickXBar"></div>
+                        </div>
+                        <span id="rightStickXValue">0</span>
+                    </div>
+                    <div class="value-row">
+                        <span>右摇杆 Y:</span>
+                        <div class="value-bar">
+                            <div class="value-fill" id="rightStickYBar"></div>
+                        </div>
+                        <span id="rightStickYValue">0</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="motion-visualization">
+                <h2>体感姿态</h2>
+                <div class="cube-container">
+                    <div class="cube" id="motionCube">
+                        <div class="cube-face front">前</div>
+                        <div class="cube-face back">后</div>
+                        <div class="cube-face right">右</div>
+                        <div class="cube-face left">左</div>
+                        <div class="cube-face top">上</div>
+                        <div class="cube-face bottom">下</div>
+                    </div>
+                </div>
+                
+                <div class="sensor-data">
+                    <h3>传感器数据</h3>
+                    <div class="sensor-group">
+                        <h4>陀螺仪 (°/s)</h4>
+                        <p>X: <span id="gyroX">0.00</span></p>
+                        <p>Y: <span id="gyroY">0.00</span></p>
+                        <p>Z: <span id="gyroZ">0.00</span></p>
+                    </div>
+                    <div class="sensor-group">
+                        <h4>加速度计 (g)</h4>
+                        <p>X: <span id="accelX">0.00</span></p>
+                        <p>Y: <span id="accelY">0.00</span></p>
+                        <p>Z: <span id="accelZ">0.00</span></p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="vibration-panel">
+                <h2>振动控制</h2>
+                <div class="vibration-controls">
+                    <div class="control-group">
+                        <label>左电机频率 (Hz):</label>
+                        <input type="range" id="leftFreq" min="0" max="1000" value="160">
+                        <span id="leftFreqValue">160</span>
+                    </div>
+                    <div class="control-group">
+                        <label>左电机幅度:</label>
+                        <input type="range" id="leftAmp" min="0" max="100" value="50">
+                        <span id="leftAmpValue">50%</span>
+                    </div>
+                    <div class="control-group">
+                        <label>右电机频率 (Hz):</label>
+                        <input type="range" id="rightFreq" min="0" max="1000" value="320">
+                        <span id="rightFreqValue">320</span>
+                    </div>
+                    <div class="control-group">
+                        <label>右电机幅度:</label>
+                        <input type="range" id="rightAmp" min="0" max="100" value="50">
+                        <span id="rightAmpValue">50%</span>
+                    </div>
+                    <div class="control-group">
+                        <label>持续时间 (ms):</label>
+                        <input type="range" id="vibrateDuration" min="100" max="5000" value="500">
+                        <span id="vibrateDurationValue">500</span>
+                    </div>
+                    <button id="vibrateBtn" class="btn btn-primary" disabled>触发振动</button>
+                </div>
+            </section>
+
+            <section class="calibration-panel">
+                <h2>校准设置</h2>
+                <div class="calibration-controls">
+                    <button id="calibrateGyroBtn" class="btn btn-secondary" disabled>陀螺仪归零</button>
+                    <button id="resetOrientationBtn" class="btn btn-secondary" disabled>重置姿态</button>
+                    
+                    <div class="control-group">
+                        <label>左摇杆死区:</label>
+                        <input type="range" id="leftDeadzone" min="0" max="30" value="5">
+                        <span id="leftDeadzoneValue">5%</span>
+                    </div>
+                    <div class="control-group">
+                        <label>右摇杆死区:</label>
+                        <input type="range" id="rightDeadzone" min="0" max="30" value="5">
+                        <span id="rightDeadzoneValue">5%</span>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>摇杆范围校准</label>
+                        <button id="calibrateStickRangeBtn" class="btn btn-secondary" disabled>校准摇杆范围</button>
+                        <p style="font-size: 0.8em; color: #aaa; margin-top: 5px;">点击后5秒内转动两个摇杆到最大范围</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mouse-control-panel">
+                <h2>体感鼠标控制</h2>
+                <div class="mouse-controls">
+                    <div class="control-row">
+                        <label class="switch">
+                            <input type="checkbox" id="mouseControlEnabled" disabled>
+                            <span class="slider"></span>
+                        </label>
+                        <span>启用体感鼠标</span>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>灵敏度: <span id="mouseSensitivityValue">3.0</span></label>
+                        <input type="range" id="mouseSensitivity" min="0.5" max="10" step="0.1" value="3">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>平滑度: <span id="mouseSmoothingValue">0.7</span></label>
+                        <input type="range" id="mouseSmoothing" min="0" max="0.95" step="0.05" value="0.7">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>死区: <span id="mouseDeadzoneValue">0.05</span></label>
+                        <input type="range" id="mouseDeadzone" min="0" max="0.3" step="0.01" value="0.05">
+                    </div>
+                    
+                    <div class="control-row">
+                        <label class="switch">
+                            <input type="checkbox" id="mouseReverseY" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>反转 Y 轴（像飞机摇杆）</span>
+                    </div>
+                    
+                    <div class="control-row">
+                        <label class="switch">
+                            <input type="checkbox" id="mouseUseGyro">
+                            <span class="slider"></span>
+                        </label>
+                        <span>使用陀螺仪（否则使用倾斜）</span>
+                    </div>
+                    
+                    <button id="resetMouseCenter" class="btn btn-secondary" disabled>重置中心位置</button>
+                </div>
+                
+                <div class="mouse-preview">
+                    <h3>鼠标预览区域</h3>
+                    <div class="mouse-canvas" id="mouseCanvas">
+                        <div class="virtual-cursor" id="virtualCursor"></div>
+                    </div>
+                    <p class="mouse-coords">
+                        X: <span id="mouseX">0</span> | Y: <span id="mouseY">0</span>
+                    </p>
+                </div>
+            </section>
+
+            <section class="recording-panel">
+                <h2>记录与回放</h2>
+                <div class="recording-controls">
+                    <button id="recordBtn" class="btn btn-warning" disabled>开始记录</button>
+                    <button id="stopRecordBtn" class="btn btn-danger" disabled>停止记录</button>
+                    <button id="playbackBtn" class="btn btn-success" disabled>开始回放</button>
+                    <button id="stopPlaybackBtn" class="btn btn-danger" disabled>停止回放</button>
+                </div>
+                <div class="recording-info">
+                    <p>状态: <span id="recordStatus">空闲</span></p>
+                    <p>已记录帧: <span id="recordCount">0</span></p>
+                    <p>回放进度: <span id="playbackProgress">0%</span></p>
+                </div>
+                <div class="recording-speed">
+                    <label>回放速度:</label>
+                    <input type="range" id="playbackSpeed" min="0.25" max="4" step="0.25" value="1">
+                    <span id="playbackSpeedValue">1x</span>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="switchHid.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

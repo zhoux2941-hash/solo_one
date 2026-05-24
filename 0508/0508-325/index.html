@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS小票打印机 - WebUSB</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖨️ POS小票打印工具</h1>
+            <div class="printer-status">
+                <span id="statusIndicator" class="status-indicator disconnected"></span>
+                <span id="statusText">未连接打印机</span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="card">
+                    <h2>📋 打印机控制</h2>
+                    <div class="button-group">
+                        <button id="connectBtn" class="btn btn-primary">连接打印机</button>
+                        <button id="disconnectBtn" class="btn btn-secondary" disabled>断开连接</button>
+                    </div>
+                    <div id="printerInfo" class="printer-info" style="display: none;">
+                        <p><strong>打印机:</strong> <span id="printerName">-</span></p>
+                        <p><strong>状态:</strong> <span id="printerState">-</span></p>
+                        <div class="status-monitor">
+                            <div class="status-item">
+                                <span class="status-icon" id="paperIcon">📄</span>
+                                <span>纸张状态</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-icon" id="tempIcon">🌡️</span>
+                                <span>温度状态</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-icon" id="coverIcon">📦</span>
+                                <span>开盖状态</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>🎨 选择模板</h2>
+                    <select id="templateSelect" class="form-control">
+                        <option value="receipt">购物小票</option>
+                        <option value="refund">退款单</option>
+                        <option value="test">测试单</option>
+                    </select>
+                </div>
+
+                <div class="card">
+                    <h2>🏪 店铺信息</h2>
+                    <div class="form-group">
+                        <label>店铺LOGO</label>
+                        <div class="logo-upload-area">
+                            <div id="logoPreview" class="logo-preview" style="display: none;">
+                                <img id="logoImage" src="" alt="LOGO">
+                                <button type="button" id="removeLogoBtn" class="btn btn-danger btn-small">删除</button>
+                            </div>
+                            <label id="logoUploadBtn" class="btn btn-secondary">
+                                📷 上传LOGO
+                                <input type="file" id="logoInput" accept="image/png,image/jpeg,image/gif,image/bmp" style="display: none;">
+                            </label>
+                        </div>
+                        <small class="form-hint">建议使用黑白高对比度图片，宽度384像素(58mm纸)或576像素(80mm纸)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>LOGO尺寸</label>
+                        <select id="logoSize" class="form-control">
+                            <option value="small">小 (128px)</option>
+                            <option value="medium" selected>中 (256px)</option>
+                            <option value="large">大 (384px)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>店铺名称</label>
+                        <input type="text" id="shopName" class="form-control" value="便民超市" placeholder="输入店铺名称">
+                    </div>
+                    <div class="form-group">
+                        <label>店铺地址</label>
+                        <input type="text" id="shopAddress" class="form-control" value="北京市朝阳区xxx路xxx号" placeholder="输入店铺地址">
+                    </div>
+                    <div class="form-group">
+                        <label>联系电话</label>
+                        <input type="text" id="shopPhone" class="form-control" value="010-12345678" placeholder="输入联系电话">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>🛒 商品列表</h2>
+                    <div id="productList" class="product-list"></div>
+                    <div class="add-product-form">
+                        <input type="text" id="productName" class="form-control" placeholder="商品名称">
+                        <input type="number" id="productPrice" class="form-control" placeholder="单价" step="0.01" min="0">
+                        <input type="number" id="productQty" class="form-control" placeholder="数量" step="1" min="1" value="1">
+                        <button id="addProductBtn" class="btn btn-success">添加</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>💰 支付信息</h2>
+                    <div class="form-group">
+                        <label>支付方式</label>
+                        <select id="paymentMethod" class="form-control">
+                            <option value="cash">现金</option>
+                            <option value="wechat">微信支付</option>
+                            <option value="alipay">支付宝</option>
+                            <option value="card">银行卡</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>支付二维码内容</label>
+                        <input type="text" id="qrCodeData" class="form-control" value="https://example.com/pay/123456" placeholder="二维码链接或内容">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>🖨️ 打印设置</h2>
+                    <div class="form-group">
+                        <label>打印份数</label>
+                        <input type="number" id="printCopies" class="form-control" value="1" min="1" max="10">
+                    </div>
+                    <div class="button-group">
+                        <button id="printBtn" class="btn btn-primary" disabled>打印收据</button>
+                        <button id="testPrintBtn" class="btn btn-info" disabled>测试打印</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="card">
+                    <h2>👁️ 实时预览</h2>
+                    <div class="receipt-preview-container">
+                        <div id="receiptPreview" class="receipt-preview"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

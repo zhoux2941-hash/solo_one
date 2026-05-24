@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>血糖仪数据同步工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🩸 血糖仪数据同步工具</h1>
+            <p class="subtitle">本地存储 · 隐私保护 · 支持多品牌</p>
+        </header>
+
+        <section class="connection-section">
+            <h2>设备连接</h2>
+            <div class="device-selector">
+                <select id="deviceBrand">
+                    <option value="">选择血糖仪品牌</option>
+                    <option value="contour">Contour (拜耳)</option>
+                    <option value="roche">罗氏 (Roche)</option>
+                    <option value="yuyue">鱼跃 (Yuwell)</option>
+                </select>
+                <button id="connectBtn" class="btn btn-primary">
+                    <span class="icon">🔗</span> 连接设备
+                </button>
+                <button id="syncBtn" class="btn btn-success" disabled>
+                    <span class="icon">📥</span> 同步数据
+                </button>
+            </div>
+            <div id="connectionStatus" class="status"></div>
+        </section>
+
+        <section class="stats-section">
+            <h2>血糖统计</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">平均血糖</div>
+                    <div class="stat-value" id="avgGlucose">--</div>
+                    <div class="stat-unit">mmol/L</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">标准差</div>
+                    <div class="stat-value" id="stdDev">--</div>
+                    <div class="stat-unit">mmol/L</div>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-label">预估 HbA1c</div>
+                    <div class="stat-value" id="hba1c">--</div>
+                    <div class="stat-unit">%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">测量次数</div>
+                    <div class="stat-value" id="totalReadings">--</div>
+                    <div class="stat-unit">次</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="chart-section">
+            <h2>血糖趋势图</h2>
+            <div class="chart-controls">
+                <button class="chart-btn active" data-period="day">日视图</button>
+                <button class="chart-btn" data-period="week">周视图</button>
+                <button class="chart-btn" data-period="month">月视图</button>
+            </div>
+            <div class="chart-container" id="chartContainer">
+                <canvas id="glucoseChart"></canvas>
+            </div>
+            <div class="range-info">
+                <span class="normal-range">■ 正常范围: 3.9 - 10.0 mmol/L</span>
+            </div>
+        </section>
+
+        <section class="data-section">
+            <div class="section-header">
+                <h2>测量记录</h2>
+                <div style="display: flex; gap: 10px;">
+                    <button id="shareBtn" class="btn btn-secondary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <span class="icon">🔗</span> 分享给医生
+                    </button>
+                    <button id="exportPdfBtn" class="btn btn-secondary">
+                        <span class="icon">📄</span> 导出PDF
+                    </button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="readingsTable">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>血糖值 (mmol/L)</th>
+                            <th>标记</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="readingsBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="privacy-notice">
+            <p>🔒 隐私保护：所有数据仅存储在本地浏览器中，不会上传到任何服务器</p>
+        </section>
+    </div>
+
+    <div class="share-modal-overlay" id="shareModal" style="display: none;">
+        <div class="share-modal">
+            <div class="share-modal-header">
+                <h3>🔗 分享给医生</h3>
+                <button class="share-close-btn" onclick="app.closeShareModal()">×</button>
+            </div>
+            <div class="share-modal-body">
+                <div class="share-form-group">
+                    <label>患者姓名（可选）</label>
+                    <input type="text" id="patientName" placeholder="请输入患者姓名" maxlength="20">
+                </div>
+                <div class="share-info-box">
+                    <p><strong>📊 将分享以下数据：</strong></p>
+                    <ul>
+                        <li>最近 <span id="shareDataCount">0</span> 条血糖记录</li>
+                        <li>血糖统计数据（平均值、标准差、HbA1c等）</li>
+                        <li>餐前/餐后标记信息</li>
+                    </ul>
+                    <p style="color: #28a745; margin-top: 10px;">
+                        <strong>✅ 数据安全：</strong>所有数据经加密后直接嵌入链接，不经过任何服务器
+                    </p>
+                    <p style="color: #6c757d; font-size: 0.9rem;">
+                        ⏰ 链接有效期：30天
+                    </p>
+                </div>
+                <div id="shareLinkContainer" style="display: none;">
+                    <label>分享链接</label>
+                    <div class="share-link-box">
+                        <input type="text" id="shareLink" readonly>
+                        <button class="copy-btn" onclick="app.copyShareLink()">📋 复制</button>
+                    </div>
+                    <p style="text-align: center; margin-top: 15px; color: #28a745;" id="copySuccess" style="display: none;">
+                        ✅ 链接已复制到剪贴板！
+                    </p>
+                </div>
+            </div>
+            <div class="share-modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeShareModal()">取消</button>
+                <button class="btn btn-primary" id="generateLinkBtn" onclick="app.generateShareLink()">
+                    生成分享链接
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .share-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .share-modal {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .share-modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .share-modal-header h3 {
+            margin: 0;
+        }
+
+        .share-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+
+        .share-close-btn:hover {
+            opacity: 1;
+        }
+
+        .share-modal-body {
+            padding: 25px;
+        }
+
+        .share-form-group {
+            margin-bottom: 20px;
+        }
+
+        .share-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .share-form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .share-form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .share-info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .share-info-box ul {
+            margin: 10px 0 0 20px;
+            color: #495057;
+        }
+
+        .share-info-box li {
+            margin: 5px 0;
+        }
+
+        .share-link-box {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .share-link-box input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            background: #f8f9fa;
+        }
+
+        .copy-btn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .share-modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+    </style>
+
+    <script src="database.js"></script>
+    <script src="bluetooth.js"></script>
+    <script src="charts.js"></script>
+    <script src="stats.js"></script>
+    <script src="export.js"></script>
+    <script src="share.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

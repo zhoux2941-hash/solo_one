@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>虚拟展厅管理后台</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 24px;
+    }
+
+    .back-btn {
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .back-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .tab {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    .tab.active {
+      background: #667eea;
+      color: white;
+    }
+
+    .tab:hover:not(.active) {
+      background: #e9ecef;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5a6fd6;
+    }
+
+    .btn-danger {
+      background: #f44336;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #d32f2f;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .scene-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .scene-image {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      background: #f0f0f0;
+    }
+
+    .scene-info {
+      padding: 15px;
+    }
+
+    .scene-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .scene-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: #f0f0f0;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    .hotspot-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .hotspot-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+
+    .hotspot-info {
+      flex: 1;
+    }
+
+    .hotspot-title {
+      font-weight: 500;
+    }
+
+    .hotspot-meta {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .hotspot-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-right: 8px;
+    }
+
+    .badge-navigate {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .badge-info {
+      background: #2196F3;
+      color: white;
+    }
+
+    .badge-model {
+      background: #9C27B0;
+      color: white;
+    }
+
+    .upload-area {
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .upload-area:hover {
+      border-color: #667eea;
+      background: #f8f9ff;
+    }
+
+    .upload-icon {
+      font-size: 48px;
+      color: #ccc;
+      margin-bottom: 10px;
+    }
+
+    .upload-text {
+      color: #666;
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 15px;
+      display: none;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .upload-status {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      background: #333;
+      color: white;
+      border-radius: 8px;
+      z-index: 2000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.success {
+      background: #4CAF50;
+    }
+
+    .toast.error {
+      background: #f44336;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>虚拟展厅管理后台</h1>
+    <button class="back-btn" onclick="window.location.href='/'">返回展厅</button>
+  </div>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" data-tab="scenes">场景管理</button>
+      <button class="tab" data-tab="hotspots">热点管理</button>
+      <button class="tab" data-tab="export">导出配置</button>
+    </div>
+
+    <div id="scenes-tab" class="tab-content active">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">全景场景列表</h2>
+          <button class="btn btn-primary" onclick="openSceneModal()">+ 添加场景</button>
+        </div>
+        <div id="scenes-grid" class="grid"></div>
+      </div>
+    </div>
+
+    <div id="hotspots-tab" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">热点配置</h2>
+          <div>
+            <select id="hotspot-scene-filter" class="form-input" style="width: auto; display: inline-block; margin-right: 10px;">
+              <option value="">所有场景</option>
+            </select>
+            <button class="btn btn-primary" onclick="openHotspotModal()">+ 添加热点</button>
+          </div>
+        </div>
+        <div id="hotspots-list" class="hotspot-list"></div>
+      </div>
+    </div>
+
+    <div id="export-tab" class="tab-content">
+      <div class="card">
+        <h2 class="card-title" style="margin-bottom: 20px;">导出配置</h2>
+        <p style="margin-bottom: 20px; color: #666;">您可以导出当前的展厅配置为JSON文件，或导入已有的配置文件。</p>
+        <div style="display: flex; gap: 15px;">
+          <button class="btn btn-primary" onclick="exportConfig()">导出配置</button>
+          <button class="btn" onclick="document.getElementById('import-file').click()">导入配置</button>
+          <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importConfig(event)">
+        </div>
+        <div style="margin-top: 30px;">
+          <h3 style="margin-bottom: 15px;">当前配置预览</h3>
+          <pre id="config-preview" style="background: #f5f5f5; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 12px;"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="scene-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="scene-modal-title">添加场景</h3>
+        <button class="modal-close" onclick="closeSceneModal()">×</button>
+      </div>
+      <form id="scene-form">
+        <input type="hidden" id="scene-id">
+        <div class="form-group">
+          <label class="form-label">场景名称</label>
+          <input type="text" id="scene-name" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">全景图片</label>
+          <div class="upload-area" onclick="document.getElementById('scene-image-file').click()">
+            <div class="upload-icon">📷</div>
+            <div class="upload-text">点击上传全景图片（推荐2:1比例，2048×1024或更大）</div>
+            <input type="file" id="scene-image-file" accept="image/*" style="display: none;" onchange="uploadSceneImage(event)">
+          </div>
+          <div class="progress-container" id="upload-progress">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+          <div class="upload-status" id="upload-status"></div>
+          <input type="hidden" id="scene-image">
+          <div id="image-preview" style="margin-top: 10px; display: none;">
+            <img id="preview-img" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 6px;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">图片URL（或直接输入）</label>
+          <input type="text" id="scene-image-url" class="form-input" placeholder="https://...">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">地图位置 X</label>
+            <input type="number" id="scene-pos-x" class="form-input" value="100">
+          </div>
+          <div class="form-group">
+            <label class="form-label">地图位置 Y</label>
+            <input type="number" id="scene-pos-y" class="form-input" value="100">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" onclick="closeSceneModal()">取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="hotspot-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="hotspot-modal-title">添加热点</h3>
+        <button class="modal-close" onclick="closeHotspotModal()">×</button>
+      </div>
+      <form id="hotspot-form">
+        <input type="hidden" id="hotspot-id">
+        <div class="form-group">
+          <label class="form-label">所属场景</label>
+          <select id="hotspot-scene" class="form-input" required></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">热点类型</label>
+          <select id="hotspot-type" class="form-input" onchange="toggleHotspotFields()">
+            <option value="navigate">跳转热点 (绿色)</option>
+            <option value="info">信息热点 (蓝色)</option>
+            <option value="model">3D模型热点 (紫色)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">热点标题</label>
+          <input type="text" id="hotspot-title" class="form-input" required>
+        </div>
+        <div id="navigate-fields">
+          <div class="form-group">
+            <label class="form-label">目标场景</label>
+            <select id="hotspot-target" class="form-input"></select>
+          </div>
+        </div>
+        <div id="info-fields" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">详细描述</label>
+            <textarea id="hotspot-description" class="form-input form-textarea"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">展品图片URL</label>
+            <input type="text" id="hotspot-image" class="form-input">
+          </div>
+        </div>
+        <div id="model-fields" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">展品描述</label>
+            <textarea id="hotspot-model-description" class="form-input form-textarea"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">3D模型文件 (GLTF/GLB)</label>
+            <div class="upload-area" onclick="document.getElementById('model-file').click()">
+              <div class="upload-icon">📦</div>
+              <div class="upload-text">点击上传3D模型文件（支持GLTF/GLB格式）</div>
+              <input type="file" id="model-file" accept=".gltf,.glb" style="display: none;" onchange="uploadModel(event)">
+            </div>
+            <div class="progress-container" id="model-upload-progress" style="display: none; margin-top: 15px;">
+              <div class="progress-bar">
+                <div class="progress-fill" id="model-progress-bar"></div>
+              </div>
+              <div class="upload-status" id="model-upload-status" style="text-align: center; margin-top: 10px;"></div>
+            </div>
+            <input type="hidden" id="hotspot-model-url">
+          </div>
+          <div class="form-group">
+            <label class="form-label">或直接输入模型URL</label>
+            <input type="text" id="hotspot-model-url-input" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">展品分类</label>
+            <input type="text" id="hotspot-category" class="form-input" placeholder="如：青铜器、玉器、雕塑">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">3D位置（球面坐标，单位：像素）</label>
+          <div class="form-row">
+            <input type="number" id="hotspot-pos-x" class="form-input" value="0" step="10">
+            <input type="number" id="hotspot-pos-y" class="form-input" value="0" step="10">
+            <input type="number" id="hotspot-pos-z" class="form-input" value="-400" step="10">
+          </div>
+          <small style="color: #666;">提示：Z轴负值表示在观察者前方</small>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" onclick="closeHotspotModal()">取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    let config = { scenes: [], hotspots: [] };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadConfig();
+      setupTabs();
+      setupForms();
+    });
+
+    async function loadConfig() {
+      try {
+        const res = await fetch('/api/config');
+        config = await res.json();
+        renderScenes();
+        renderHotspots();
+        renderConfigPreview();
+      } catch (e) {
+        showToast('加载配置失败', 'error');
+      }
+    }
+
+    function setupTabs() {
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          tab.classList.add('active');
+          document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
+        });
+      });
+    }
+
+    function setupForms() {
+      document.getElementById('scene-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveScene();
+      });
+
+      document.getElementById('hotspot-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveHotspot();
+      });
+    }
+
+    function renderScenes() {
+      const grid = document.getElementById('scenes-grid');
+      const filterSelect = document.getElementById('hotspot-scene-filter');
+      const sceneSelect = document.getElementById('hotspot-scene');
+      const targetSelect = document.getElementById('hotspot-target');
+
+      grid.innerHTML = '';
+      filterSelect.innerHTML = '<option value="">所有场景</option>';
+      sceneSelect.innerHTML = '';
+      targetSelect.innerHTML = '';
+
+      config.scenes.forEach(scene => {
+        const card = document.createElement('div');
+        card.className = 'scene-card';
+        card.innerHTML = `
+          <img src="${scene.image || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22150%22><rect fill=%22%23f0f0f0%22 width=%22300%22 height=%22150%22/><text fill=%22%23999%22 x=%22150%22 y=%2275%22 text-anchor=%22middle%22>暂无图片</text></svg>'}" class="scene-image" alt="${scene.name}">
+          <div class="scene-info">
+            <div class="scene-name">${scene.name}</div>
+            <div class="scene-actions">
+              <button class="btn btn-sm btn-primary" onclick="editScene('${scene.id}')">编辑</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteScene('${scene.id}')">删除</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+
+        filterSelect.innerHTML += `<option value="${scene.id}">${scene.name}</option>`;
+        sceneSelect.innerHTML += `<option value="${scene.id}">${scene.name}</option>`;
+        targetSelect.innerHTML += `<option value="${scene.id}">${scene.name}</option>`;
+      });
+
+      filterSelect.addEventListener('change', renderHotspots);
+    }
+
+    function renderHotspots() {
+      const list = document.getElementById('hotspots-list');
+      const filter = document.getElementById('hotspot-scene-filter').value;
+
+      let hotspots = config.hotspots;
+      if (filter) {
+        hotspots = hotspots.filter(h => h.sceneId === filter);
+      }
+
+      list.innerHTML = '';
+
+      hotspots.forEach(hotspot => {
+        const sceneName = config.scenes.find(s => s.id === hotspot.sceneId)?.name || hotspot.sceneId;
+        const targetName = config.scenes.find(s => s.id === hotspot.target)?.name || '';
+        
+        let badgeText = '信息';
+        if (hotspot.type === 'navigate') badgeText = '跳转';
+        if (hotspot.type === 'model') badgeText = '3D模型';
+        
+        const item = document.createElement('div');
+        item.className = 'hotspot-item';
+        item.innerHTML = `
+          <div class="hotspot-info">
+            <div class="hotspot-title">
+              <span class="badge badge-${hotspot.type}">${badgeText}</span>
+              ${hotspot.title}
+            </div>
+            <div class="hotspot-meta">
+              场景: ${sceneName}
+              ${hotspot.type === 'navigate' ? ` → 目标: ${targetName}` : ''}
+              ${hotspot.type === 'model' ? ` | 分类: ${hotspot.category || '未分类'}` : ''}
+              | 位置: (${hotspot.position?.x || 0}, ${hotspot.position?.y || 0}, ${hotspot.position?.z || 0})
+            </div>
+          </div>
+          <div class="hotspot-actions">
+            <button class="btn btn-sm btn-primary" onclick="editHotspot('${hotspot.id}')">编辑</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteHotspot('${hotspot.id}')">删除</button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+
+      if (hotspots.length === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">暂无热点</div>';
+      }
+    }
+
+    function renderConfigPreview() {
+      document.getElementById('config-preview').textContent = JSON.stringify(config, null, 2);
+    }
+
+    function openSceneModal(scene = null) {
+      document.getElementById('scene-modal').classList.add('active');
+      document.getElementById('scene-modal-title').textContent = scene ? '编辑场景' : '添加场景';
+      
+      if (scene) {
+        document.getElementById('scene-id').value = scene.id;
+        document.getElementById('scene-name').value = scene.name;
+        document.getElementById('scene-image').value = scene.image || '';
+        document.getElementById('scene-image-url').value = scene.image || '';
+        document.getElementById('scene-pos-x').value = scene.position?.x || 100;
+        document.getElementById('scene-pos-y').value = scene.position?.y || 100;
+        
+        if (scene.image) {
+          document.getElementById('preview-img').src = scene.image;
+          document.getElementById('image-preview').style.display = 'block';
+        }
+      } else {
+        document.getElementById('scene-form').reset();
+        document.getElementById('scene-id').value = '';
+        document.getElementById('image-preview').style.display = 'none';
+      }
+    }
+
+    function closeSceneModal() {
+      document.getElementById('scene-modal').classList.remove('active');
+      const progressContainer = document.getElementById('upload-progress');
+      const progressBar = document.getElementById('progress-bar');
+      const uploadStatus = document.getElementById('upload-status');
+      progressContainer.style.display = 'none';
+      progressBar.style.width = '0%';
+      uploadStatus.textContent = '';
+    }
+
+    function editScene(id) {
+      const scene = config.scenes.find(s => s.id === id);
+      if (scene) openSceneModal(scene);
+    }
+
+    async function uploadSceneImage(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const progressContainer = document.getElementById('upload-progress');
+      const progressBar = document.getElementById('progress-bar');
+      const uploadStatus = document.getElementById('upload-status');
+
+      progressContainer.style.display = 'block';
+      uploadStatus.textContent = `正在上传: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+
+      const formData = new FormData();
+      formData.append('panorama', file);
+
+      try {
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            progressBar.style.width = percentComplete + '%';
+            uploadStatus.textContent = `正在上传: ${(event.loaded / 1024 / 1024).toFixed(2)} / ${(event.total / 1024 / 1024).toFixed(2)} MB (${Math.round(percentComplete)}%)`;
+          }
+        });
+
+        await new Promise((resolve, reject) => {
+          xhr.open('POST', '/api/upload');
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve(JSON.parse(xhr.responseText));
+            } else {
+              reject(new Error('Upload failed'));
+            }
+          };
+          xhr.onerror = () => reject(new Error('Network error'));
+          xhr.send(formData);
+        }).then((data) => {
+          if (data.success) {
+            document.getElementById('scene-image').value = data.url;
+            document.getElementById('scene-image-url').value = data.url;
+            document.getElementById('preview-img').src = data.url;
+            document.getElementById('image-preview').style.display = 'block';
+            const compressionInfo = data.compressionRatio ? `已压缩 ${data.compressionRatio} (${data.originalSize} → ${data.compressedSize})` : '上传完成！';
+            uploadStatus.textContent = compressionInfo;
+            showToast('图片上传成功');
+            setTimeout(() => {
+              progressContainer.style.display = 'none';
+              progressBar.style.width = '0%';
+              uploadStatus.textContent = '';
+            }, 3000);
+          }
+        });
+      } catch (e) {
+        progressContainer.style.display = 'none';
+        progressBar.style.width = '0%';
+        uploadStatus.textContent = '';
+        showToast('图片上传失败', 'error');
+      }
+    }
+
+    async function saveScene() {
+      const id = document.getElementById('scene-id').value;
+      const imageUrl = document.getElementById('scene-image-url').value || document.getElementById('scene-image').value;
+      
+      const sceneData = {
+        name: document.getElementById('scene-name').value,
+        image: imageUrl,
+        position: {
+          x: parseInt(document.getElementById('scene-pos-x').value) || 100,
+          y: parseInt(document.getElementById('scene-pos-y').value) || 100
+        }
+      };
+
+      try {
+        let res;
+        if (id) {
+          res = await fetch(`/api/scenes/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sceneData)
+          });
+        } else {
+          res = await fetch('/api/scenes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sceneData)
+          });
+        }
+
+        const data = await res.json();
+        if (data.success) {
+          closeSceneModal();
+          await loadConfig();
+          showToast(id ? '场景更新成功' : '场景创建成功');
+        }
+      } catch (e) {
+        showToast('保存场景失败', 'error');
+      }
+    }
+
+    async function deleteScene(id) {
+      if (!confirm('确定要删除此场景吗？相关的热点也会被删除。')) return;
+
+      try {
+        const res = await fetch(`/api/scenes/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          await loadConfig();
+          showToast('场景删除成功');
+        }
+      } catch (e) {
+        showToast('删除场景失败', 'error');
+      }
+    }
+
+    function openHotspotModal(hotspot = null) {
+      document.getElementById('hotspot-modal').classList.add('active');
+      document.getElementById('hotspot-modal-title').textContent = hotspot ? '编辑热点' : '添加热点';
+      
+      if (hotspot) {
+        document.getElementById('hotspot-id').value = hotspot.id;
+        document.getElementById('hotspot-scene').value = hotspot.sceneId;
+        document.getElementById('hotspot-type').value = hotspot.type;
+        document.getElementById('hotspot-title').value = hotspot.title;
+        document.getElementById('hotspot-target').value = hotspot.target || '';
+        document.getElementById('hotspot-description').value = hotspot.description || '';
+        document.getElementById('hotspot-image').value = hotspot.image || '';
+        document.getElementById('hotspot-model-description').value = hotspot.description || '';
+        document.getElementById('hotspot-model-url').value = hotspot.modelUrl || '';
+        document.getElementById('hotspot-model-url-input').value = hotspot.modelUrl || '';
+        document.getElementById('hotspot-category').value = hotspot.category || '';
+        document.getElementById('hotspot-pos-x').value = hotspot.position?.x || 0;
+        document.getElementById('hotspot-pos-y').value = hotspot.position?.y || 0;
+        document.getElementById('hotspot-pos-z').value = hotspot.position?.z || -400;
+      } else {
+        document.getElementById('hotspot-form').reset();
+        document.getElementById('hotspot-id').value = '';
+        document.getElementById('hotspot-pos-z').value = '-400';
+        document.getElementById('hotspot-model-url').value = '';
+      }
+      
+      toggleHotspotFields();
+    }
+
+    function closeHotspotModal() {
+      document.getElementById('hotspot-modal').classList.remove('active');
+    }
+
+    function toggleHotspotFields() {
+      const type = document.getElementById('hotspot-type').value;
+      document.getElementById('navigate-fields').style.display = type === 'navigate' ? 'block' : 'none';
+      document.getElementById('info-fields').style.display = type === 'info' ? 'block' : 'none';
+      document.getElementById('model-fields').style.display = type === 'model' ? 'block' : 'none';
+    }
+
+    function editHotspot(id) {
+      const hotspot = config.hotspots.find(h => h.id === id);
+      if (hotspot) openHotspotModal(hotspot);
+    }
+
+    async function saveHotspot() {
+      const id = document.getElementById('hotspot-id').value;
+      const type = document.getElementById('hotspot-type').value;
+      
+      const hotspotData = {
+        sceneId: document.getElementById('hotspot-scene').value,
+        type: type,
+        title: document.getElementById('hotspot-title').value,
+        position: {
+          x: parseInt(document.getElementById('hotspot-pos-x').value) || 0,
+          y: parseInt(document.getElementById('hotspot-pos-y').value) || 0,
+          z: parseInt(document.getElementById('hotspot-pos-z').value) || -400
+        }
+      };
+
+      if (type === 'navigate') {
+        hotspotData.target = document.getElementById('hotspot-target').value;
+      } else if (type === 'info') {
+        hotspotData.description = document.getElementById('hotspot-description').value;
+        hotspotData.image = document.getElementById('hotspot-image').value;
+      } else if (type === 'model') {
+        hotspotData.description = document.getElementById('hotspot-model-description').value;
+        hotspotData.modelUrl = document.getElementById('hotspot-model-url-input').value || 
+                               document.getElementById('hotspot-model-url').value;
+        hotspotData.category = document.getElementById('hotspot-category').value;
+      }
+
+      try {
+        let res;
+        if (id) {
+          res = await fetch(`/api/hotspots/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(hotspotData)
+          });
+        } else {
+          res = await fetch('/api/hotspots', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(hotspotData)
+          });
+        }
+
+        const data = await res.json();
+        if (data.success) {
+          closeHotspotModal();
+          await loadConfig();
+          showToast(id ? '热点更新成功' : '热点创建成功');
+        }
+      } catch (e) {
+        showToast('保存热点失败', 'error');
+      }
+    }
+
+    async function uploadModel(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const progressContainer = document.getElementById('model-upload-progress');
+      const progressBar = document.getElementById('model-progress-bar');
+      const uploadStatus = document.getElementById('model-upload-status');
+
+      progressContainer.style.display = 'block';
+      uploadStatus.textContent = `正在上传: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+
+      const formData = new FormData();
+      formData.append('model', file);
+
+      try {
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            progressBar.style.width = percentComplete + '%';
+            uploadStatus.textContent = `正在上传: ${(event.loaded / 1024 / 1024).toFixed(2)} / ${(event.total / 1024 / 1024).toFixed(2)} MB (${Math.round(percentComplete)}%)`;
+          }
+        });
+
+        await new Promise((resolve, reject) => {
+          xhr.open('POST', '/api/upload-model');
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve(JSON.parse(xhr.responseText));
+            } else {
+              reject(new Error('Upload failed'));
+            }
+          };
+          xhr.onerror = () => reject(new Error('Network error'));
+          xhr.send(formData);
+        }).then((data) => {
+          if (data.success) {
+            document.getElementById('hotspot-model-url').value = data.url;
+            document.getElementById('hotspot-model-url-input').value = data.url;
+            uploadStatus.textContent = '模型上传成功！';
+            showToast('3D模型上传成功');
+            setTimeout(() => {
+              progressContainer.style.display = 'none';
+              progressBar.style.width = '0%';
+              uploadStatus.textContent = '';
+            }, 3000);
+          }
+        });
+      } catch (e) {
+        progressContainer.style.display = 'none';
+        progressBar.style.width = '0%';
+        uploadStatus.textContent = '';
+        showToast('模型上传失败', 'error');
+      }
+    }
+
+    async function deleteHotspot(id) {
+      if (!confirm('确定要删除此热点吗？')) return;
+
+      try {
+        const res = await fetch(`/api/hotspots/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          await loadConfig();
+          showToast('热点删除成功');
+        }
+      } catch (e) {
+        showToast('删除热点失败', 'error');
+      }
+    }
+
+    function exportConfig() {
+      const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'exhibition-config.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('配置导出成功');
+    }
+
+    async function importConfig(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const importedConfig = JSON.parse(event.target.result);
+          
+          const res = await fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(importedConfig)
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            await loadConfig();
+            showToast('配置导入成功');
+          }
+        } catch (e) {
+          showToast('配置文件格式错误', 'error');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

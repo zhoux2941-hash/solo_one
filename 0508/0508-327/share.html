@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>血糖监测报告 - 医生查看</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .share-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .share-header h1 {
+            margin-bottom: 10px;
+        }
+
+        .patient-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: inline-block;
+        }
+
+        .doctor-note {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 20px;
+            margin: 20px 30px;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .doctor-note h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .doctor-note p {
+            color: #0d47a1;
+            line-height: 1.6;
+        }
+
+        .glucose-levels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .level-card {
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .level-card.low {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffc107 100%);
+        }
+
+        .level-card.normal {
+            background: linear-gradient(135deg, #d4edda 0%, #28a745 100%);
+            color: white;
+        }
+
+        .level-card.high {
+            background: linear-gradient(135deg, #f8d7da 0%, #dc3545 100%);
+            color: white;
+        }
+
+        .level-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .level-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .chart-section {
+            padding: 25px 30px;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .data-table-section {
+            padding: 25px 30px;
+        }
+
+        .footer-info {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .invalid-link {
+            text-align: center;
+            padding: 60px 30px;
+        }
+
+        .invalid-link h2 {
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+
+        .invalid-link p {
+            color: #6c757d;
+            margin-bottom: 30px;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .time-range-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .time-btn {
+            padding: 8px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .time-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: transform 0.3s;
+        }
+
+        .print-btn:hover {
+            transform: scale(1.1);
+        }
+
+        @media print {
+            .print-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在加载数据...</p>
+        </div>
+
+        <div id="content" style="display: none;">
+            <div class="share-header">
+                <h1>🩸 血糖监测报告</h1>
+                <p>仅供医生诊断参考</p>
+                <div class="patient-info" id="patientInfo">
+                    <span id="patientNameDisplay">患者信息</span>
+                    <span style="margin: 0 10px;">|</span>
+                    <span id="reportDate">报告日期</span>
+                </div>
+            </div>
+
+            <div class="doctor-note">
+                <h3>📋 报告说明</h3>
+                <p>本报告基于患者血糖仪同步数据自动生成，包含近期血糖监测结果统计。
+                正常血糖范围：3.9 - 10.0 mmol/L。
+                请结合患者临床症状进行综合判断。</p>
+            </div>
+
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">平均血糖</div>
+                        <div class="stat-value" id="avgGlucose">--</div>
+                        <div class="stat-unit">mmol/L</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">标准差</div>
+                        <div class="stat-value" id="stdDev">--</div>
+                        <div class="stat-unit">mmol/L</div>
+                    </div>
+                    <div class="stat-card highlight">
+                        <div class="stat-label">预估 HbA1c</div>
+                        <div class="stat-value" id="hba1c">--</div>
+                        <div class="stat-unit">%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">测量次数</div>
+                        <div class="stat-value" id="totalReadings">--</div>
+                        <div class="stat-unit">次</div>
+                    </div>
+                </div>
+
+                <div class="glucose-levels">
+                    <div class="level-card low">
+                        <div class="level-value" id="lowCount">--</div>
+                        <div class="level-label">偏低 (＜3.9 mmol/L)</div>
+                    </div>
+                    <div class="level-card normal">
+                        <div class="level-value" id="normalCount">--</div>
+                        <div class="level-label">正常 (3.9-10.0 mmol/L)</div>
+                    </div>
+                    <div class="level-card high">
+                        <div class="level-value" id="highCount">--</div>
+                        <div class="level-label">偏高 (＞10.0 mmol/L)</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="chart-section">
+                <h2 style="text-align: center; margin-bottom: 20px;">📈 血糖趋势图</h2>
+                <div class="time-range-selector">
+                    <button class="time-btn active" data-range="7">近7天</button>
+                    <button class="time-btn" data-range="14">近14天</button>
+                    <button class="time-btn" data-range="30">近30天</button>
+                    <button class="time-btn" data-range="all">全部</button>
+                </div>
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="glucoseChart"></canvas>
+                </div>
+                <div class="range-info" style="margin-top: 15px; text-align: center;">
+                    <span class="normal-range">■ 正常范围: 3.9 - 10.0 mmol/L</span>
+                </div>
+            </section>
+
+            <section class="data-table-section">
+                <h2 style="margin-bottom: 20px;">📋 详细数据记录</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>日期时间</th>
+                                <th>血糖值 (mmol/L)</th>
+                                <th>标记</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody id="readingsBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div class="footer-info">
+                <p>🔒 本报告为加密分享数据，有效期30天</p>
+                <p style="margin-top: 5px;">生成时间: <span id="generateTime"></span></p>
+            </div>
+
+            <button class="print-btn" onclick="window.print()" title="打印报告">🖨️</button>
+        </div>
+
+        <div class="invalid-link" id="invalidLink" style="display: none;">
+            <h2>⚠️ 链接无效或已过期</h2>
+            <p>该分享链接可能已过期或格式不正确，请联系患者重新获取</p>
+            <a href="index.html" class="btn-primary">返回首页</a>
+        </div>
+    </div>
+
+    <script src="share.js"></script>
+    <script>
+        class ShareViewer {
+            constructor() {
+                this.data = null;
+                this.chart = null;
+                this.currentRange = 7;
+            }
+
+            init() {
+                this.data = ShareUtils.parseShareLink();
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (!this.data) {
+                    document.getElementById('invalidLink').style.display = 'block';
+                    return;
+                }
+
+                document.getElementById('content').style.display = 'block';
+                this.renderData();
+                this.bindEvents();
+            }
+
+            renderData() {
+                const { readings, stats, timestamp, patientName } = this.data;
+
+                document.getElementById('patientNameDisplay').textContent = 
+                    patientName ? `患者: ${patientName}` : '患者: 匿名';
+                document.getElementById('reportDate').textContent = 
+                    `报告日期: ${ShareUtils.formatDate(timestamp)}`;
+                document.getElementById('generateTime').textContent = 
+                    new Date(timestamp).toLocaleString('zh-CN');
+
+                document.getElementById('avgGlucose').textContent = 
+                    stats.average ? stats.average.toFixed(1) : '--';
+                document.getElementById('stdDev').textContent = 
+                    stats.stdDev ? stats.stdDev.toFixed(2) : '--';
+                document.getElementById('hba1c').textContent = 
+                    stats.hba1c ? stats.hba1c.toFixed(1) : '--';
+                document.getElementById('totalReadings').textContent = stats.count || '--';
+
+                const levelStats = this.calculateLevelStats(readings);
+                document.getElementById('lowCount').textContent = levelStats.low;
+                document.getElementById('normalCount').textContent = levelStats.normal;
+                document.getElementById('highCount').textContent = levelStats.high;
+
+                this.initChart(readings);
+                this.renderTable(readings);
+            }
+
+            calculateLevelStats(readings) {
+                let low = 0, normal = 0, high = 0;
+                readings.forEach(r => {
+                    if (r.glucoseValue < 3.9) low++;
+                    else if (r.glucoseValue > 10.0) high++;
+                    else normal++;
+                });
+                return { low, normal, high };
+            }
+
+            initChart(readings) {
+                const ctx = document.getElementById('glucoseChart').getContext('2d');
+                const chartData = this.prepareChartData(readings, this.currentRange);
+
+                this.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [{
+                            label: '血糖值 (mmol/L)',
+                            data: chartData.values,
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: chartData.colors
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    afterLabel: (context) => {
+                                        const value = context.parsed.y;
+                                        if (value < 3.9) return '状态: 偏低';
+                                        if (value > 10.0) return '状态: 偏高';
+                                        return '状态: 正常';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                min: 2,
+                                max: 20,
+                                grid: {
+                                    color: (context) => {
+                                        if (context.tick.value === 3.9 || context.tick.value === 10.0) {
+                                            return 'rgba(40, 167, 69, 0.8)';
+                                        }
+                                        return 'rgba(0, 0, 0, 0.1)';
+                                    },
+                                    lineWidth: (context) => {
+                                        if (context.tick.value === 3.9 || context.tick.value === 10.0) {
+                                            return 2;
+                                        }
+                                        return 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            prepareChartData(readings, days) {
+                const now = Date.now();
+                const cutoff = now - days * 24 * 60 * 60 * 1000;
+
+                let filteredReadings = readings;
+                if (days !== 'all') {
+                    filteredReadings = readings.filter(r => r.timestamp >= cutoff);
+                }
+
+                filteredReadings.sort((a, b) => a.timestamp - b.timestamp);
+
+                const labels = [];
+                const values = [];
+                const colors = [];
+
+                filteredReadings.forEach(r => {
+                    const date = new Date(r.timestamp);
+                    labels.push(date.toLocaleDateString('zh-CN', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }));
+                    values.push(r.glucoseValue);
+                    
+                    if (r.glucoseValue < 3.9) colors.push('#ffc107');
+                    else if (r.glucoseValue > 10.0) colors.push('#dc3545');
+                    else colors.push('#28a745');
+                });
+
+                return { labels, values, colors };
+            }
+
+            updateChart() {
+                const chartData = this.prepareChartData(this.data.readings, this.currentRange);
+                this.chart.data.labels = chartData.labels;
+                this.chart.data.datasets[0].data = chartData.values;
+                this.chart.data.datasets[0].pointBackgroundColor = chartData.colors;
+                this.chart.update();
+            }
+
+            renderTable(readings) {
+                const tbody = document.getElementById('readingsBody');
+                const sortedReadings = [...readings].sort((a, b) => b.timestamp - a.timestamp);
+
+                tbody.innerHTML = sortedReadings.map(r => {
+                    const date = new Date(r.timestamp);
+                    const status = this.getStatus(r.glucoseValue);
+                    const typeLabel = this.getTypeLabel(r.type);
+                    const typeClass = this.getTypeClass(r.type);
+                    const statusClass = this.getStatusClass(status);
+                    const statusLabel = this.getStatusLabel(status);
+
+                    return `
+                        <tr>
+                            <td>${date.toLocaleString('zh-CN')}</td>
+                            <td><strong>${r.glucoseValue.toFixed(1)}</strong></td>
+                            <td><span class="${typeClass}">${typeLabel}</span></td>
+                            <td><span class="${statusClass}">${statusLabel}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            getStatus(value) {
+                if (value < 3.9) return 'low';
+                if (value > 10.0) return 'high';
+                return 'normal';
+            }
+
+            getTypeLabel(type) {
+                switch (type) {
+                    case 'before_meal': return '餐前';
+                    case 'after_meal': return '餐后';
+                    case 'fasting': return '空腹';
+                    case 'casual': return '随机';
+                    default: return '未标记';
+                }
+            }
+
+            getTypeClass(type) {
+                switch (type) {
+                    case 'before_meal': return 'tag-before';
+                    case 'after_meal': return 'tag-after';
+                    default: return 'tag-none';
+                }
+            }
+
+            getStatusClass(status) {
+                switch (status) {
+                    case 'low': return 'status-low';
+                    case 'high': return 'status-high';
+                    default: return 'status-normal';
+                }
+            }
+
+            getStatusLabel(status) {
+                switch (status) {
+                    case 'low': return '偏低';
+                    case 'high': return '偏高';
+                    default: return '正常';
+                }
+            }
+
+            bindEvents() {
+                document.querySelectorAll('.time-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        
+                        const range = e.target.dataset.range;
+                        this.currentRange = range === 'all' ? 'all' : parseInt(range);
+                        this.updateChart();
+                    });
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const viewer = new ShareViewer();
+            viewer.init();
+        });
+    </script>
+</body>
+</html>
