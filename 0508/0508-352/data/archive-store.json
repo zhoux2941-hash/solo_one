@@ -1,0 +1,84 @@
+{
+  "washRecords": [
+    {
+      "chainId": "734b5a6d-006e-4296-83a5-ae83e533685f",
+      "plateNumber": "FULLFLOW001",
+      "recordType": "ENTRY_REGISTRATION",
+      "operator": "API操作员A",
+      "timestamp": 1779711774903,
+      "data": {
+        "driverName": "测试司机",
+        "driverPhone": "13900139000",
+        "cargoType": "丙酮",
+        "hazardLevel": "乙级",
+        "expectedWashType": "普通洗消"
+      },
+      "id": "fbc5aaa6-e11d-4ba7-a4df-1fde6f80a550"
+    },
+    {
+      "chainId": "734b5a6d-006e-4296-83a5-ae83e533685f",
+      "plateNumber": "FULLFLOW001",
+      "recordType": "WASH_COMPLETION",
+      "operator": "API操作员B",
+      "timestamp": 1779711774912,
+      "data": {
+        "washType": "普通洗消",
+        "washDuration": 1200,
+        "detergent": "中性清洁剂",
+        "waterTemp": 50,
+        "pressure": 6
+      },
+      "id": "41772beb-8b8f-46c4-a2a7-648332ddf5c3"
+    },
+    {
+      "chainId": "734b5a6d-006e-4296-83a5-ae83e533685f",
+      "plateNumber": "FULLFLOW001",
+      "recordType": "SAMPLING_REVIEW",
+      "operator": "API操作员C",
+      "timestamp": 1779711774921,
+      "data": {
+        "samplingPoints": [
+          "车头",
+          "车尾"
+        ],
+        "testItems": [
+          "PH值",
+          "残留物"
+        ],
+        "testResult": "PASS",
+        "tester": "API检测员"
+      },
+      "id": "fe11b02c-9286-4400-9311-c89a686c1c01"
+    },
+    {
+      "chainId": "734b5a6d-006e-4296-83a5-ae83e533685f",
+      "plateNumber": "FULLFLOW001",
+      "recordType": "EXIT_RELEASE",
+      "operator": "API操作员D",
+      "timestamp": 1779711774934,
+      "data": {
+        "gateNumber": "2号门",
+        "destination": "北京"
+      },
+      "id": "2915924c-4d77-4d1e-ad08-c43e4bc17baf"
+    }
+  ],
+  "vehicleStatusMap": {
+    "FULLFLOW001": {
+      "plateNumber": "FULLFLOW001",
+      "currentStatus": "EXITED",
+      "currentChainId": null,
+      "lastUpdateTime": 1779711774934,
+      "lastAnomaly": null,
+      "stageTimestamps": {
+        "ENTRY_REGISTRATION": 1779711774903,
+        "WASH_COMPLETION": 1779711774912,
+        "SAMPLING_REVIEW": 1779711774921,
+        "EXIT_RELEASE": 1779711774934
+      }
+    }
+  },
+  "anomalyRecords": [],
+  "shiftSummaries": [],
+  "lastPersistTime": 1779712923789
+}
