@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>遗址修复签审台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .project-info {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+        }
+
+        .process-flow {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reorder-hint {
+            font-size: 12px;
+            color: #999;
+            font-weight: normal;
+        }
+
+        .process-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .process-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 5px solid #ddd;
+            cursor: grab;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .process-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .process-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .process-card.status-ready {
+            border-left-color: #ffc107;
+            background: linear-gradient(90deg, #fff3cd 0%, #f8f9fa 100%);
+        }
+
+        .process-card.status-submitted {
+            border-left-color: #17a2b8;
+            background: linear-gradient(90deg, #d1ecf1 0%, #f8f9fa 100%);
+        }
+
+        .process-card.status-completed {
+            border-left-color: #28a745;
+            background: linear-gradient(90deg, #d4edda 0%, #f8f9fa 100%);
+        }
+
+        .process-card.status-rework {
+            border-left-color: #dc3545;
+            background: linear-gradient(90deg, #f8d7da 0%, #f8f9fa 100%);
+        }
+
+        .process-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .process-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .process-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-ready .process-status {
+            background: #ffc107;
+            color: #856404;
+        }
+
+        .status-submitted .process-status {
+            background: #17a2b8;
+            color: #fff;
+        }
+
+        .status-completed .process-status {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .status-rework .process-status {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .status-pending .process-status {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .process-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .process-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: #fff;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .photo-gallery {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .photo-item {
+            margin-bottom: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .photo-info {
+            padding: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .photo-version {
+            display: inline-block;
+            background: #667eea;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-right: 5px;
+        }
+
+        .rework-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .rework-item {
+            background: #f8d7da;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .rework-reason {
+            color: #721c24;
+            margin-bottom: 5px;
+        }
+
+        .rework-meta {
+            color: #999;
+            font-size: 11px;
+        }
+
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .upload-area input {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 30px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .photo-compare {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .photo-compare-item {
+            text-align: center;
+        }
+
+        .photo-compare-item img {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .drag-handle {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ccc;
+            cursor: grab;
+            font-size: 18px;
+        }
+
+        .process-card .drag-handle {
+            display: none;
+        }
+
+        .process-card:hover .drag-handle {
+            display: block;
+        }
+
+        .process-card-content {
+            margin-left: 15px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .stat-badge {
+            background: #e9ecef;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .stat-badge.photo {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .stat-badge.rework {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .history-compare {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .history-version {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            background: #fafafa;
+        }
+
+        .history-version.current {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .history-version.old {
+            border-color: #999;
+            background: #f5f5f5;
+        }
+
+        .version-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .version-label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .history-version.current .version-label {
+            color: #667eea;
+        }
+
+        .version-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .version-info {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .version-info span {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .weekly-stats {
+            margin-top: 10px;
+        }
+
+        .weekly-total {
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #dc3545;
+            margin-bottom: 15px;
+        }
+
+        .weekly-process-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #6c757d;
+        }
+
+        .weekly-process-item.high {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .weekly-process-item.medium {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+
+        .weekly-process-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .weekly-process-count {
+            background: #6c757d;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .weekly-process-item.high .weekly-process-count {
+            background: #dc3545;
+        }
+
+        .weekly-process-item.medium .weekly-process-count {
+            background: #ffc107;
+            color: #856404;
+        }
+
+        .weekly-reason-list {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .weekly-reason-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .weekly-reason-process {
+            display: inline-block;
+            background: #667eea;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-right: 8px;
+        }
+
+        .weekly-reason-text {
+            color: #333;
+            margin: 5px 0;
+        }
+
+        .weekly-reason-meta {
+            color: #999;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏛️ 遗址修复签审台</h1>
+            <div class="project-info">
+                <span id="projectName">青铜鼎修复项目</span> | 
+                <span id="projectDesc">商周时期青铜鼎的修复工作</span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="process-flow">
+                <div class="section-title">
+                    <span>修复工序流程</span>
+                    <span class="reorder-hint">💡 拖拽卡片可调整工序顺序</span>
+                </div>
+                <div class="process-cards" id="processCards">
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="panel">
+                    <div class="section-title">照片版本</div>
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="photoInput" accept="image/*">
+                        <div class="upload-icon">📷</div>
+                        <div>点击上传照片</div>
+                        <small>支持 JPG、PNG 格式</small>
+                    </div>
+                    <div class="photo-gallery" id="photoGallery">
+                        <div style="text-align: center; color: #999; padding: 20px;">
+                            选择工序查看照片
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="section-title">返工记录</div>
+                    <div class="rework-list" id="reworkList">
+                        <div style="text-align: center; color: #999; padding: 20px;">
+                            暂无返工记录
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="section-title">返工统计</div>
+                    <div id="reworkSummary">
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="section-title">近七天返工统计</div>
+                    <div id="weeklyStats">
+                        <div style="text-align: center; color: #999; padding: 20px;">
+                            加载中...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="submitModal">
+        <div class="modal-content">
+            <h3 class="modal-title">提交工序</h3>
+            <div class="form-group">
+                <label>提交人</label>
+                <input type="text" id="submitterName" placeholder="请输入修复师姓名">
+            </div>
+            <div class="form-group">
+                <label>备注说明</label>
+                <textarea id="submitNotes" placeholder="请输入修复说明..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" onclick="closeModal('submitModal')">取消</button>
+                <button class="btn btn-primary" onclick="confirmSubmit()">确认提交</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="reviewModal">
+        <div class="modal-content">
+            <h3 class="modal-title">审核工序</h3>
+            <div class="form-group">
+                <label>审核人</label>
+                <input type="text" id="reviewerName" placeholder="请输入审核人姓名">
+            </div>
+            <div class="form-group">
+                <label>审核意见（如返工请填写原因）</label>
+                <textarea id="reviewReason" placeholder="请输入审核意见..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" onclick="closeModal('reviewModal')">取消</button>
+                <button class="btn btn-danger" onclick="confirmReview(false)">返工</button>
+                <button class="btn btn-success" onclick="confirmReview(true)">通过</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="photoModal">
+        <div class="modal-content">
+            <h3 class="modal-title">照片对比</h3>
+            <div class="photo-compare" id="photoCompare">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="closeModal('photoModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="historyModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <h3 class="modal-title">工序历史回看</h3>
+            <div id="historyContent">
+                <div style="text-align: center; color: #999; padding: 40px;">
+                    加载中...
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="closeModal('historyModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentProjectId = 1;
+        let currentProcessId = null;
+        let processes = [];
+        let draggedCard = null;
+
+        const statusMap = {
+            'pending': '待开始',
+            'ready': '待提交',
+            'submitted': '待审核',
+            'completed': '已完成',
+            'rework': '待返工'
+        };
+
+        async function loadProcesses() {
+            const response = await fetch(`/api/projects/${currentProjectId}/processes`);
+            processes = await response.json();
+            renderProcessCards();
+            loadReworkSummary();
+        }
+
+        function renderProcessCards() {
+            const container = document.getElementById('processCards');
+            container.innerHTML = '';
+
+            processes.forEach((process, index) => {
+                const card = document.createElement('div');
+                card.className = `process-card status-${process.status}`;
+                card.draggable = true;
+                card.dataset.id = process.id;
+                card.dataset.index = index;
+
+                card.innerHTML = `
+                    <div class="drag-handle">⋮⋮</div>
+                    <div class="process-card-content">
+                        <div class="process-header">
+                            <span class="process-name">${process.order_index + 1}. ${process.name}</span>
+                            <span class="process-status">${statusMap[process.status]}</span>
+                        </div>
+                        <div class="process-meta">
+                            ${process.submitter ? `<span>修复师: ${process.submitter}</span>` : ''}
+                            ${process.reviewer ? `<span>审核人: ${process.reviewer}</span>` : ''}
+                            ${process.submitted_at ? `<span>提交时间: ${formatDate(process.submitted_at)}</span>` : ''}
+                        </div>
+                        ${process.notes ? `<div style="font-size: 13px; color: #666;">备注: ${process.notes}</div>` : ''}
+                        <div class="stats-row">
+                            <span class="stat-badge photo">📷 ${process.photo_count} 张照片</span>
+                            <span class="stat-badge rework">🔄 返工 ${process.rework_count} 次</span>
+                        </div>
+                        <div class="process-actions">
+                            ${renderProcessActions(process)}
+                        </div>
+                    </div>
+                `;
+
+                card.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('btn') && !e.target.classList.contains('drag-handle')) {
+                        selectProcess(process.id);
+                    }
+                });
+
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragover', handleDragOver);
+                card.addEventListener('drop', handleDrop);
+                card.addEventListener('dragend', handleDragEnd);
+
+                container.appendChild(card);
+            });
+        }
+
+        function renderProcessActions(process) {
+            let actions = '';
+            
+            if (process.status === 'ready') {
+                actions += `<button class="btn btn-primary" onclick="openSubmitModal(${process.id})">提交审核</button>`;
+            }
+            
+            if (process.status === 'submitted') {
+                actions += `<button class="btn btn-info" onclick="openReviewModal(${process.id})">审核</button>`;
+            }
+            
+            if (process.status === 'rework') {
+                actions += `<button class="btn btn-primary" onclick="resubmitProcess(${process.id})">重新提交</button>`;
+            }
+            
+            actions += `<button class="btn" style="background: #6c757d; color: #fff;" onclick="openHistoryModal(${process.id})">历史回看</button>`;
+            
+            return actions;
+        }
+
+        function handleDragStart(e) {
+            draggedCard = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            const draggingCard = document.querySelector('.dragging');
+            if (this !== draggingCard) {
+                const container = document.getElementById('processCards');
+                const cards = [...container.querySelectorAll('.process-card')];
+                const draggingIndex = cards.indexOf(draggingCard);
+                const hoverIndex = cards.indexOf(this);
+                
+                if (draggingIndex < hoverIndex) {
+                    this.parentNode.insertBefore(draggingCard, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(draggingCard, this);
+                }
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+        }
+
+        async function handleDragEnd() {
+            this.classList.remove('dragging');
+            
+            const cards = [...document.querySelectorAll('.process-card')];
+            const newOrder = cards.map(card => parseInt(card.dataset.id));
+            
+            const oldOrder = processes.map(p => p.id);
+            
+            if (JSON.stringify(newOrder) !== JSON.stringify(oldOrder)) {
+                try {
+                    const response = await fetch(`/api/projects/${currentProjectId}/reorder`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ processIds: newOrder })
+                    });
+                    
+                    processes = await response.json();
+                    renderProcessCards();
+                    alert('工序顺序已更新，后续待签审节点已同步调整');
+                } catch (error) {
+                    console.error('排序失败:', error);
+                    loadProcesses();
+                }
+            }
+            
+            draggedCard = null;
+        }
+
+        function selectProcess(processId) {
+            currentProcessId = processId;
+            const process = processes.find(p => p.id === processId);
+            
+            document.querySelectorAll('.process-card').forEach(card => {
+                card.style.boxShadow = '';
+            });
+            document.querySelector(`[data-id="${processId}"]`).style.boxShadow = '0 0 0 3px #667eea';
+            
+            loadPhotos(processId);
+            loadReworkRecords(process);
+        }
+
+        async function loadPhotos(processId) {
+            const response = await fetch(`/api/processes/${processId}/photos`);
+            const photos = await response.json();
+            
+            const gallery = document.getElementById('photoGallery');
+            
+            if (photos.length === 0) {
+                gallery.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">暂无照片</div>';
+                return;
+            }
+            
+            gallery.innerHTML = photos.map(photo => `
+                <div class="photo-item">
+                    <img src="/uploads/${photo.file_path}" alt="修复照片" onclick="openPhotoCompare(${processId}, ${photo.version})">
+                    <div class="photo-info">
+                        <span class="photo-version">v${photo.version}</span>
+                        ${photo.description || '无描述'}
+                        <div style="margin-top: 5px; font-size: 11px;">
+                            ${photo.uploaded_by || '匿名'} · ${formatDate(photo.uploaded_at)}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadReworkRecords(process) {
+            const list = document.getElementById('reworkList');
+            
+            if (!process.reworkRecords || process.reworkRecords.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">暂无返工记录</div>';
+                return;
+            }
+            
+            const sortedRecords = [...process.reworkRecords].sort((a, b) => {
+                return new Date(b.created_at) - new Date(a.created_at);
+            });
+            
+            list.innerHTML = sortedRecords.map(record => `
+                <div class="rework-item">
+                    <div class="rework-reason">${record.reason}</div>
+                    <div class="rework-meta">审核人: ${record.reviewer} · ${formatDate(record.created_at)}</div>
+                </div>
+            `).join('');
+        }
+
+        async function loadReworkSummary() {
+            const response = await fetch(`/api/projects/${currentProjectId}/rework-summary`);
+            const summary = await response.json();
+            
+            const container = document.getElementById('reworkSummary');
+            const totalRework = summary.reduce((sum, item) => sum + item.rework_count, 0);
+            
+            container.innerHTML = `
+                <div style="font-size: 24px; font-weight: bold; color: #dc3545; text-align: center; margin-bottom: 15px;">
+                    ${totalRework} 次
+                </div>
+                ${summary.map(item => `
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
+                        <span>${item.name}</span>
+                        <span style="color: ${item.rework_count > 0 ? '#dc3545' : '#28a745'};">
+                            ${item.rework_count} 次
+                        </span>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        async function openPhotoCompare(processId, currentVersion) {
+            const response = await fetch(`/api/processes/${processId}/photos`);
+            const photos = await response.json();
+            
+            const currentPhoto = photos.find(p => p.version === currentVersion);
+            const prevPhoto = photos.find(p => p.version === currentVersion - 1);
+            
+            const compareContainer = document.getElementById('photoCompare');
+            
+            compareContainer.innerHTML = `
+                ${prevPhoto ? `
+                    <div class="photo-compare-item">
+                        <img src="/uploads/${prevPhoto.file_path}" alt="上一版本">
+                        <div>版本 v${prevPhoto.version}</div>
+                    </div>
+                ` : '<div style="text-align: center; color: #999;">无旧版本</div>'}
+                <div class="photo-compare-item">
+                    <img src="/uploads/${currentPhoto.file_path}" alt="当前版本">
+                    <div>版本 v${currentPhoto.version}</div>
+                </div>
+            `;
+            
+            document.getElementById('photoModal').classList.add('active');
+        }
+
+        function openSubmitModal(processId) {
+            currentProcessId = processId;
+            document.getElementById('submitModal').classList.add('active');
+        }
+
+        async function confirmSubmit() {
+            const submitter = document.getElementById('submitterName').value;
+            const notes = document.getElementById('submitNotes').value;
+            
+            if (!submitter) {
+                alert('请输入提交人姓名');
+                return;
+            }
+            
+            const response = await fetch(`/api/processes/${currentProcessId}/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ submitter, notes })
+            });
+            
+            if (response.ok) {
+                closeModal('submitModal');
+                loadProcesses();
+                document.getElementById('submitterName').value = '';
+                document.getElementById('submitNotes').value = '';
+            }
+        }
+
+        function openReviewModal(processId) {
+            currentProcessId = processId;
+            document.getElementById('reviewModal').classList.add('active');
+        }
+
+        async function confirmReview(approved) {
+            const reviewer = document.getElementById('reviewerName').value;
+            const reason = document.getElementById('reviewReason').value;
+            
+            if (!reviewer) {
+                alert('请输入审核人姓名');
+                return;
+            }
+            
+            if (!approved && !reason) {
+                alert('返工请填写原因');
+                return;
+            }
+            
+            const response = await fetch(`/api/processes/${currentProcessId}/review`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reviewer, approved, reason })
+            });
+            
+            if (response.ok) {
+                closeModal('reviewModal');
+                loadProcesses();
+                document.getElementById('reviewerName').value = '';
+                document.getElementById('reviewReason').value = '';
+            }
+        }
+
+        async function resubmitProcess(processId) {
+            const response = await fetch(`/api/processes/${processId}/resubmit`, {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                loadProcesses();
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        document.getElementById('uploadArea').addEventListener('click', () => {
+            if (!currentProcessId) {
+                alert('请先选择一个工序');
+                return;
+            }
+            document.getElementById('photoInput').click();
+        });
+
+        document.getElementById('photoInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const description = prompt('请输入照片描述:');
+            
+            const formData = new FormData();
+            formData.append('photo', file);
+            formData.append('description', description || '');
+            formData.append('uploadedBy', '修复师');
+            
+            const response = await fetch(`/api/processes/${currentProcessId}/photos`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                loadPhotos(currentProcessId);
+                loadProcesses();
+            }
+            
+            e.target.value = '';
+        });
+
+        async function openHistoryModal(processId) {
+            document.getElementById('historyModal').classList.add('active');
+            document.getElementById('historyContent').innerHTML = '<div style="text-align: center; color: #999; padding: 40px;">加载中...</div>';
+            
+            try {
+                const response = await fetch(`/api/processes/${processId}/history`);
+                const history = await response.json();
+                
+                if (history.length === 0) {
+                    document.getElementById('historyContent').innerHTML = '<div style="text-align: center; color: #999; padding: 40px;">暂无历史记录</div>';
+                    return;
+                }
+                
+                const currentVersion = history[0];
+                const oldVersion = history.length > 1 ? history[1] : null;
+                
+                let html = `
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <span style="font-size: 18px; font-weight: bold; color: #333;">${history[0].process_name}</span>
+                    </div>
+                    <div class="history-compare">
+                        <div class="history-version ${oldVersion ? 'old' : 'current'}">
+                            <div class="version-header">
+                                <span class="version-label">${oldVersion ? '上一版本' : '当前版本'} ${oldVersion ? 'v' + oldVersion.version : 'v' + currentVersion.version}</span>
+                                <span class="version-date">${formatDate(oldVersion ? oldVersion.created_at : currentVersion.created_at)}</span>
+                            </div>
+                            <div class="version-info">状态: <span>${statusMap[oldVersion ? oldVersion.status : currentVersion.status]}</span></div>
+                            <div class="version-info">修复师: <span>${oldVersion ? oldVersion.submitter : currentVersion.submitter}</span></div>
+                            ${(oldVersion ? oldVersion.notes : currentVersion.notes) ? `
+                                <div class="version-info">备注: <span>${oldVersion ? oldVersion.notes : currentVersion.notes}</span></div>
+                            ` : ''}
+                            <div style="margin-top: 10px;">
+                                <strong>照片记录:</strong>
+                                ${(oldVersion ? oldVersion.photos : currentVersion.photos).length > 0 ? 
+                                    (oldVersion ? oldVersion.photos : currentVersion.photos).slice(0, 2).map(p => `
+                                        <div style="margin-top: 8px;">
+                                            <img src="/uploads/${p.file_path}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 6px;">
+                                            <div style="font-size: 11px; color: #666; margin-top: 4px;">v${p.version} - ${p.description || '无描述'}</div>
+                                        </div>
+                                    `).join('') : '<div style="color: #999; font-size: 13px; margin-top: 5px;">暂无照片</div>'
+                                }
+                            </div>
+                        </div>
+                `;
+                
+                if (oldVersion) {
+                    html += `
+                        <div class="history-version current">
+                            <div class="version-header">
+                                <span class="version-label">当前版本 v${currentVersion.version}</span>
+                                <span class="version-date">${formatDate(currentVersion.created_at)}</span>
+                            </div>
+                            <div class="version-info">状态: <span>${statusMap[currentVersion.status]}</span></div>
+                            <div class="version-info">修复师: <span>${currentVersion.submitter}</span></div>
+                            ${currentVersion.notes ? `
+                                <div class="version-info">备注: <span>${currentVersion.notes}</span></div>
+                            ` : ''}
+                            <div style="margin-top: 10px;">
+                                <strong>照片记录:</strong>
+                                ${currentVersion.photos.length > 0 ? 
+                                    currentVersion.photos.slice(0, 2).map(p => `
+                                        <div style="margin-top: 8px;">
+                                            <img src="/uploads/${p.file_path}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 6px;">
+                                            <div style="font-size: 11px; color: #666; margin-top: 4px;">v${p.version} - ${p.description || '无描述'}</div>
+                                        </div>
+                                    `).join('') : '<div style="color: #999; font-size: 13px; margin-top: 5px;">暂无照片</div>'
+                                }
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
+                
+                if (history.length > 2) {
+                    html += `
+                        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+                            <strong>历史版本列表:</strong>
+                            <div style="margin-top: 10px; max-height: 150px; overflow-y: auto;">
+                                ${history.map((h, i) => `
+                                    <div style="padding: 8px; background: ${i === 0 ? '#f0f4ff' : '#f8f9fa'}; margin-bottom: 5px; border-radius: 6px; font-size: 13px;">
+                                        <span style="font-weight: bold;">v${h.version}</span>
+                                        <span style="color: #999; margin-left: 10px;">${formatDate(h.created_at)}</span>
+                                        <span style="color: #667eea; margin-left: 10px;">${statusMap[h.status]}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('historyContent').innerHTML = html;
+            } catch (error) {
+                document.getElementById('historyContent').innerHTML = '<div style="text-align: center; color: #dc3545; padding: 40px;">加载失败</div>';
+            }
+        }
+
+        async function loadWeeklyStats() {
+            try {
+                const response = await fetch(`/api/projects/${currentProjectId}/rework-weekly`);
+                const data = await response.json();
+                
+                const container = document.getElementById('weeklyStats');
+                
+                if (data.total === 0) {
+                    container.innerHTML = '<div style="text-align: center; color: #28a745; padding: 20px;">近七天无返工记录 🎉</div>';
+                    return;
+                }
+                
+                let html = `
+                    <div class="weekly-total">${data.total} 次</div>
+                    <div style="margin-bottom: 15px;">
+                        <strong>按工序统计:</strong>
+                    </div>
+                `;
+                
+                data.byProcess.forEach(item => {
+                    const level = item.count >= 3 ? 'high' : (item.count >= 2 ? 'medium' : '');
+                    html += `
+                        <div class="weekly-process-item ${level}">
+                            <span class="weekly-process-name">${item.name}</span>
+                            <span class="weekly-process-count">${item.count} 次</span>
+                        </div>
+                    `;
+                });
+                
+                html += '<div class="weekly-reason-list"><strong>返工原因详情:</strong>';
+                
+                data.details.forEach(detail => {
+                    html += `
+                        <div class="weekly-reason-item">
+                            <span class="weekly-reason-process">${detail.process_name}</span>
+                            <div class="weekly-reason-text">${detail.reason}</div>
+                            <div class="weekly-reason-meta">审核人: ${detail.reviewer} · ${formatDate(detail.created_at)}</div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                
+                container.innerHTML = html;
+            } catch (error) {
+                document.getElementById('weeklyStats').innerHTML = '<div style="text-align: center; color: #dc3545; padding: 20px;">加载失败</div>';
+            }
+        }
+
+        loadProcesses();
+        loadWeeklyStats();
+    </script>
+</body>
+</html>
