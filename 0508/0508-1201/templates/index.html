@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抽卡模拟器</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎴 抽卡模拟器</h1>
+            <p class="subtitle">体验抽卡的快感，看看你的运气如何！</p>
+        </div>
+
+        <div class="nav-tabs">
+            <div class="nav-tab active" data-tab="draw" onclick="switchTab('draw')">抽卡</div>
+            <div class="nav-tab" data-tab="history" onclick="switchTab('history')">历史记录</div>
+            <div class="nav-tab" data-tab="stats" onclick="switchTab('stats')">数据统计</div>
+            <div class="nav-tab" data-tab="admin" onclick="window.location.href='/admin'">管理员</div>
+        </div>
+
+        <div class="main-content">
+            <div class="user-info">
+                <span class="username">加载中...</span>
+                <span class="free-draws">免费抽卡: 0次</span>
+            </div>
+
+            <div id="drawTab" class="tab-content active">
+                <div class="pool-selector">
+                    <label>选择卡池:</label>
+                    <div id="poolTabs" class="pool-tabs"></div>
+                </div>
+
+                <div id="poolInfo" class="pool-info"></div>
+
+                <div class="draw-area">
+                    <h2 style="margin-bottom:10px; color:#333">准备好抽卡了吗？</h2>
+                    <p style="color:#666; margin-bottom:10px">每日赠送10次免费抽卡机会</p>
+                    <div id="pityInfo"></div>
+                    <div class="draw-buttons">
+                        <button class="btn-draw btn-single" onclick="draw(1)">抽一发</button>
+                        <button class="btn-draw btn-ten" onclick="draw(10)">抽十连</button>
+                    </div>
+                </div>
+
+                <div id="drawResults" class="draw-results"></div>
+            </div>
+
+            <div id="historyTab" class="tab-content">
+                <h2 style="margin-bottom:20px; color:#333">抽卡历史</h2>
+                <div id="historyList" class="history-list"></div>
+                <div id="pagination" class="pagination"></div>
+            </div>
+
+            <div id="statsTab" class="tab-content">
+                <h2 style="margin-bottom:20px; color:#333">数据统计</h2>
+                <div id="statsSection" class="stats-section"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

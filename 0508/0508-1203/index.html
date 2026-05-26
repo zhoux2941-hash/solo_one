@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>校园二手教材回收系统</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <h1>📚 校园二手教材回收系统</h1>
+      <p class="subtitle">回收闲置教材 · 循环再利用 · 绿色校园</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="browse">教材市场</button>
+      <button class="tab-btn" data-tab="submit">提交回收</button>
+      <button class="tab-btn" data-tab="wanted">求购信息</button>
+      <button class="tab-btn" data-tab="calculator">估价计算器</button>
+      <button class="tab-btn" data-tab="orders">我的订单</button>
+    </nav>
+
+    <!-- 教材市场 -->
+    <section id="browse" class="tab-panel active">
+      <div class="panel-header">
+        <h2>📖 教材市场</h2>
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="按教材名称或 ISBN 搜索..." />
+          <button id="searchBtn" class="btn btn-primary">搜索</button>
+        </div>
+      </div>
+      <div id="bookList" class="book-grid"></div>
+      <p id="emptyHint" class="empty-hint" style="display:none;">暂无库存教材，欢迎提交回收！</p>
+    </section>
+
+    <!-- 提交回收 -->
+    <section id="submit" class="tab-panel">
+      <div class="panel-header">
+        <h2>♻️ 提交教材回收</h2>
+      </div>
+      <form id="submitForm" class="card form-card">
+        <div class="form-row">
+          <label for="f_isbn">ISBN</label>
+          <input type="text" id="f_isbn" required placeholder="请输入 13 位 ISBN" />
+        </div>
+        <div class="form-row">
+          <label for="f_title">书名</label>
+          <input type="text" id="f_title" required placeholder="请输入书名" />
+        </div>
+        <div class="form-row">
+          <label for="f_condition">新旧程度 <span class="hint">(1=很旧，10=崭新)</span></label>
+          <div class="condition-row">
+            <input type="range" id="f_condition" min="1" max="10" step="1" value="8" />
+            <span id="conditionValue" class="condition-value">8</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="f_price">原价（元）</label>
+          <input type="number" id="f_price" required min="0" step="0.01" placeholder="请输入原价" />
+        </div>
+        <div class="form-row">
+          <label for="f_seller">卖家姓名</label>
+          <input type="text" id="f_seller" required placeholder="请输入卖家姓名" />
+        </div>
+
+        <div class="estimate-box">
+          <div>新书折扣率：<strong id="discountRate">50%</strong></div>
+          <div>系统估价：<strong id="liveEstimate">0.00</strong> 元</div>
+          <div id="formulaText" class="formula">公式：原价 × 0.5 × (新旧程度/10)</div>
+        </div>
+
+        <div class="form-actions">
+          <button type="reset" class="btn btn-secondary">重置</button>
+          <button type="submit" class="btn btn-primary">提交并生成回收订单</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 求购信息 -->
+    <section id="wanted" class="tab-panel">
+      <div class="panel-header">
+        <h2>🔍 教材求购</h2>
+        <button id="showWantedFormBtn" class="btn btn-primary">发布求购</button>
+      </div>
+
+      <div id="wantedFormContainer" style="display:none; margin-bottom:20px;">
+        <form id="wantedForm" class="card form-card">
+          <div class="form-row">
+            <label for="w_title">教材名称</label>
+            <input type="text" id="w_title" required placeholder="请输入教材名称" />
+          </div>
+          <div class="form-row">
+            <label for="w_isbn">ISBN（选填）</label>
+            <input type="text" id="w_isbn" placeholder="可输入 ISBN 精确查找" />
+          </div>
+          <div class="form-row">
+            <label for="w_price">愿出价格（元）</label>
+            <input type="number" id="w_price" required min="0" step="0.01" placeholder="您愿意出的价格" />
+          </div>
+          <div class="form-row">
+            <label for="w_contact">联系方式</label>
+            <input type="text" id="w_contact" required placeholder="手机号 / 微信 / QQ" />
+          </div>
+          <div class="form-row">
+            <label for="w_remark">备注（选填）</label>
+            <input type="text" id="w_remark" placeholder="版本要求、新旧要求等" />
+          </div>
+          <div class="form-actions">
+            <button type="button" id="cancelWantedBtn" class="btn btn-secondary">取消</button>
+            <button type="submit" class="btn btn-primary">发布求购</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="wantedList" class="wanted-grid"></div>
+      <p id="wantedEmptyHint" class="empty-hint" style="display:none;">暂无求购信息，快来发布第一条吧！</p>
+    </section>
+
+    <!-- 估价计算器 -->
+    <section id="calculator" class="tab-panel">
+      <div class="panel-header">
+        <h2>🧮 估价计算器</h2>
+      </div>
+      <div class="card form-card">
+        <div class="form-row">
+          <label for="calc_price">原价（元）</label>
+          <input type="number" id="calc_price" min="0" step="0.01" placeholder="请输入原价" />
+        </div>
+        <div class="form-row">
+          <label for="calc_condition">新旧程度 <span class="hint">(1-10)</span></label>
+          <div class="condition-row">
+            <input type="range" id="calc_condition" min="1" max="10" step="1" value="8" />
+            <span id="calcCondValue" class="condition-value">8</span>
+          </div>
+        </div>
+        <div class="estimate-box big">
+          <div>预计回收价：<strong id="calcResult">0.00</strong> 元</div>
+          <div id="calcFormulaText" class="formula">公式：原价 × 0.5 × (新旧程度/10)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 我的订单 -->
+    <section id="orders" class="tab-panel">
+      <div class="panel-header">
+        <h2>📦 我的订单</h2>
+        <div class="filter-bar">
+          <label>类型：</label>
+          <select id="orderTypeFilter">
+            <option value="all">全部</option>
+            <option value="recycle">回收订单</option>
+            <option value="purchase">购买订单</option>
+          </select>
+        </div>
+      </div>
+      <div id="orderList" class="order-list"></div>
+      <p id="orderEmptyHint" class="empty-hint" style="display:none;">暂无订单记录。</p>
+    </section>
+  </main>
+
+  <!-- 提示 Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- 购买弹窗 -->
+  <div id="purchaseModal" class="modal" hidden>
+    <div class="modal-content">
+      <h3>确认购买</h3>
+      <div id="purchaseDetails" class="purchase-details"></div>
+      <div class="form-row">
+        <label for="buyerName">买家姓名</label>
+        <input type="text" id="buyerName" placeholder="请输入您的姓名" />
+      </div>
+      <div class="form-actions">
+        <button id="cancelPurchase" class="btn btn-secondary">取消</button>
+        <button id="confirmPurchase" class="btn btn-primary">确认购买</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f7fa;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.card {
+  @apply bg-white rounded-lg shadow-md p-6;
+}
+
+.btn-primary {
+  @apply bg-blue-800 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 text-gray-800 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors;
+}
+
+.btn-success {
+  @apply bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-500 transition-colors;
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-500 transition-colors;
+}
+
+.option-btn {
+  @apply w-full text-left p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all;
+}
+
+.option-btn.selected {
+  @apply border-blue-500 bg-blue-50;
+}
+
+.option-btn.correct {
+  @apply border-green-500 bg-green-50;
+}
+
+.option-btn.wrong {
+  @apply border-red-500 bg-red-50;
+}

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>食堂菜品点评系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>🍽️ 食堂菜品点评系统</h1>
+            <div class="user-info">
+                <span id="username-display">欢迎，美食家</span>
+            </div>
+        </div>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab-btn active" data-tab="recommend">为你推荐</button>
+        <button class="tab-btn" data-tab="all">全部菜品</button>
+        <button class="tab-btn" data-tab="avoid">避雷榜</button>
+        <button class="tab-btn" data-tab="profile">我的口味</button>
+    </nav>
+
+    <main>
+        <section id="recommend-section" class="tab-content active">
+            <div class="section-header">
+                <h2>🎯 为你推荐</h2>
+                <p class="section-desc">根据你的口味偏好精心挑选</p>
+            </div>
+            <div id="recommend-preference" class="preference-info"></div>
+            <div id="recommend-grid" class="dish-grid"></div>
+        </section>
+
+        <section id="all-section" class="tab-content">
+            <div class="section-header">
+                <h2>🍜 全部菜品</h2>
+                <div class="filter-container">
+                    <span>按窗口筛选：</span>
+                    <div id="window-filters" class="window-filters"></div>
+                </div>
+            </div>
+            <div id="all-grid" class="dish-grid"></div>
+        </section>
+
+        <section id="avoid-section" class="tab-content">
+            <div class="section-header">
+                <h2>⚠️ 避雷榜</h2>
+                <p class="section-desc">最近7天评分最低的5个菜品（采用贝叶斯平均，评价数少的菜品不会异常上榜）</p>
+            </div>
+            <div id="avoid-grid" class="dish-grid avoid-grid"></div>
+        </section>
+
+        <section id="profile-section" class="tab-content">
+            <div class="section-header">
+                <h2>👤 我的口味画像</h2>
+                <p class="section-desc">根据你的历史点评生成的口味偏好分析</p>
+            </div>
+            <div class="profile-container">
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="profile-avatar">🍽️</div>
+                        <div class="profile-stats">
+                            <div class="stat-item">
+                                <span class="stat-value" id="profile-review-count">0</span>
+                                <span class="stat-label">总点评数</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="profile-self-count">0</span>
+                                <span class="stat-label">自己吃</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="profile-other-count">0</span>
+                                <span class="stat-label">帮别人点</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-note">
+                        <span class="note-icon">💡</span>
+                        <span class="note-text">仅"自己吃"的点评用于口味画像计算</span>
+                    </div>
+                </div>
+                <div class="radar-card">
+                    <h3>口味偏好雷达图</h3>
+                    <div class="radar-container">
+                        <canvas id="radar-chart" width="400" height="400"></canvas>
+                    </div>
+                    <div class="radar-legend">
+                        <div class="legend-item"><span class="legend-dot" style="background: #ff6b6b;"></span>咸度偏好</div>
+                        <div class="legend-item"><span class="legend-dot" style="background: #4facfe;"></span>淡度偏好</div>
+                        <div class="legend-item"><span class="legend-dot" style="background: #ffa500;"></span>油腻偏好</div>
+                        <div class="legend-item"><span class="legend-dot" style="background: #ff5050;"></span>辣度偏好</div>
+                    </div>
+                </div>
+                <div class="preference-cards">
+                    <div class="pref-card" id="pref-salty">
+                        <div class="pref-icon">🧂</div>
+                        <div class="pref-title">咸度偏好</div>
+                        <div class="pref-value" id="pref-salty-value">--</div>
+                        <div class="pref-desc" id="pref-salty-desc">暂无数据</div>
+                    </div>
+                    <div class="pref-card" id="pref-light">
+                        <div class="pref-icon">💧</div>
+                        <div class="pref-title">淡度偏好</div>
+                        <div class="pref-value" id="pref-light-value">--</div>
+                        <div class="pref-desc" id="pref-light-desc">暂无数据</div>
+                    </div>
+                    <div class="pref-card" id="pref-oily">
+                        <div class="pref-icon">🍳</div>
+                        <div class="pref-title">油腻偏好</div>
+                        <div class="pref-value" id="pref-oily-value">--</div>
+                        <div class="pref-desc" id="pref-oily-desc">暂无数据</div>
+                    </div>
+                    <div class="pref-card" id="pref-spicy">
+                        <div class="pref-icon">🌶️</div>
+                        <div class="pref-title">辣度偏好</div>
+                        <div class="pref-value" id="pref-spicy-value">--</div>
+                        <div class="pref-desc" id="pref-spicy-desc">暂无数据</div>
+                    </div>
+                </div>
+                <div class="suggestion-card" id="suggestion-card">
+                    <div class="suggestion-icon">💡</div>
+                    <div class="suggestion-content">
+                        <h4>口味建议</h4>
+                        <p id="suggestion-text">多点评一些菜品，系统就能为你生成更精准的口味画像哦！</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="review-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-dish-name">菜品点评</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="rating-section">
+                    <label>评分：</label>
+                    <div class="star-rating">
+                        <span class="star" data-rating="1">★</span>
+                        <span class="star" data-rating="2">★</span>
+                        <span class="star" data-rating="3">★</span>
+                        <span class="star" data-rating="4">★</span>
+                        <span class="star" data-rating="5">★</span>
+                    </div>
+                    <span id="rating-text" class="rating-text">请选择评分</span>
+                </div>
+                <div class="review-type-section">
+                    <label>点评类型：</label>
+                    <div class="review-type-options">
+                        <label class="review-type-option">
+                            <input type="radio" name="reviewType" value="self" checked>
+                            <span>🍽️ 自己吃</span>
+                        </label>
+                        <label class="review-type-option">
+                            <input type="radio" name="reviewType" value="other">
+                            <span>👥 帮别人点</span>
+                        </label>
+                    </div>
+                    <p class="review-type-hint">只有"自己吃"的点评会用于计算你的口味画像</p>
+                </div>
+                <div class="tags-section">
+                    <label>口味标签（可选）：</label>
+                    <div class="tag-options">
+                        <label class="tag-option">
+                            <input type="checkbox" value="太咸">
+                            <span>太咸</span>
+                        </label>
+                        <label class="tag-option">
+                            <input type="checkbox" value="太淡">
+                            <span>太淡</span>
+                        </label>
+                        <label class="tag-option">
+                            <input type="checkbox" value="太油">
+                            <span>太油</span>
+                        </label>
+                        <label class="tag-option">
+                            <input type="checkbox" value="太辣">
+                            <span>太辣</span>
+                        </label>
+                        <label class="tag-option">
+                            <input type="checkbox" value="刚好">
+                            <span>刚好</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="comment-section">
+                    <label>评价内容（可选）：</label>
+                    <textarea id="review-comment" placeholder="分享你的用餐体验..." rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitReview()">提交点评</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

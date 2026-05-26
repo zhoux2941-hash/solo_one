@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>干洗店订单管理 - 店员端</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Microsoft YaHei', sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 30px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 20px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .card h2 {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #667eea;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      color: #555;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .clothing-item {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid #e9ecef;
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .item-header span {
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    .item-remove {
+      background: none;
+      border: none;
+      color: #e74c3c;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 8px;
+    }
+
+    .item-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .photo-upload {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .photo-upload input[type="file"] {
+      padding: 6px;
+      font-size: 12px;
+    }
+
+    .photo-preview {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+    }
+
+    .btn-add-item {
+      width: 100%;
+      padding: 12px;
+      background: #e8f4fd;
+      color: #3498db;
+      border: 2px dashed #3498db;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+
+    .btn-add-item:hover {
+      background: #d6eaf8;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: transform 0.2s;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-1px);
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-bar select,
+    .filter-bar input {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-card .number {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .stat-card .label {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .order-list {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .order-item {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-left: 4px solid #667eea;
+      transition: all 0.3s;
+    }
+
+    .order-item:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .order-id {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .order-time {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .order-customer {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 6px;
+    }
+
+    .order-items-summary {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .order-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .order-total {
+      font-size: 16px;
+      font-weight: bold;
+      color: #e74c3c;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-已收衣 {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .status-洗涤中 {
+      background: #fff3e0;
+      color: #f57c00;
+    }
+
+    .status-已完成 {
+      background: #e8f5e9;
+      color: #388e3c;
+    }
+
+    .status-已取衣 {
+      background: #e0e0e0;
+      color: #616161;
+    }
+
+    .order-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .order-actions button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-next {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-next:hover {
+      background: #5568d3;
+    }
+
+    .btn-receipt {
+      background: #3498db;
+      color: white;
+    }
+
+    .btn-receipt:hover {
+      background: #2980b9;
+    }
+
+    .btn-detail {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .btn-detail:hover {
+      background: #7f8c8d;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .total-preview {
+      background: #fff3e0;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 15px;
+      text-align: right;
+    }
+
+    .total-preview span {
+      font-size: 20px;
+      font-weight: bold;
+      color: #e74c3c;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-content h3 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .modal-close {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #888;
+    }
+
+    .success-toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #27ae60;
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 2000;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+    }
+
+    .success-toast.show {
+      transform: translateX(0);
+    }
+
+    .success-toast .order-no {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    .detail-item {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .detail-item img {
+      max-width: 100%;
+      margin-top: 8px;
+      border-radius: 4px;
+    }
+
+    .stain-marker-btn {
+      padding: 6px 12px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .stain-marker-btn:hover {
+      background: #c0392b;
+    }
+
+    .stain-marker-btn.has-marks {
+      background: #f39c12;
+    }
+
+    .stain-count {
+      display: inline-block;
+      background: white;
+      color: #e74c3c;
+      border-radius: 10px;
+      padding: 0 6px;
+      font-size: 11px;
+      font-weight: bold;
+      margin-left: 4px;
+    }
+
+    .stain-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .stain-modal.show {
+      display: flex;
+    }
+
+    .stain-modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 700px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .stain-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .stain-modal-header h3 {
+      color: #333;
+      font-size: 18px;
+    }
+
+    .stain-close {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: #888;
+      line-height: 1;
+    }
+
+    .canvas-container {
+      position: relative;
+      background: #f0f0f0;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+
+    #stainCanvas {
+      display: block;
+      max-width: 100%;
+      cursor: crosshair;
+    }
+
+    .stain-tools {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .tool-btn {
+      padding: 8px 16px;
+      border: 2px solid #ddd;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .tool-btn.active {
+      border-color: #e74c3c;
+      background: #e74c3c;
+      color: white;
+    }
+
+    .tool-btn:hover {
+      border-color: #e74c3c;
+    }
+
+    .color-picker {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .color-option {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .color-option.active {
+      border-color: #333;
+    }
+
+    .color-red { background: #e74c3c; }
+    .color-orange { background: #f39c12; }
+    .color-blue { background: #3498db; }
+    .color-green { background: #27ae60; }
+
+    .size-picker {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .size-option {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid #ddd;
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+
+    .size-option.active {
+      border-color: #e74c3c;
+      background: #fdeaea;
+    }
+
+    .stain-markers-list {
+      max-height: 120px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+      border: 1px solid #eee;
+      border-radius: 6px;
+    }
+
+    .stain-marker-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 13px;
+    }
+
+    .stain-marker-item:last-child {
+      border-bottom: none;
+    }
+
+    .stain-marker-item .stain-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stain-color-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+    }
+
+    .stain-remove-btn {
+      background: none;
+      border: none;
+      color: #e74c3c;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 2px 6px;
+    }
+
+    .stain-modal-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .stain-modal-actions .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .btn-clear {
+      background: #f0f0f0;
+      color: #555;
+    }
+
+    .btn-clear:hover {
+      background: #e0e0e0;
+    }
+
+    .btn-undo {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .btn-undo:hover {
+      background: #7f8c8d;
+    }
+
+    .btn-save {
+      background: #27ae60;
+      color: white;
+    }
+
+    .btn-save:hover {
+      background: #229954;
+    }
+
+    .stain-instructions {
+      background: #fff3cd;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #856404;
+      margin-bottom: 12px;
+    }
+
+    .photo-with-markers {
+      position: relative;
+      display: inline-block;
+    }
+
+    .photo-with-markers .marker-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .item-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .stain-tools {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .upload-progress-container {
+        width: 100%;
+        background: #e0e0e0;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 6px;
+        display: none;
+      }
+
+      .upload-progress-container.show {
+        display: block;
+      }
+
+      .upload-progress-bar {
+        height: 8px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+
+      .upload-progress-text {
+        font-size: 11px;
+        color: #666;
+        margin-top: 4px;
+        text-align: center;
+      }
+
+      .upload-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 6px;
+        font-size: 12px;
+      }
+
+      .upload-status .status-icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+      }
+
+      .status-uploading {
+        background: #fff3cd;
+        color: #856404;
+        animation: pulse 1s infinite;
+      }
+
+      .status-success {
+        background: #d4edda;
+        color: #28a745;
+      }
+
+      .status-error {
+        background: #f8d7da;
+        color: #dc3545;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+
+      .upload-speed {
+        font-size: 11px;
+        color: #888;
+      }
+
+      .parallel-upload-indicator {
+        font-size: 11px;
+        color: #28a745;
+        margin-top: 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🛁 洁净干洗店 - 订单管理系统</h1>
+    <p>店员端 | 快速录入订单 · 实时跟踪状态</p>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h2>📝 新建订单</h2>
+      
+      <div class="form-group">
+        <label>客户姓名</label>
+        <input type="text" id="customerName" placeholder="请输入客户姓名" required>
+      </div>
+
+      <div class="form-group">
+        <label>联系电话</label>
+        <input type="tel" id="customerPhone" placeholder="请输入11位手机号码" pattern="1[3-9]\d{9}" required>
+      </div>
+
+      <div id="clothingItems">
+        <div class="clothing-item" data-index="0">
+          <div class="item-header">
+            <span>衣物 1</span>
+          </div>
+          <div class="item-row">
+            <div class="form-group">
+              <label>衣物类型</label>
+              <select class="clothing-type" required onchange="setDefaultPrice(this)">
+                <option value="">请选择</option>
+                <option value="外套">外套</option>
+                <option value="衬衫">衬衫</option>
+                <option value="裤子">裤子</option>
+                <option value="毛衣">毛衣</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>数量</label>
+              <input type="number" class="quantity" min="1" value="1" required onchange="calculateTotal()">
+            </div>
+            <div class="form-group">
+              <label>单价 (¥)</label>
+              <input type="number" class="unit-price" min="0" step="0.01" placeholder="如: 30" required onchange="calculateTotal()">
+            </div>
+            <div class="photo-upload">
+              <label>照片</label>
+              <input type="file" class="photo" accept="image/*" capture="environment" onchange="handlePhotoUpload(this)">
+              <img class="photo-preview" style="display:none;">
+              <div class="upload-progress-container">
+                <div class="upload-progress-bar"></div>
+                <div class="upload-progress-text">0%</div>
+              </div>
+              <div class="upload-status" style="display:none;">
+                <span class="status-icon status-uploading">⏳</span>
+                <span class="status-text">上传中...</span>
+                <span class="upload-speed"></span>
+              </div>
+              <button type="button" class="stain-marker-btn" onclick="openStainMarker(this)" disabled style="margin-top: 6px; width: 100%;">
+                🎯 标记污渍<span class="stain-count" style="display:none;">0</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-add-item" onclick="addClothingItem()">
+        ➕ 添加衣物
+      </button>
+
+      <div class="total-preview">
+        预估金额：<span id="totalAmount">¥0.00</span>
+      </div>
+
+      <button type="button" class="btn-submit" onclick="submitOrder()">
+        ✅ 创建订单并打印小票
+      </button>
+    </div>
+
+    <div class="card">
+      <h2>📋 订单列表</h2>
+      
+      <div class="stats-bar">
+        <div class="stat-card">
+          <div class="number" id="stat-total">0</div>
+          <div class="label">今日订单</div>
+        </div>
+        <div class="stat-card">
+          <div class="number" id="stat-pending">0</div>
+          <div class="label">已收衣</div>
+        </div>
+        <div class="stat-card">
+          <div class="number" id="stat-washing">0</div>
+          <div class="label">洗涤中</div>
+        </div>
+        <div class="stat-card">
+          <div class="number" id="stat-done">0</div>
+          <div class="label">已完成</div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <select id="statusFilter" onchange="loadOrders()">
+          <option value="all">全部状态</option>
+          <option value="已收衣">已收衣</option>
+          <option value="洗涤中">洗涤中</option>
+          <option value="已完成">已完成</option>
+          <option value="已取衣">已取衣</option>
+        </select>
+        <input type="date" id="dateFilter" onchange="loadOrders()">
+      </div>
+
+      <div class="order-list" id="orderList">
+        <div class="empty-state">加载中...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="detailModal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h3>订单详情</h3>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
+  <div class="stain-modal" id="stainModal">
+    <div class="stain-modal-content">
+      <div class="stain-modal-header">
+        <h3>🎯 标记衣物污渍</h3>
+        <button class="stain-close" onclick="closeStainMarker()">&times;</button>
+      </div>
+
+      <div class="stain-instructions">
+        💡 提示：在照片上按住鼠标拖动即可圈出污渍位置，支持多种颜色和笔触大小
+      </div>
+
+      <div class="canvas-container">
+        <canvas id="stainCanvas"></canvas>
+      </div>
+
+      <div class="stain-tools">
+        <button class="tool-btn active" id="drawTool" onclick="setTool('draw')">✏️ 画笔</button>
+        <button class="tool-btn" id="eraseTool" onclick="setTool('erase')">🧹 橡皮擦</button>
+
+        <div class="color-picker">
+          <span style="font-size:12px; color:#666;">颜色:</span>
+          <div class="color-option color-red active" onclick="setColor('#e74c3c')"></div>
+          <div class="color-option color-orange" onclick="setColor('#f39c12')"></div>
+          <div class="color-option color-blue" onclick="setColor('#3498db')"></div>
+          <div class="color-option color-green" onclick="setColor('#27ae60')"></div>
+        </div>
+
+        <div class="size-picker">
+          <span style="font-size:12px; color:#666;">大小:</span>
+          <div class="size-option" onclick="setSize(3)">3</div>
+          <div class="size-option active" onclick="setSize(5)">5</div>
+          <div class="size-option" onclick="setSize(8)">8</div>
+          <div class="size-option" onclick="setSize(12)">12</div>
+        </div>
+      </div>
+
+      <div class="stain-markers-list" id="markersList">
+        <div style="padding: 15px; text-align: center; color: #999; font-size: 13px;">
+          暂无标记，在照片上绘制污渍标记
+        </div>
+      </div>
+
+      <div class="stain-modal-actions">
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-undo" onclick="undoLastMarker()">↩️ 撤销</button>
+          <button class="btn btn-clear" onclick="clearAllMarkers()">🗑️ 清除全部</button>
+        </div>
+        <button class="btn btn-save" onclick="saveStainMarkers()">✅ 保存标记</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="success-toast" id="successToast">
+    <div>🎉 订单创建成功！</div>
+    <div class="order-no" id="toastOrderNo"></div>
+    <div style="margin-top: 10px;">
+      <button style="background: white; color: #27ae60; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 8px;" onclick="printReceiptFromToast()">打印小票</button>
+      <button style="background: rgba(255,255,255,0.3); color: white; border: 1px solid white; padding: 6px 12px; border-radius: 4px; cursor: pointer;" onclick="hideToast()">关闭</button>
+    </div>
+  </div>
+
+  <script>
+    let clothingIndex = 0;
+    let lastCreatedOrderId = null;
+
+    const clothingPrices = {
+      '外套': 35,
+      '衬衫': 15,
+      '裤子': 20,
+      '毛衣': 25
+    };
+
+    document.getElementById('dateFilter').valueAsDate = new Date();
+
+    function addClothingItem() {
+      clothingIndex++;
+      const container = document.getElementById('clothingItems');
+      const newItem = document.createElement('div');
+      newItem.className = 'clothing-item';
+      newItem.dataset.index = clothingIndex;
+      newItem.innerHTML = `
+        <div class="item-header">
+          <span>衣物 ${clothingIndex + 1}</span>
+          <button type="button" class="item-remove" onclick="removeClothingItem(this)">✕</button>
+        </div>
+        <div class="item-row">
+          <div class="form-group">
+            <label>衣物类型</label>
+            <select class="clothing-type" required onchange="setDefaultPrice(this)">
+              <option value="">请选择</option>
+              <option value="外套">外套</option>
+              <option value="衬衫">衬衫</option>
+              <option value="裤子">裤子</option>
+              <option value="毛衣">毛衣</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>数量</label>
+            <input type="number" class="quantity" min="1" value="1" required onchange="calculateTotal()">
+          </div>
+          <div class="form-group">
+            <label>单价 (¥)</label>
+            <input type="number" class="unit-price" min="0" step="0.01" placeholder="如: 30" required onchange="calculateTotal()">
+          </div>
+          <div class="photo-upload">
+            <label>照片</label>
+            <input type="file" class="photo" accept="image/*" capture="environment" onchange="handlePhotoUpload(this)">
+            <img class="photo-preview" style="display:none;">
+            <div class="upload-progress-container">
+              <div class="upload-progress-bar"></div>
+              <div class="upload-progress-text">0%</div>
+            </div>
+            <div class="upload-status" style="display:none;">
+              <span class="status-icon status-uploading">⏳</span>
+              <span class="status-text">上传中...</span>
+              <span class="upload-speed"></span>
+            </div>
+            <button type="button" class="stain-marker-btn" onclick="openStainMarker(this)" disabled style="margin-top: 6px; width: 100%;">
+              🎯 标记污渍<span class="stain-count" style="display:none;">0</span>
+            </button>
+          </div>
+        </div>
+      `;
+      container.appendChild(newItem);
+    }
+
+    function removeClothingItem(btn) {
+      const item = btn.closest('.clothing-item');
+      item.remove();
+      calculateTotal();
+    }
+
+    function setDefaultPrice(select) {
+      const item = select.closest('.clothing-item');
+      const priceInput = item.querySelector('.unit-price');
+      const type = select.value;
+      if (clothingPrices[type]) {
+        priceInput.value = clothingPrices[type];
+      }
+      calculateTotal();
+    }
+
+    function calculateTotal() {
+      let total = 0;
+      const items = document.querySelectorAll('.clothing-item');
+      items.forEach(item => {
+        const qty = parseInt(item.querySelector('.quantity').value) || 0;
+        const price = parseFloat(item.querySelector('.unit-price').value) || 0;
+        const itemTotal = qty * price;
+        total = Math.round((total + itemTotal) * 100) / 100;
+      });
+      document.getElementById('totalAmount').textContent = `¥${total.toFixed(2)}`;
+    }
+
+    const CHUNK_SIZE = 1024 * 1024;
+    const MAX_PARALLEL_UPLOADS = 3;
+    const uploadedFiles = new Map();
+    let activeUploads = 0;
+    const uploadQueue = [];
+
+    function generateFileId(file) {
+      return `${file.name}_${file.size}_${file.lastModified}`;
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function formatSpeed(bytesPerSecond) {
+      if (bytesPerSecond < 1024) return bytesPerSecond + ' B/s';
+      if (bytesPerSecond < 1024 * 1024) return (bytesPerSecond / 1024).toFixed(1) + ' KB/s';
+      return (bytesPerSecond / (1024 * 1024)).toFixed(1) + ' MB/s';
+    }
+
+    function generateThumbnail(file, maxSize = 300) {
+      return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxSize) {
+              height = (height * maxSize) / width;
+              width = maxSize;
+            }
+          } else {
+            if (height > maxSize) {
+              width = (width * maxSize) / height;
+              height = maxSize;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob((blob) => {
+            resolve({
+              blob,
+              dataUrl: canvas.toDataURL('image/jpeg', 0.8),
+              width,
+              height
+            });
+          }, 'image/jpeg', 0.8);
+        };
+
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    function updateUploadProgress(item, uploaded, total, startTime) {
+      const progressContainer = item.querySelector('.upload-progress-container');
+      const progressBar = item.querySelector('.upload-progress-bar');
+      const progressText = item.querySelector('.upload-progress-text');
+      const uploadStatus = item.querySelector('.upload-status');
+      const uploadSpeed = item.querySelector('.upload-speed');
+
+      progressContainer.classList.add('show');
+      uploadStatus.style.display = 'flex';
+
+      const percent = Math.round((uploaded / total) * 100);
+      progressBar.style.width = `${percent}%`;
+      progressText.textContent = `${percent}% (${formatFileSize(uploaded)} / ${formatFileSize(total)})`;
+
+      const elapsed = (Date.now() - startTime) / 1000;
+      if (elapsed > 0) {
+        const speed = uploaded / elapsed;
+        uploadSpeed.textContent = formatSpeed(speed);
+      }
+    }
+
+    function setUploadStatus(item, status, text) {
+      const statusIcon = item.querySelector('.status-icon');
+      const statusText = item.querySelector('.status-text');
+
+      statusIcon.className = `status-icon status-${status}`;
+      statusText.textContent = text;
+
+      if (status === 'uploading') {
+        statusIcon.textContent = '⏳';
+      } else if (status === 'success') {
+        statusIcon.textContent = '✓';
+      } else if (status === 'error') {
+        statusIcon.textContent = '✕';
+      }
+    }
+
+    async function uploadChunk(file, chunkIndex, fileId, item, startTime) {
+      const start = chunkIndex * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, file.size);
+      const chunk = file.slice(start, end);
+
+      const formData = new FormData();
+      formData.append('fileId', fileId);
+      formData.append('chunkIndex', chunkIndex);
+      formData.append('totalChunks', Math.ceil(file.size / CHUNK_SIZE));
+      formData.append('chunk', chunk);
+
+      try {
+        const response = await fetch('/api/upload/chunk', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          const uploaded = Math.min((chunkIndex + 1) * CHUNK_SIZE, file.size);
+          updateUploadProgress(item, uploaded, file.size, startTime);
+        }
+
+        return result.success;
+      } catch (e) {
+        console.error('上传分片失败:', e);
+        return false;
+      }
+    }
+
+    async function mergeChunks(fileId, fileName, totalChunks, item) {
+      try {
+        const response = await fetch('/api/upload/merge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileId,
+            fileName,
+            totalChunks,
+            generateThumbnail: true
+          })
+        });
+
+        return await response.json();
+      } catch (e) {
+        console.error('合并分片失败:', e);
+        return { success: false, error: e.message };
+      }
+    }
+
+    async function uploadFile(file, item) {
+      const fileId = generateFileId(file);
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      const startTime = Date.now();
+
+      setUploadStatus(item, 'uploading', '上传中...');
+
+      try {
+        const checkResponse = await fetch(`/api/upload/check/${fileId}`);
+        const checkResult = await checkResponse.json();
+        const uploadedChunks = checkResult.uploadedChunks || [];
+
+        if (uploadedChunks.length === totalChunks) {
+          updateUploadProgress(item, file.size, file.size, startTime);
+          setUploadStatus(item, 'uploading', '合并文件...');
+          const mergeResult = await mergeChunks(fileId, file.name, totalChunks, item);
+          if (mergeResult.success) {
+            return mergeResult;
+          }
+        }
+
+        const chunksToUpload = [];
+        for (let i = 0; i < totalChunks; i++) {
+          if (!uploadedChunks.includes(i)) {
+            chunksToUpload.push(i);
+          }
+        }
+
+        for (let i = 0; i < chunksToUpload.length; i += MAX_PARALLEL_UPLOADS) {
+          const batch = chunksToUpload.slice(i, i + MAX_PARALLEL_UPLOADS);
+          const promises = batch.map(chunkIndex =>
+            uploadChunk(file, chunkIndex, fileId, item, startTime)
+          );
+
+          const results = await Promise.all(promises);
+          if (results.some(r => !r)) {
+            throw new Error('部分分片上传失败');
+          }
+        }
+
+        setUploadStatus(item, 'uploading', '合并文件...');
+        const mergeResult = await mergeChunks(fileId, file.name, totalChunks, item);
+
+        if (mergeResult.success) {
+          setUploadStatus(item, 'success', '上传成功');
+          return mergeResult;
+        } else {
+          throw new Error(mergeResult.error);
+        }
+
+      } catch (e) {
+        console.error('上传失败:', e);
+        setUploadStatus(item, 'error', '上传失败');
+        throw e;
+      }
+    }
+
+    async function processUploadQueue() {
+      while (uploadQueue.length > 0 && activeUploads < MAX_PARALLEL_UPLOADS) {
+        const task = uploadQueue.shift();
+        activeUploads++;
+
+        (async () => {
+          try {
+            const result = await uploadFile(task.file, task.item);
+            task.onSuccess(result);
+          } catch (e) {
+            task.onError(e);
+          } finally {
+            activeUploads--;
+            processUploadQueue();
+          }
+        })();
+      }
+    }
+
+    async function handlePhotoUpload(input) {
+      if (!input.files || !input.files[0]) return;
+
+      const file = input.files[0];
+      const item = input.closest('.clothing-item');
+      const preview = item.querySelector('.photo-preview');
+      const stainBtn = item.querySelector('.stain-marker-btn');
+
+      const thumb = await generateThumbnail(file);
+      preview.src = thumb.dataUrl;
+      preview.style.display = 'block';
+
+      const uploadTask = {
+        file,
+        item,
+        onSuccess: (result) => {
+          uploadedFiles.set(item.dataset.index, {
+            originalFile: file,
+            filePath: result.filePath,
+            thumbnailPath: result.thumbnailPath || thumb.dataUrl
+          });
+          stainBtn.disabled = false;
+        },
+        onError: (error) => {
+          alert(`照片上传失败: ${error.message}`);
+        }
+      };
+
+      uploadQueue.push(uploadTask);
+      processUploadQueue();
+    }
+
+    let currentStainItem = null;
+    let stainCanvas = null;
+    let stainCtx = null;
+    let isDrawing = false;
+    let currentTool = 'draw';
+    let currentColor = '#e74c3c';
+    let currentSize = 5;
+    let stainMarkers = [];
+    let currentPath = [];
+    let stainImage = new Image();
+    let allItemStainMarkers = {};
+
+    function openStainMarker(btn) {
+      currentStainItem = btn.closest('.clothing-item');
+      const itemIndex = parseInt(currentStainItem.dataset.index);
+      const preview = currentStainItem.querySelector('.photo-preview');
+      
+      stainMarkers = allItemStainMarkers[itemIndex] ? [...allItemStainMarkers[itemIndex]] : [];
+      
+      stainCanvas = document.getElementById('stainCanvas');
+      stainCtx = stainCanvas.getContext('2d');
+      
+      stainImage = new Image();
+      stainImage.onload = function() {
+        const maxWidth = 660;
+        const maxHeight = 500;
+        let width = stainImage.width;
+        let height = stainImage.height;
+        
+        if (width > maxWidth) {
+          height = (maxWidth / width) * height;
+          width = maxWidth;
+        }
+        if (height > maxHeight) {
+          width = (maxHeight / height) * width;
+          height = maxHeight;
+        }
+        
+        stainCanvas.width = width;
+        stainCanvas.height = height;
+        redrawCanvas();
+        updateMarkersList();
+      };
+      stainImage.src = preview.src;
+      
+      document.getElementById('stainModal').classList.add('show');
+      setupCanvasEvents();
+    }
+
+    function setupCanvasEvents() {
+      stainCanvas.onmousedown = startDrawing;
+      stainCanvas.onmousemove = draw;
+      stainCanvas.onmouseup = stopDrawing;
+      stainCanvas.onmouseleave = stopDrawing;
+      
+      stainCanvas.ontouchstart = function(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = stainCanvas.getBoundingClientRect();
+        startDrawing({ clientX: touch.clientX, clientY: touch.clientY });
+      };
+      stainCanvas.ontouchmove = function(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        draw({ clientX: touch.clientX, clientY: touch.clientY });
+      };
+      stainCanvas.ontouchend = stopDrawing;
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      const rect = stainCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      currentPath = [{ x, y }];
+      
+      stainCtx.beginPath();
+      stainCtx.moveTo(x, y);
+      
+      if (currentTool === 'draw') {
+        stainCtx.strokeStyle = currentColor;
+        stainCtx.lineWidth = currentSize;
+        stainCtx.lineCap = 'round';
+        stainCtx.lineJoin = 'round';
+      } else {
+        stainCtx.globalCompositeOperation = 'destination-out';
+        stainCtx.lineWidth = currentSize * 2;
+      }
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      
+      const rect = stainCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      currentPath.push({ x, y });
+      
+      stainCtx.lineTo(x, y);
+      stainCtx.stroke();
+    }
+
+    function stopDrawing() {
+      if (!isDrawing) return;
+      isDrawing = false;
+      stainCtx.globalCompositeOperation = 'source-over';
+      
+      if (currentPath.length > 1 && currentTool === 'draw') {
+        stainMarkers.push({
+          path: [...currentPath],
+          color: currentColor,
+          size: currentSize
+        });
+        updateMarkersList();
+      }
+      currentPath = [];
+    }
+
+    function redrawCanvas() {
+      if (!stainCtx || !stainCanvas) return;
+      
+      stainCtx.clearRect(0, 0, stainCanvas.width, stainCanvas.height);
+      stainCtx.drawImage(stainImage, 0, 0, stainCanvas.width, stainCanvas.height);
+      
+      stainMarkers.forEach(marker => {
+        if (marker.path.length < 2) return;
+        
+        stainCtx.beginPath();
+        stainCtx.moveTo(marker.path[0].x, marker.path[0].y);
+        
+        for (let i = 1; i < marker.path.length; i++) {
+          stainCtx.lineTo(marker.path[i].x, marker.path[i].y);
+        }
+        
+        stainCtx.strokeStyle = marker.color;
+        stainCtx.lineWidth = marker.size;
+        stainCtx.lineCap = 'round';
+        stainCtx.lineJoin = 'round';
+        stainCtx.stroke();
+      });
+    }
+
+    function setTool(tool) {
+      currentTool = tool;
+      document.getElementById('drawTool').classList.toggle('active', tool === 'draw');
+      document.getElementById('eraseTool').classList.toggle('active', tool === 'erase');
+    }
+
+    function setColor(color) {
+      currentColor = color;
+      document.querySelectorAll('.color-option').forEach(el => {
+        el.classList.toggle('active', 
+          (color === '#e74c3c' && el.classList.contains('color-red')) ||
+          (color === '#f39c12' && el.classList.contains('color-orange')) ||
+          (color === '#3498db' && el.classList.contains('color-blue')) ||
+          (color === '#27ae60' && el.classList.contains('color-green'))
+        );
+      });
+    }
+
+    function setSize(size) {
+      currentSize = size;
+      document.querySelectorAll('.size-option').forEach(el => {
+        el.classList.toggle('active', parseInt(el.textContent) === size);
+      });
+    }
+
+    function updateMarkersList() {
+      const list = document.getElementById('markersList');
+      
+      if (stainMarkers.length === 0) {
+        list.innerHTML = `
+          <div style="padding: 15px; text-align: center; color: #999; font-size: 13px;">
+            暂无标记，在照片上绘制污渍标记
+          </div>
+        `;
+        return;
+      }
+      
+      list.innerHTML = stainMarkers.map((marker, index) => `
+        <div class="stain-marker-item">
+          <div class="stain-info">
+            <span class="stain-color-dot" style="background: ${marker.color}"></span>
+            <span>标记 ${index + 1}</span>
+            <span style="color: #888; font-size: 12px;">(颜色: ${marker.color}, 大小: ${marker.size}px)</span>
+          </div>
+          <button class="stain-remove-btn" onclick="removeMarker(${index})" title="删除此标记">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function removeMarker(index) {
+      stainMarkers.splice(index, 1);
+      redrawCanvas();
+      updateMarkersList();
+    }
+
+    function undoLastMarker() {
+      if (stainMarkers.length > 0) {
+        stainMarkers.pop();
+        redrawCanvas();
+        updateMarkersList();
+      }
+    }
+
+    function clearAllMarkers() {
+      if (confirm('确定要清除所有标记吗？')) {
+        stainMarkers = [];
+        redrawCanvas();
+        updateMarkersList();
+      }
+    }
+
+    function saveStainMarkers() {
+      const itemIndex = parseInt(currentStainItem.dataset.index);
+      allItemStainMarkers[itemIndex] = [...stainMarkers];
+      
+      const stainBtn = currentStainItem.querySelector('.stain-marker-btn');
+      const stainCount = stainBtn.querySelector('.stain-count');
+      
+      if (stainMarkers.length > 0) {
+        stainBtn.classList.add('has-marks');
+        stainCount.style.display = 'inline-block';
+        stainCount.textContent = stainMarkers.length;
+      } else {
+        stainBtn.classList.remove('has-marks');
+        stainCount.style.display = 'none';
+      }
+      
+      closeStainMarker();
+    }
+
+    function closeStainMarker() {
+      document.getElementById('stainModal').classList.remove('show');
+      currentStainItem = null;
+      isDrawing = false;
+      currentPath = [];
+    }
+
+    async function submitOrder() {
+      const customerName = document.getElementById('customerName').value.trim();
+      const customerPhone = document.getElementById('customerPhone').value.trim();
+
+      if (!customerName || !customerPhone) {
+        alert('请填写客户信息');
+        return;
+      }
+
+      if (activeUploads > 0 || uploadQueue.length > 0) {
+        alert('照片正在上传中，请稍候...');
+        return;
+      }
+
+      const items = [];
+      const photoPaths = [];
+      const clothingItems = document.querySelectorAll('.clothing-item');
+
+      for (const item of clothingItems) {
+        const type = item.querySelector('.clothing-type').value;
+        const quantity = parseInt(item.querySelector('.quantity').value);
+        const unitPrice = parseFloat(item.querySelector('.unit-price').value);
+        const itemIndex = parseInt(item.dataset.index);
+        const uploadedFile = uploadedFiles.get(itemIndex);
+
+        if (!type || !quantity || !unitPrice) {
+          alert('请完善所有衣物信息');
+          return;
+        }
+
+        items.push({ clothing_type: type, quantity, unit_price: unitPrice });
+        photoPaths.push(uploadedFile ? uploadedFile.filePath : null);
+      }
+
+      if (items.length === 0) {
+        alert('请至少添加一件衣物');
+        return;
+      }
+
+      const stainMarkersData = {};
+      clothingItems.forEach((item, index) => {
+        const itemIndex = parseInt(item.dataset.index);
+        if (allItemStainMarkers[itemIndex]) {
+          stainMarkersData[index] = allItemStainMarkers[itemIndex];
+        }
+      });
+
+      try {
+        const response = await fetch('/api/orders/create-with-paths', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customer_name: customerName,
+            phone: customerPhone,
+            items,
+            photo_paths: photoPaths,
+            stain_markers: stainMarkersData
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          lastCreatedOrderId = result.orderId;
+          showSuccessToast(result.orderId);
+          resetForm();
+          loadOrders();
+        } else {
+          alert('创建订单失败: ' + result.error);
+        }
+      } catch (error) {
+        console.error('提交失败:', error);
+        alert('提交失败，请检查网络连接');
+      }
+    }
+
+    function showSuccessToast(orderId) {
+      document.getElementById('toastOrderNo').textContent = orderId;
+      const toast = document.getElementById('successToast');
+      toast.classList.add('show');
+    }
+
+    function hideToast() {
+      document.getElementById('successToast').classList.remove('show');
+    }
+
+    function printReceiptFromToast() {
+      if (lastCreatedOrderId) {
+        window.open(`/api/receipt/${lastCreatedOrderId}`, '_blank');
+      }
+      hideToast();
+    }
+
+    function resetForm() {
+      document.getElementById('customerName').value = '';
+      document.getElementById('customerPhone').value = '';
+      document.getElementById('clothingItems').innerHTML = `
+        <div class="clothing-item" data-index="0">
+          <div class="item-header">
+            <span>衣物 1</span>
+          </div>
+          <div class="item-row">
+            <div class="form-group">
+              <label>衣物类型</label>
+              <select class="clothing-type" required onchange="setDefaultPrice(this)">
+                <option value="">请选择</option>
+                <option value="外套">外套</option>
+                <option value="衬衫">衬衫</option>
+                <option value="裤子">裤子</option>
+                <option value="毛衣">毛衣</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>数量</label>
+              <input type="number" class="quantity" min="1" value="1" required onchange="calculateTotal()">
+            </div>
+            <div class="form-group">
+              <label>单价 (¥)</label>
+              <input type="number" class="unit-price" min="0" step="0.01" placeholder="如: 30" required onchange="calculateTotal()">
+            </div>
+            <div class="photo-upload">
+              <label>照片</label>
+              <input type="file" class="photo" accept="image/*" capture="environment" onchange="handlePhotoUpload(this)">
+              <img class="photo-preview" style="display:none;">
+              <div class="upload-progress-container">
+                <div class="upload-progress-bar"></div>
+                <div class="upload-progress-text">0%</div>
+              </div>
+              <div class="upload-status" style="display:none;">
+                <span class="status-icon status-uploading">⏳</span>
+                <span class="status-text">上传中...</span>
+                <span class="upload-speed"></span>
+              </div>
+              <button type="button" class="stain-marker-btn" onclick="openStainMarker(this)" disabled style="margin-top: 6px; width: 100%;">
+                🎯 标记污渍<span class="stain-count" style="display:none;">0</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      clothingIndex = 0;
+      allItemStainMarkers = {};
+      uploadedFiles.clear();
+      calculateTotal();
+    }
+
+    async function loadOrders() {
+      const status = document.getElementById('statusFilter').value;
+      const date = document.getElementById('dateFilter').value;
+
+      let url = '/api/orders?';
+      if (status !== 'all') url += `status=${encodeURIComponent(status)}&`;
+      if (date) url += `date=${date}&`;
+
+      try {
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.success) {
+          renderOrders(result.orders);
+          updateStats(result.orders);
+        }
+      } catch (error) {
+        console.error('加载订单失败:', error);
+      }
+    }
+
+    function renderOrders(orders) {
+      const container = document.getElementById('orderList');
+
+      if (orders.length === 0) {
+        container.innerHTML = '<div class="empty-state">暂无订单</div>';
+        return;
+      }
+
+      container.innerHTML = orders.map(order => {
+        const nextStatus = getNextStatus(order.status);
+        return `
+          <div class="order-item">
+            <div class="order-header">
+              <span class="order-id">${order.id}</span>
+              <span class="order-time">${formatTime(order.created_at)}</span>
+            </div>
+            <div class="order-customer">👤 ${order.customer_name} (${order.phone})</div>
+            <div class="order-items-summary">📦 ${order.items_summary || '无衣物信息'}</div>
+            <div class="order-footer">
+              <span class="status-badge status-${order.status}">${order.status}</span>
+              <span class="order-total">¥${order.total_amount.toFixed(2)}</span>
+            </div>
+            <div class="order-actions">
+              ${nextStatus ? `<button class="btn-next" onclick="updateStatus('${order.id}', '${nextStatus}')">→ ${nextStatus}</button>` : ''}
+              <button class="btn-detail" onclick="showOrderDetail('${order.id}')">查看详情</button>
+              <button class="btn-receipt" onclick="printReceipt('${order.id}')">打印小票</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function getNextStatus(currentStatus) {
+      const flow = ['已收衣', '洗涤中', '已完成', '已取衣'];
+      const index = flow.indexOf(currentStatus);
+      return index < flow.length - 1 ? flow[index + 1] : null;
+    }
+
+    async function updateStatus(orderId, newStatus) {
+      if (!confirm(`确定要将订单状态更新为"${newStatus}"吗？`)) return;
+
+      try {
+        const response = await fetch(`/api/orders/${orderId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          loadOrders();
+        } else {
+          alert('更新失败: ' + result.error);
+        }
+      } catch (error) {
+        console.error('更新失败:', error);
+        alert('更新失败');
+      }
+    }
+
+    async function showOrderDetail(orderId) {
+      try {
+        const response = await fetch(`/api/orders/${orderId}`);
+        const result = await response.json();
+
+        if (result.success) {
+          const order = result.order;
+          let html = `
+            <p><strong>订单号：</strong>${order.id}</p>
+            <p><strong>客户：</strong>${order.customer_name} (${order.phone})</p>
+            <p><strong>状态：</strong><span class="status-badge status-${order.status}">${order.status}</span></p>
+            <p><strong>创建时间：</strong>${formatTime(order.created_at)}</p>
+            <p><strong>总金额：</strong>¥${order.total_amount.toFixed(2)}</p>
+            <h4 style="margin: 16px 0 10px 0;">衣物明细：</h4>
+          `;
+
+          let itemIndex = 0;
+          order.items.forEach(item => {
+            const hasMarkers = item.stain_markers && item.stain_markers.length > 0;
+            html += `
+              <div class="detail-item">
+                <p><strong>类型：</strong>${item.clothing_type}</p>
+                <p><strong>数量：</strong>${item.quantity} | <strong>单价：</strong>¥${item.unit_price.toFixed(2)} | <strong>小计：</strong>¥${(item.quantity * item.unit_price).toFixed(2)}</p>
+                ${hasMarkers ? `<p><strong>污渍标记：</strong><span style="color: #e74c3c;">${item.stain_markers.length} 处</span></p>` : ''}
+                ${item.photo_path ? `
+                  <div class="photo-with-markers" id="photo-container-${itemIndex}" style="margin-top: 8px;">
+                    <img src="${item.photo_path}" alt="衣物照片" id="detail-photo-${itemIndex}" onload="drawMarkersOnPhoto(${itemIndex}, '${JSON.stringify(item.stain_markers || []).replace(/'/g, "\\'")}')" style="max-width: 100%; border-radius: 6px;">
+                  </div>
+                ` : ''}
+              </div>
+            `;
+            itemIndex++;
+          });
+
+          document.getElementById('detailContent').innerHTML = html;
+          document.getElementById('detailModal').classList.add('show');
+        }
+      } catch (error) {
+        console.error('获取详情失败:', error);
+      }
+    }
+
+    function drawMarkersOnPhoto(itemIndex, markersJson) {
+      try {
+        const markers = JSON.parse(markersJson);
+        if (!markers || markers.length === 0) return;
+
+        const img = document.getElementById(`detail-photo-${itemIndex}`);
+        const container = document.getElementById(`photo-container-${itemIndex}`);
+        if (!img || !container) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.className = 'marker-overlay';
+        canvas.width = img.clientWidth;
+        canvas.height = img.clientHeight;
+        container.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        const scaleX = canvas.width / img.naturalWidth;
+        const scaleY = canvas.height / img.naturalHeight;
+
+        markers.forEach(marker => {
+          if (!marker.path || marker.path.length < 2) return;
+
+          ctx.beginPath();
+          ctx.moveTo(marker.path[0].x * scaleX, marker.path[0].y * scaleY);
+
+          for (let i = 1; i < marker.path.length; i++) {
+            ctx.lineTo(marker.path[i].x * scaleX, marker.path[i].y * scaleY);
+          }
+
+          ctx.strokeStyle = marker.color;
+          ctx.lineWidth = marker.size * Math.max(scaleX, scaleY);
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+        });
+      } catch (e) {
+        console.error('绘制标记失败:', e);
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('detailModal').classList.remove('show');
+    }
+
+    function printReceipt(orderId) {
+      window.open(`/api/receipt/${orderId}`, '_blank');
+    }
+
+    function updateStats(orders) {
+      document.getElementById('stat-total').textContent = orders.length;
+      document.getElementById('stat-pending').textContent = orders.filter(o => o.status === '已收衣').length;
+      document.getElementById('stat-washing').textContent = orders.filter(o => o.status === '洗涤中').length;
+      document.getElementById('stat-done').textContent = orders.filter(o => o.status === '已完成').length;
+    }
+
+    function formatTime(isoString) {
+      const date = new Date(isoString);
+      return date.toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    document.querySelectorAll('.quantity, .unit-price').forEach(el => {
+      el.addEventListener('change', calculateTotal);
+    });
+
+    calculateTotal();
+    loadOrders();
+    setInterval(loadOrders, 30000);
+  </script>
+</body>
+</html>

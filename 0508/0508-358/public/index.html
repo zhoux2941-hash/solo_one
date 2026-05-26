@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>宠物医院电子病历系统</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-content">
+        <h1>🐾 宠物医院电子病历系统</h1>
+        <div class="header-stats">
+          <span id="totalCount">共 0 份病历</span>
+          <span id="queryTime" class="query-time"></span>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <nav class="sidebar">
+        <button class="nav-btn active" data-view="list">📋 病历列表</button>
+        <button class="nav-btn" data-view="create">➕ 新建病历</button>
+        <button class="nav-btn" id="perfTestBtn">⚡ 性能测试</button>
+      </nav>
+
+      <section class="content">
+        <div id="view-list" class="view active">
+          <div class="toolbar">
+            <div class="search-box">
+              <input type="text" id="searchInput" placeholder="搜索宠物名或主人名...">
+              <button id="searchBtn">搜索</button>
+            </div>
+            <div class="page-info" id="pageInfo">最新 20 条 / 共 0 条</div>
+            <div class="pagination">
+              <button id="prevBtn" disabled>上一批</button>
+              <button id="nextBtn" disabled>下一批</button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="records-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>宠物名</th>
+                  <th>主人</th>
+                  <th>种类</th>
+                  <th>体重(kg)</th>
+                  <th>体温(℃)</th>
+                  <th>诊断</th>
+                  <th>费用(¥)</th>
+                  <th>日期</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="recordsTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="view-create" class="view">
+          <div class="form-container">
+            <h2 id="formTitle">新建病历</h2>
+
+            <div class="template-section">
+              <label>选择病历模板</label>
+              <select id="templateSelect">
+                <option value="">-- 不使用模板 --</option>
+                <optgroup label="犬">
+                  <option value="1">犬细小病毒</option>
+                  <option value="2">犬瘟热</option>
+                  <option value="5">犬皮肤病</option>
+                  <option value="7">犬胃肠炎</option>
+                  <option value="8">犬骨折</option>
+                </optgroup>
+                <optgroup label="猫">
+                  <option value="3">猫瘟热</option>
+                  <option value="4">猫传染性腹膜炎</option>
+                  <option value="6">猫泌尿系统综合征</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <form id="recordForm">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>宠物名 *</label>
+                  <input type="text" id="pet_name" required>
+                </div>
+                <div class="form-group">
+                  <label>主人 *</label>
+                  <input type="text" id="owner_name" required>
+                </div>
+                <div class="form-group">
+                  <label>联系电话</label>
+                  <input type="text" id="owner_phone">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>种类</label>
+                  <select id="pet_type">
+                    <option value="犬">犬</option>
+                    <option value="猫">猫</option>
+                    <option value="其他">其他</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>品种</label>
+                  <input type="text" id="breed">
+                </div>
+                <div class="form-group">
+                  <label>年龄</label>
+                  <input type="text" id="age" placeholder="如: 3岁">
+                </div>
+                <div class="form-group">
+                  <label>性别</label>
+                  <select id="gender">
+                    <option value="">-- 请选择 --</option>
+                    <option value="公">公</option>
+                    <option value="母">母</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>体重 (kg)</label>
+                  <input type="number" step="0.1" id="weight" placeholder="如: 5.5">
+                </div>
+                <div class="form-group">
+                  <label>体温 (℃)</label>
+                  <input type="number" step="0.1" id="temperature" placeholder="如: 38.5">
+                </div>
+                <div class="form-group">
+                  <label>医生</label>
+                  <input type="text" id="doctor_name">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>主诉</label>
+                <textarea id="chief_complaint" rows="2" placeholder="主人描述的症状和病史..."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>临床检查</label>
+                <textarea id="clinical_findings" rows="2" placeholder="医生检查发现..."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>检查项（费用自动累加）</label>
+                <div class="exam-checkboxes" id="examCheckboxes">
+                </div>
+                <div class="total-fee">
+                  <span>检查费用合计：</span>
+                  <span class="fee-amount" id="examFeeTotal">¥ 0.00</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>诊断</label>
+                <textarea id="diagnosis" rows="2" placeholder="疾病诊断结果..."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>治疗方案</label>
+                <textarea id="treatment_plan" rows="4" placeholder="详细治疗方案..."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>处方用药（库存不足将无法保存）</label>
+                <div class="medicine-selector">
+                  <div class="medicine-add-row">
+                    <select id="medicineSelect" class="medicine-select">
+                      <option value="">-- 选择药品 --</option>
+                    </select>
+                    <input type="number" id="medicineQuantity" min="1" value="1" placeholder="数量" class="medicine-quantity">
+                    <input type="text" id="medicineUsage" placeholder="用法" class="medicine-usage">
+                    <button type="button" id="addMedicineBtn" class="btn-primary">添加</button>
+                  </div>
+                  <div class="medicine-list" id="medicineList"></div>
+                  <div class="medicine-fee">
+                    <span>药品费用合计：</span>
+                    <span class="fee-amount" id="medicineFeeTotal">¥ 0.00</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>处方</label>
+                <textarea id="prescription" rows="4" placeholder="药品和用法用量（备注）..."></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" id="cancelBtn" class="btn-secondary">取消</button>
+                <button type="submit" class="btn-primary">保存病历</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div id="view-detail" class="view">
+          <div class="detail-container" id="detailContainer">
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="detailTemplate" style="display: none;">
+    <div class="detail-content" id="printContent">
+      <div class="detail-header">
+        <div class="hospital-info">
+          <h2>🐾 宠物医院</h2>
+          <p>电子病历单</p>
+        </div>
+        <div class="detail-actions no-print">
+          <button class="btn-secondary" id="backToListBtn">返回列表</button>
+          <button class="btn-secondary" id="editBtn">编辑</button>
+          <button class="btn-primary" id="printBtn">🖨️ 打印PDF</button>
+          <button class="btn-danger" id="deleteBtn">删除</button>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h3>基本信息</h3>
+        <div class="detail-grid">
+          <div class="detail-item"><label>病历号：</label><span id="d-id"></span></div>
+          <div class="detail-item"><label>就诊日期：</label><span id="d-created_at"></span></div>
+          <div class="detail-item"><label>宠物名：</label><span id="d-pet_name"></span></div>
+          <div class="detail-item"><label>主人：</label><span id="d-owner_name"></span></div>
+          <div class="detail-item"><label>联系电话：</label><span id="d-owner_phone"></span></div>
+          <div class="detail-item"><label>种类：</label><span id="d-pet_type"></span></div>
+          <div class="detail-item"><label>品种：</label><span id="d-breed"></span></div>
+          <div class="detail-item"><label>年龄：</label><span id="d-age"></span></div>
+          <div class="detail-item"><label>性别：</label><span id="d-gender"></span></div>
+          <div class="detail-item"><label>体重：</label><span id="d-weight"></span></div>
+          <div class="detail-item"><label>体温：</label><span id="d-temperature"></span></div>
+          <div class="detail-item"><label>医生：</label><span id="d-doctor_name"></span></div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h3>主诉</h3>
+        <p id="d-chief_complaint" class="detail-text"></p>
+      </div>
+
+      <div class="detail-section">
+        <h3>临床检查</h3>
+        <p id="d-clinical_findings" class="detail-text"></p>
+      </div>
+
+      <div class="detail-section">
+        <h3>检查项目</h3>
+        <table class="exam-table">
+          <thead>
+            <tr><th>检查项目</th><th>费用(¥)</th><th>结果</th></tr>
+          </thead>
+          <tbody id="d-exams"></tbody>
+          <tfoot>
+            <tr><td><strong>合计</strong></td><td><strong id="d-total_fee"></strong></td><td></td></tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="detail-section">
+        <h3>用药明细</h3>
+        <table class="exam-table">
+          <thead>
+            <tr><th>药品名称</th><th>规格</th><th>单价(¥)</th><th>数量</th><th>用法</th><th>小计(¥)</th></tr>
+          </thead>
+          <tbody id="d-medicines"></tbody>
+          <tfoot>
+            <tr><td colspan="5"><strong>药品合计</strong></td><td><strong id="d-medicine-total"></strong></td></tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="detail-section">
+        <h3>诊断</h3>
+        <p id="d-diagnosis" class="detail-text"></p>
+      </div>
+
+      <div class="detail-section">
+        <h3>治疗方案</h3>
+        <pre id="d-treatment_plan" class="detail-pre"></pre>
+      </div>
+
+      <div class="detail-section">
+        <h3>处方</h3>
+        <pre id="d-prescription" class="detail-pre"></pre>
+      </div>
+
+      <div class="detail-footer">
+        <div class="sign-area">
+          <span>医生签名：</span>
+          <span class="sign-line"></span>
+        </div>
+        <div class="print-time">
+          打印时间：<span id="printTime"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+{
+  "orders": [
+    {
+      "id": "DC2026052691620",
+      "customer_name": "张三",
+      "phone": "13800138000",
+      "total_amount": 65,
+      "status": "洗涤中",
+      "created_at": "2026-05-25T19:06:11.893Z",
+      "updated_at": "2026-05-25T19:06:11.919Z"
+    },
+    {
+      "id": "DC2026052618024",
+      "customer_name": "测试用户",
+      "phone": "13900139000",
+      "total_amount": 65,
+      "status": "已收衣",
+      "created_at": "2026-05-25T19:15:21.665Z",
+      "updated_at": "2026-05-25T19:15:21.665Z"
+    },
+    {
+      "id": "DC2026052644000",
+      "customer_name": "测试用户",
+      "phone": "13900139000",
+      "total_amount": 0.3,
+      "status": "已收衣",
+      "created_at": "2026-05-25T19:15:21.682Z",
+      "updated_at": "2026-05-25T19:15:21.682Z"
+    },
+    {
+      "id": "DC2026052619407",
+      "customer_name": "测试用户",
+      "phone": "13900139000",
+      "total_amount": 147.16,
+      "status": "已收衣",
+      "created_at": "2026-05-25T19:15:21.687Z",
+      "updated_at": "2026-05-25T19:15:21.687Z"
+    },
+    {
+      "id": "DC2026052668889",
+      "customer_name": "测试用户",
+      "phone": "13900139000",
+      "total_amount": 10.1,
+      "status": "已收衣",
+      "created_at": "2026-05-25T19:15:21.692Z",
+      "updated_at": "2026-05-25T19:15:21.692Z"
+    },
+    {
+      "id": "DC2026052624755",
+      "customer_name": "测试用户",
+      "phone": "13900139000",
+      "total_amount": 86.31,
+      "status": "已收衣",
+      "created_at": "2026-05-25T19:15:21.698Z",
+      "updated_at": "2026-05-25T19:15:21.698Z"
+    },
+    {
+      "id": "DC2026052681504",
+      "customer_name": "测试用户",
+      "phone": "13900139000",
+      "total_amount": 35.5,
+      "status": "已收衣",
+      "created_at": "2026-05-25T19:29:12.020Z",
+      "updated_at": "2026-05-25T19:29:12.020Z"
+    }
+  ],
+  "orderItems": [
+    {
+      "id": 1779735971893,
+      "order_id": "DC2026052691620",
+      "clothing_type": "外套",
+      "quantity": 1,
+      "unit_price": 35,
+      "photo_path": null
+    },
+    {
+      "id": 1779735971894,
+      "order_id": "DC2026052691620",
+      "clothing_type": "衬衫",
+      "quantity": 2,
+      "unit_price": 15,
+      "photo_path": null
+    },
+    {
+      "id": 1779736521666,
+      "order_id": "DC2026052618024",
+      "clothing_type": "外套",
+      "quantity": 1,
+      "unit_price": 35,
+      "photo_path": null
+    },
+    {
+      "id": 1779736521667,
+      "order_id": "DC2026052618024",
+      "clothing_type": "衬衫",
+      "quantity": 2,
+      "unit_price": 15,
+      "photo_path": null
+    },
+    {
+      "id": 1779736521682,
+      "order_id": "DC2026052644000",
+      "clothing_type": "外套",
+      "quantity": 1,
+      "unit_price": 0.1,
+      "photo_path": null
+    },
+    {
+      "id": 1779736521683,
+      "order_id": "DC2026052644000",
+      "clothing_type": "衬衫",
+      "quantity": 1,
+      "unit_price": 0.2,
+      "photo_path": null
+    },
+    {
+      "id": 1779736521687,
+      "order_id": "DC2026052619407",
+      "clothing_type": "外套",
+      "quantity": 3,
+      "unit_price": 35.5,
+      "photo_path": null
+    },
+    {
+      "id": 1779736521688,
+      "order_id": "DC2026052619407",
+      "clothing_type": "裤子",
+      "quantity": 2,
+      "unit_price": 20.33,
+      "photo_path": null
+    },
+    {
+      "id": 1779736521693,
+      "order_id": "DC2026052668889",
+      "clothing_type": "外套",
+      "quantity": 1,
+      "unit_price": 1.01,
+      "photo_path": null
+    },
+    {
+      "id": 1779736521694,
+      "order_id": "DC2026052668889",
+      "clothing_type": "衬衫",
+      "quantity": 1,
+      "unit_price": 2.02,
+      "photo_path": null
+    },
+    {
+      "id": 1779736521695,
+      "order_id": "DC2026052668889",
+      "clothing_type": "裤子",
+      "quantity": 1,
+      "unit_price": 3.03,
+      "photo_path": null
+    },
+    {
+      "id": 1779736521696,
+      "order_id": "DC2026052668889",
+      "clothing_type": "毛衣",
+      "quantity": 1,
+      "unit_price": 4.04,
+      "photo_path": null
+    },
+    {
+      "id": 1779736521698,
+      "order_id": "DC2026052624755",
+      "clothing_type": "外套",
+      "quantity": 7,
+      "unit_price": 12.33,
+      "photo_path": null
+    },
+    {
+      "id": 1779737352021,
+      "order_id": "DC2026052681504",
+      "clothing_type": "外套",
+      "quantity": 1,
+      "unit_price": 35.5,
+      "photo_path": null,
+      "stain_markers": [
+        {
+          "path": [
+            {
+              "x": 100,
+              "y": 150
+            },
+            {
+              "x": 120,
+              "y": 160
+            },
+            {
+              "x": 140,
+              "y": 155
+            },
+            {
+              "x": 130,
+              "y": 140
+            },
+            {
+              "x": 110,
+              "y": 145
+            }
+          ],
+          "color": "#e74c3c",
+          "size": 5
+        },
+        {
+          "path": [
+            {
+              "x": 200,
+              "y": 250
+            },
+            {
+              "x": 220,
+              "y": 260
+            },
+            {
+              "x": 230,
+              "y": 245
+            },
+            {
+              "x": 210,
+              "y": 240
+            }
+          ],
+          "color": "#f39c12",
+          "size": 8
+        }
+      ]
+    }
+  ]
+}

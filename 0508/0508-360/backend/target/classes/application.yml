@@ -1,0 +1,26 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:sqlite:community_group_buy.db
+    driver-class-name: org.sqlite.JDBC
+    username: admin
+    password: admin
+
+  jpa:
+    database-platform: org.sqlite.hibernate.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  web:
+    cors:
+      allow-credentials: true
+      allowed-origins: "*"
+      allowed-methods: "*"
+      allowed-headers: "*"

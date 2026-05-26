@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校医院电子处方系统</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>🏥 校医院电子处方系统</h1>
+            <div class="role-switcher">
+                <button class="role-btn active" data-role="doctor">👨‍⚕️ 医生</button>
+                <button class="role-btn" data-role="pharmacy">💊 药房</button>
+                <button class="role-btn" data-role="patient">🧑 患者</button>
+                <button class="role-btn" data-role="admin">📋 管理员</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div id="doctor-view" class="view active">
+                <div class="view-header">
+                    <h2>开具电子处方</h2>
+                </div>
+                <div class="prescription-form">
+                    <div class="form-group">
+                        <label for="patientName">患者姓名</label>
+                        <input type="text" id="patientName" placeholder="请输入患者姓名">
+                    </div>
+                    <div class="form-group">
+                        <label for="patientId">病历号/校园卡号</label>
+                        <input type="text" id="patientId" placeholder="请输入病历号或校园卡号" onchange="checkPatientAllergies()" oninput="checkPatientAllergies()">
+                    </div>
+                    <div class="form-group">
+                        <label for="diagnosis">诊断结果</label>
+                        <input type="text" id="diagnosis" placeholder="请输入诊断结果">
+                    </div>
+                    
+                    <div id="allergyAlertSection" class="allergy-section hidden">
+                        <div class="allergy-alert">
+                            <span class="allergy-icon">⚠️</span>
+                            <div class="allergy-content">
+                                <strong>患者过敏史</strong>
+                                <div id="allergyList" class="allergy-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="selectedMedicineWarnings" class="medicine-warnings"></div>
+                    
+                    <div class="medicines-section">
+                        <h3>药品清单</h3>
+                        <div id="medicineList" class="medicine-list"></div>
+                        <button class="btn btn-secondary" onclick="addMedicineRow()">+ 添加药品</button>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="submitPrescription()">提交处方</button>
+                </div>
+                
+                <div class="recent-prescriptions">
+                    <h3>近期开具处方</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>处方号</th>
+                                <th>患者</th>
+                                <th>病历号</th>
+                                <th>诊断</th>
+                                <th>药品数量</th>
+                                <th>状态</th>
+                                <th>时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentPrescriptions"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="pharmacy-view" class="view">
+                <div class="view-header">
+                    <h2>药房取药管理</h2>
+                </div>
+                
+                <div class="pharmacy-container">
+                    <div class="queue-display">
+                        <h3>📢 当前叫号</h3>
+                        <div class="current-call">
+                            <div class="call-number" id="currentCallNumber">--</div>
+                            <div class="call-info" id="currentCallInfo">等待叫号...</div>
+                            <div class="call-window" id="currentCallWindow">窗口: --</div>
+                        </div>
+                        <div class="call-controls">
+                            <button class="btn btn-warning" onclick="repeatCurrentCall()">🔊 重复播报</button>
+                            <button class="btn btn-success" onclick="manualCallNext()">➡️ 下一位</button>
+                        </div>
+                        
+                        <h3 style="margin-top: 30px;">📋 排队列表</h3>
+                        <div class="queue-list" id="queueList">
+                            <div class="empty-state">暂无排队患者</div>
+                        </div>
+                    </div>
+                    
+                    <div class="pharmacy-actions">
+                        <h3>💊 待配药处方</h3>
+                        <div id="prescriptionsToFill" class="prescriptions-to-fill">
+                            <div class="empty-state">暂无待配药处方</div>
+                        </div>
+                        
+                        <h3 style="margin-top: 20px;">📦 库存状态</h3>
+                        <div class="inventory-summary" id="inventorySummary"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="patient-view" class="view">
+                <div class="view-header">
+                    <h2>患者取药</h2>
+                </div>
+                
+                <div class="patient-container">
+                    <div class="patient-search">
+                        <h3>🔍 查询处方</h3>
+                        <div class="form-group">
+                            <label>请输入病历号或校园卡号</label>
+                            <input type="text" id="patientSearchId" placeholder="请输入病历号或校园卡号">
+                            <button class="btn btn-primary" onclick="searchPatientPrescriptions()">查询</button>
+                        </div>
+                    </div>
+                    
+                    <div id="patientPrescriptions" class="patient-prescriptions">
+                        <div class="empty-state">请输入病历号或校园卡号查询处方</div>
+                    </div>
+                    
+                    <div class="patient-records">
+                        <h3>📋 取药记录</h3>
+                        <div id="patientRecords">
+                            <div class="empty-state">暂无取药记录</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="admin-view" class="view">
+                <div class="view-header">
+                    <h2>药品库存管理</h2>
+                </div>
+                
+                <div class="admin-container">
+                    <div class="admin-actions">
+                        <button class="btn btn-primary" onclick="openAddMedicineModal()">+ 添加药品</button>
+                        <button class="btn btn-secondary" onclick="exportInventoryData()">导出数据</button>
+                    </div>
+                    
+                    <div class="low-stock-alerts" id="lowStockAlerts"></div>
+                    
+                    <div class="inventory-section">
+                        <h3>📦 药品库存列表</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>药品编码</th>
+                                    <th>药品名称</th>
+                                    <th>规格</th>
+                                    <th>当前库存</th>
+                                    <th>阈值</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTable"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="purchase-history">
+                        <h3>📝 采购记录</h3>
+                        <div id="purchaseHistory">
+                            <div class="empty-state">暂无采购记录</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">标题</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+    
+    <canvas id="signatureCanvas" class="signature-canvas hidden"></canvas>
+
+    <script src="app.js"></script>
+</body>
+</html>
