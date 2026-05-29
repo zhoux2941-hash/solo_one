@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>占星术星盘生成工具</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>占星术星盘生成工具</h1>
+            <p>输入您的出生信息，生成个性化星盘</p>
+        </header>
+
+        <div class="main-content">
+            <div class="form-section">
+                <h2>出生信息</h2>
+                <form id="birthForm">
+                    <div class="form-row">
+                        <label>出生日期：</label>
+                        <input type="number" id="year" placeholder="年" min="1900" max="2100" required>
+                        <span>/</span>
+                        <input type="number" id="month" placeholder="月" min="1" max="12" required>
+                        <span>/</span>
+                        <input type="number" id="day" placeholder="日" min="1" max="31" required>
+                    </div>
+                    <div class="form-row">
+                        <label>出生时间：</label>
+                        <input type="number" id="hour" placeholder="时" min="0" max="23" required>
+                        <span>:</span>
+                        <input type="number" id="minute" placeholder="分" min="0" max="59" required>
+                    </div>
+                    <div class="form-row">
+                        <label>地点：</label>
+                        <input type="text" id="location" placeholder="城市名称" required>
+                    </div>
+                    <div class="form-row">
+                        <label>经度：</label>
+                        <input type="number" id="longitude" placeholder="东经为正，西经为负" step="0.01" required>
+                        <label>纬度：</label>
+                        <input type="number" id="latitude" placeholder="北纬为正，南纬为负" step="0.01" required>
+                    </div>
+                    <button type="submit">生成星盘</button>
+                </form>
+                <div class="preset-locations">
+                    <h3>预设地点：</h3>
+                    <button onclick="setLocation('北京', 116.4074, 39.9042)">北京</button>
+                    <button onclick="setLocation('上海', 121.4737, 31.2304)">上海</button>
+                    <button onclick="setLocation('纽约', -74.006, 40.7128)">纽约</button>
+                    <button onclick="setLocation('伦敦', -0.1276, 51.5074)">伦敦</button>
+                </div>
+                
+                <div class="aspect-settings">
+                    <h3>相位容许度设置：</h3>
+                    <div class="aspect-tolerance">
+                        <label>合相 (0°)：</label>
+                        <input type="range" id="conjunctionTolerance" min="0" max="15" value="8" step="0.5">
+                        <span id="conjunctionValue">8.0°</span>
+                    </div>
+                    <div class="aspect-tolerance">
+                        <label>六分相 (60°)：</label>
+                        <input type="range" id="sextileTolerance" min="0" max="15" value="5" step="0.5">
+                        <span id="sextileValue">5.0°</span>
+                    </div>
+                    <div class="aspect-tolerance">
+                        <label>四分相 (90°)：</label>
+                        <input type="range" id="squareTolerance" min="0" max="15" value="8" step="0.5">
+                        <span id="squareValue">8.0°</span>
+                    </div>
+                    <div class="aspect-tolerance">
+                        <label>三分相 (120°)：</label>
+                        <input type="range" id="trineTolerance" min="0" max="15" value="8" step="0.5">
+                        <span id="trineValue">8.0°</span>
+                    </div>
+                    <div class="aspect-tolerance">
+                        <label>冲相 (180°)：</label>
+                        <input type="range" id="oppositionTolerance" min="0" max="15" value="8" step="0.5">
+                        <span id="oppositionValue">8.0°</span>
+                    </div>
+                    <button onclick="resetTolerances()">重置默认值</button>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <h2>星盘图</h2>
+                <canvas id="chartCanvas" width="500" height="500"></canvas>
+                <div class="legend">
+                    <h3>行星符号说明：</h3>
+                    <div class="legend-items">
+                        <span>☉ 太阳</span>
+                        <span>☽ 月亮</span>
+                        <span>☿ 水星</span>
+                        <span>♀ 金星</span>
+                        <span>♂ 火星</span>
+                        <span>♃ 木星</span>
+                        <span>♄ 土星</span>
+                        <span>⛢ 天王星</span>
+                        <span>♆ 海王星</span>
+                        <span>♇ 冥王星</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="aspects-section">
+            <h2>主要相位</h2>
+            <div id="aspectsDisplay"></div>
+        </div>
+
+        <div class="planets-section">
+            <h2>行星位置详情</h2>
+            <div id="planetsDisplay"></div>
+        </div>
+    </div>
+
+    <script src="swisseph.js"></script>
+    <script src="ephemeris.js"></script>
+    <script src="chart.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

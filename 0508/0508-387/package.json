@@ -1,0 +1,18 @@
+{
+  "name": "chem-structure-converter",
+  "version": "1.0.0",
+  "description": "化学结构式转换工具",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.160.0",
+    "openchemlib": "^8.0.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

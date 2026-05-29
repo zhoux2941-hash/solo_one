@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>盲打练习与打字速度分析工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>盲打练习与打字速度分析工具</h1>
+            <p class="subtitle">提升您的打字技能</p>
+        </header>
+
+        <div class="main-content">
+            <div class="control-panel">
+                <div class="difficulty-selector">
+                    <label>选择难度：</label>
+                    <select id="difficulty">
+                        <option value="easy">初级</option>
+                        <option value="medium">中级</option>
+                        <option value="hard">高级</option>
+                    </select>
+                </div>
+
+                <div class="article-selector">
+                    <label>选择文章：</label>
+                    <select id="articleSelect">
+                        <option value="0">文章 1</option>
+                        <option value="1">文章 2</option>
+                        <option value="2">文章 3</option>
+                        <option value="3">文章 4</option>
+                        <option value="4">文章 5</option>
+                    </select>
+                </div>
+
+                <div class="sound-toggle">
+                    <label>
+                        <input type="checkbox" id="soundEnabled" checked>
+                        按键音效
+                    </label>
+                </div>
+
+                <button id="startBtn" class="btn btn-primary">开始练习</button>
+                <button id="resetBtn" class="btn btn-secondary">重置</button>
+            </div>
+
+            <div class="custom-text-section">
+                <textarea id="customText" placeholder="粘贴自定义练习文本（可选）"></textarea>
+                <button id="useCustomBtn" class="btn btn-outline">使用自定义文本</button>
+            </div>
+
+            <div class="stats-panel">
+                <div class="stat-item">
+                    <span class="stat-label">总速度 (WPM)</span>
+                    <span class="stat-value" id="wpm">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">净速度 (WPM)</span>
+                    <span class="stat-value" id="netWpm">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">正确率</span>
+                    <span class="stat-value" id="accuracy">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">击键数</span>
+                    <span class="stat-value" id="keystrokes">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">错误数</span>
+                    <span class="stat-value error" id="errors">0</span>
+                </div>
+            </div>
+
+            <div class="practice-area">
+                <div class="text-display" id="textDisplay"></div>
+                <textarea 
+                    id="userInput" 
+                    placeholder="在此输入..."
+                    disabled
+                ></textarea>
+            </div>
+
+            <div class="chart-section">
+                <canvas id="speedChart"></canvas>
+            </div>
+
+            <div class="heatmap-section">
+                <h3>键位热力图（点击查看错误详情）</h3>
+                <div class="keyboard-heatmap" id="keyboardHeatmap"></div>
+                <div class="heatmap-legend">
+                    <span class="legend-item"><span class="legend-color correct-key"></span> 无错误</span>
+                    <span class="legend-item"><span class="legend-color low-error"></span> 低错误</span>
+                    <span class="legend-item"><span class="legend-color medium-error"></span> 中错误</span>
+                    <span class="legend-item"><span class="legend-color high-error"></span> 高错误</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="report-modal" id="reportModal">
+            <div class="modal-content">
+                <span class="close" id="closeModal">&times;</span>
+                <h2>练习完成报告</h2>
+                <div class="report-stats">
+                    <div class="report-stat">
+                        <span>总时长：</span>
+                        <span id="totalTime">0秒</span>
+                    </div>
+                    <div class="report-stat">
+                        <span>平均 WPM：</span>
+                        <span id="avgWpm">0</span>
+                    </div>
+                    <div class="report-stat">
+                        <span>总正确率：</span>
+                        <span id="totalAccuracy">0%</span>
+                    </div>
+                    <div class="report-stat">
+                        <span>总击键数：</span>
+                        <span id="totalKeystrokes">0</span>
+                    </div>
+                    <div class="report-stat">
+                        <span>总错误数：</span>
+                        <span id="totalErrors">0</span>
+                    </div>
+                </div>
+                <div class="error-chars">
+                    <h3>错误率最高的字符：</h3>
+                    <ul id="errorCharsList"></ul>
+                </div>
+                <button id="restartBtn" class="btn btn-primary">再练一次</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

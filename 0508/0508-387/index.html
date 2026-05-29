@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>化学结构式转换工具</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>化学结构式转换工具</h1>
+    </header>
+
+    <div class="main-content">
+      <div class="input-section">
+        <div class="input-group">
+          <label for="smiles-input">SMILES 输入</label>
+          <input type="text" id="smiles-input" placeholder="请输入SMILES字符串，如 CCO" value="CCO">
+          <button id="convert-btn">转换</button>
+        </div>
+
+        <div class="input-group">
+          <label for="mol-file">上传 MOL 文件</label>
+          <input type="file" id="mol-file" accept=".mol">
+        </div>
+
+        <div class="input-group">
+          <label for="molecule-select">选择预置分子</label>
+          <select id="molecule-select">
+            <option value="">请选择...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="display-section">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="2d">2D 结构</button>
+          <button class="tab-btn" data-tab="3d">3D 结构</button>
+        </div>
+
+        <div class="tab-content">
+          <div id="tab-2d" class="tab-pane active">
+            <div id="canvas-container">
+              <canvas id="structure-canvas"></canvas>
+            </div>
+          </div>
+          <div id="tab-3d" class="tab-pane">
+            <div id="three-container"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h3>分子信息</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">分子式</span>
+            <span id="formula" class="value">-</span>
+          </div>
+          <div class="info-item">
+            <span class="label">分子量</span>
+            <span id="molecular-weight" class="value">-</span>
+          </div>
+          <div class="info-item">
+            <span class="label">熔点</span>
+            <span id="melting-point" class="value">-</span>
+          </div>
+          <div class="info-item">
+            <span class="label">沸点</span>
+            <span id="boiling-point" class="value">-</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="smiles-section">
+        <h3>SMILES 格式转换</h3>
+        <div class="smiles-grid">
+          <div class="smiles-item">
+            <span class="label">规范 SMILES</span>
+            <input type="text" id="canonical-smiles" readonly>
+          </div>
+          <div class="smiles-item">
+            <span class="label">异构 SMILES</span>
+            <input type="text" id="isomeric-smiles" readonly>
+          </div>
+        </div>
+      </div>
+
+      <div class="export-section">
+        <button id="export-svg">导出 SVG</button>
+        <button id="export-pdb">导出 PDB</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

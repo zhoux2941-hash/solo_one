@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>化学方程式配平工具</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>化学方程式配平工具</h1>
+            <p>使用高斯消元法求解线性方程组</p>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="balancer">方程式配平</button>
+            <button class="tab-btn" data-tab="matrix">矩阵求解</button>
+            <button class="tab-btn" data-tab="periodic">元素周期表</button>
+            <button class="tab-btn" data-tab="templates">方程式模板</button>
+        </nav>
+
+        <div class="tab-content">
+            <div id="balancer" class="tab-pane active">
+                <div class="input-section">
+                    <label for="equation-input">输入化学方程式：</label>
+                    <input type="text" id="equation-input" placeholder="例如：H2+O2=H2O 或 Fe3++Cu=Fe+Cu2+">
+                    <button id="balance-btn">配平方程式</button>
+                </div>
+                <div class="result-section">
+                    <div id="original-equation" class="equation-box"></div>
+                    <div id="balanced-equation" class="equation-box balanced"></div>
+                    <div id="balance-steps"></div>
+                </div>
+            </div>
+
+            <div id="matrix" class="tab-pane">
+                <div class="matrix-section">
+                    <h3>矩阵求解过程</h3>
+                    <div id="augmented-matrix" class="matrix-display"></div>
+                    <div id="row-operations" class="steps-display"></div>
+                    <div id="final-solution" class="solution-display"></div>
+                </div>
+            </div>
+
+            <div id="periodic" class="tab-pane">
+                <div class="search-section">
+                    <input type="text" id="element-search" placeholder="搜索元素名称或符号">
+                    <button id="search-btn">搜索</button>
+                </div>
+                <div id="element-info" class="element-info"></div>
+                <div id="periodic-table" class="periodic-container"></div>
+            </div>
+
+            <div id="templates" class="tab-pane">
+                <div class="template-categories">
+                    <button class="cat-btn active" data-category="combustion">燃烧反应</button>
+                    <button class="cat-btn" data-category="neutralization">中和反应</button>
+                    <button class="cat-btn" data-category="redox">氧化还原</button>
+                </div>
+                <div id="template-list" class="template-list"></div>
+                <div id="template-preview" class="template-preview"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

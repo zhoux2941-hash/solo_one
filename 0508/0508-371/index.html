@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid流程图编辑器</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Mermaid流程图编辑器</h1>
+            <div class="header-actions">
+                <div class="theme-controls">
+                    <select id="theme-select" class="theme-select">
+                        <option value="default">默认主题</option>
+                        <option value="dark">暗黑主题</option>
+                        <option value="forest">森林主题</option>
+                        <option value="neutral">中性主题</option>
+                    </select>
+                    <select id="font-select" class="font-select">
+                        <option value="Microsoft YaHei, SimHei, sans-serif">微软雅黑</option>
+                        <option value="SimSun, serif">宋体</option>
+                        <option value="KaiTi, serif">楷体</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="Times New Roman, serif">Times New Roman</option>
+                    </select>
+                </div>
+                <button id="export-png" class="btn btn-primary">导出PNG</button>
+                <button id="export-svg" class="btn btn-secondary">导出SVG</button>
+            </div>
+        </header>
+        
+        <div class="editor-container">
+            <div class="left-panel">
+                <div class="panel-header">
+                    <span>代码编辑器</span>
+                    <div class="snippet-menu">
+                        <select id="snippet-select" class="snippet-select">
+                            <option value="">快速插入代码片段</option>
+                            <option value="flowchart-if">流程图 - 条件判断</option>
+                            <option value="flowchart-loop">流程图 - 循环</option>
+                            <option value="flowchart-function">流程图 - 函数调用</option>
+                            <option value="sequence-basic">时序图 - 基本结构</option>
+                            <option value="class-basic">类图 - 基本结构</option>
+                            <option value="state-basic">状态图 - 基本结构</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="editor-wrapper">
+                    <textarea id="code-editor" spellcheck="false"></textarea>
+                    <div id="error-panel" class="error-panel hidden">
+                        <span class="error-icon">⚠</span>
+                        <span id="error-message">错误信息</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="panel-header">
+                    <span>预览</span>
+                    <div class="zoom-controls">
+                        <button id="zoom-out" class="zoom-btn">-</button>
+                        <span id="zoom-level">100%</span>
+                        <button id="zoom-in" class="zoom-btn">+</button>
+                        <button id="zoom-fit" class="zoom-btn">⟲</button>
+                    </div>
+                </div>
+                <div class="preview-wrapper">
+                    <div id="preview-container">
+                        <div id="mermaid-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <span>支持类型：flowchart、sequenceDiagram、classDiagram、stateDiagram</span>
+        </div>
+    </div>
+</body>
+</html>

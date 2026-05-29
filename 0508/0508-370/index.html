@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页颜色提取工具</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 网页颜色提取工具</h1>
+            <p>提取图片或网页中的主要颜色，生成专业调色板</p>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="image">图片分析</button>
+            <button class="tab-btn" data-tab="gradient">渐变提取</button>
+            <button class="tab-btn" data-tab="webpage">网页抓取</button>
+            <button class="tab-btn" data-tab="contrast">对比度计算</button>
+        </nav>
+
+        <div class="tabs-content">
+            <!-- 图片分析标签页 -->
+            <div class="tab-panel active" id="image-panel">
+                <div class="input-section">
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="fileInput" accept="image/*">
+                        <div class="upload-hint">
+                            <span class="icon">📷</span>
+                            <p>点击或拖拽上传图片</p>
+                            <p class="small">支持 JPG、PNG、WebP 格式</p>
+                        </div>
+                    </div>
+                    <div class="url-input-group">
+                        <input type="text" id="imageUrl" placeholder="或输入图片URL...">
+                        <button id="loadUrlBtn">加载图片</button>
+                    </div>
+                </div>
+
+                <div class="preview-section" id="previewSection" style="display: none;">
+                    <div class="image-preview">
+                        <img id="previewImage" alt="预览图片">
+                    </div>
+                    <div class="color-count-selector">
+                        <label>提取颜色数量：</label>
+                        <input type="range" id="colorCount" min="8" max="12" value="10">
+                        <span id="colorCountValue">10</span>
+                        <label>算法：</label>
+                        <select id="algorithm">
+                            <option value="medianCut">中位切分</option>
+                            <option value="octree">八叉树</option>
+                        </select>
+                        <button id="extractBtn">提取颜色</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 渐变提取标签页 -->
+            <div class="tab-panel" id="gradient-panel">
+                <div class="input-section">
+                    <div class="upload-area" id="gradientUploadArea">
+                        <input type="file" id="gradientFileInput" accept="image/*">
+                        <div class="upload-hint">
+                            <span class="icon">🎭</span>
+                            <p>点击或拖拽上传渐变图片</p>
+                            <p class="small">支持 JPG、PNG、WebP 格式</p>
+                        </div>
+                    </div>
+                    <div class="url-input-group">
+                        <input type="text" id="gradientImageUrl" placeholder="或输入图片URL...">
+                        <button id="loadGradientUrlBtn">加载图片</button>
+                    </div>
+                </div>
+
+                <div class="preview-section" id="gradientPreviewSection" style="display: none;">
+                    <div class="image-preview">
+                        <img id="gradientPreviewImage" alt="预览图片">
+                    </div>
+                    <div class="gradient-settings">
+                        <div class="setting-item">
+                            <label>渐变类型：</label>
+                            <select id="gradientType">
+                                <option value="linear">线性渐变</option>
+                                <option value="radial">径向渐变</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>方向角度：</label>
+                            <input type="range" id="gradientAngle" min="0" max="360" value="180">
+                            <span id="gradientAngleValue">180°</span>
+                        </div>
+                        <button id="extractGradientBtn">分析渐变</button>
+                    </div>
+                </div>
+
+                <div class="gradient-result" id="gradientResult" style="display: none;">
+                    <h3>检测到的渐变</h3>
+                    <div class="gradient-preview-box" id="gradientPreviewBox"></div>
+                    <div class="gradient-code">
+                        <label>CSS 渐变代码：</label>
+                        <textarea id="gradientCode" readonly></textarea>
+                        <button id="copyGradientCode">复制代码</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 网页抓取标签页 -->
+            <div class="tab-panel" id="webpage-panel">
+                <div class="input-section">
+                    <div class="url-input-group">
+                        <input type="text" id="webpageUrl" placeholder="输入网页URL...">
+                        <button id="fetchBtn">抓取颜色</button>
+                    </div>
+                    <p class="hint">系统将分析目标网页的CSS样式，提取其中使用的颜色值</p>
+                </div>
+            </div>
+
+            <!-- 对比度计算标签页 -->
+            <div class="tab-panel" id="contrast-panel">
+                <div class="contrast-inputs">
+                    <div class="color-picker-group">
+                        <label>前景色：</label>
+                        <input type="color" id="foregroundColor" value="#000000">
+                        <input type="text" id="foregroundHex" value="#000000">
+                    </div>
+                    <div class="color-picker-group">
+                        <label>背景色：</label>
+                        <input type="color" id="backgroundColor" value="#ffffff">
+                        <input type="text" id="backgroundHex" value="#ffffff">
+                    </div>
+                </div>
+                <div class="contrast-result" id="contrastResult">
+                    <div class="preview-box">
+                        <div class="preview-text" id="previewText">ABC abc 123</div>
+                    </div>
+                    <div class="contrast-info">
+                        <div class="ratio">对比度：<span id="contrastRatio">---</span></div>
+                        <div class="wcag-level">
+                            <span class="level" id="wcagAA">AA</span>
+                            <span class="level" id="wcagAAA">AAA</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 调色板展示区域 -->
+        <div class="palette-section" id="paletteSection" style="display: none;">
+            <h2>提取的调色板</h2>
+            <div class="palette" id="palette"></div>
+            
+            <div class="export-section">
+                <button id="exportCSS">导出 CSS 变量</button>
+                <button id="exportSCSS">导出 SCSS 变量</button>
+                <button id="exportASE">导出 Adobe Swatch</button>
+            </div>
+        </div>
+
+        <!-- 复制提示 -->
+        <div class="copy-toast" id="copyToast" style="display: none;">已复制到剪贴板</div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

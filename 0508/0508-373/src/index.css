@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+}
+
+@font-face {
+  font-family: 'Noto Sans Braille';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/notosansbraille/v17/xn77YHs72GKoTvER4Gn3b5eMZBaPRkgfU8f.woff2) format('woff2'),
+       url(https://fonts.gstatic.com/s/notosansbraille/v17/xn77YHs72GKoTvER4Gn3b5eMZBaPRkgfU8f.ttf) format('truetype');
+}
+
+.braille-font {
+  font-family: 'Noto Sans Braille', sans-serif;
+}

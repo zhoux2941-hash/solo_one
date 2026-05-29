@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片像素化工具</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>图片像素化工具</h1>
+            <p>上传图片，选择参数，生成像素化效果</p>
+        </header>
+
+        <div class="main-content">
+            <div class="controls-panel">
+                <div class="control-group">
+                    <label for="upload">上传图片</label>
+                    <input type="file" id="upload" accept="image/*">
+                    <button id="uploadBtn" class="btn btn-primary">选择图片</button>
+                </div>
+
+                <div class="control-group">
+                    <label for="pixelSize">马赛克大小: <span id="pixelSizeValue">10</span>px</label>
+                    <input type="range" id="pixelSize" min="2" max="50" value="10">
+                </div>
+
+                <div class="control-group">
+                    <label for="blockMode">像素块模式</label>
+                    <select id="blockMode">
+                        <option value="rect">矩形</option>
+                        <option value="circle">圆形</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="blockMargin">像素块边距: <span id="blockMarginValue">0</span>px</label>
+                    <input type="range" id="blockMargin" min="0" max="10" value="0">
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        <input type="checkbox" id="enableSelection"> 启用选区处理
+                    </label>
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        <input type="checkbox" id="enableGradient"> 启用渐变效果
+                    </label>
+                </div>
+
+                <div class="control-group">
+                    <label for="gradientRadius">渐变半径: <span id="gradientRadiusValue">50</span>%</label>
+                    <input type="range" id="gradientRadius" min="10" max="100" value="50">
+                </div>
+
+                <div class="control-group">
+                    <label for="gradientIntensity">渐变强度: <span id="gradientIntensityValue">5</span>x</label>
+                    <input type="range" id="gradientIntensity" min="1" max="10" value="5">
+                </div>
+
+                <div class="button-group">
+                    <button id="processBtn" class="btn btn-primary">处理图片</button>
+                    <button id="undoBtn" class="btn btn-secondary" disabled>撤销</button>
+                    <button id="redoBtn" class="btn btn-secondary" disabled>重做</button>
+                    <button id="resetBtn" class="btn btn-danger">重置</button>
+                </div>
+
+                <div class="download-group">
+                    <button id="downloadPngBtn" class="btn btn-success">下载 PNG</button>
+                    <button id="downloadJpgBtn" class="btn btn-success">下载 JPG</button>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <div class="canvas-wrapper">
+                    <canvas id="canvas"></canvas>
+                    <canvas id="selectionCanvas"></canvas>
+                </div>
+                <div class="canvas-info">
+                    <span id="imageInfo">请上传图片</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>使用说明</h3>
+            <ul>
+                <li>点击"选择图片"按钮上传图片</li>
+                <li>调整马赛克大小和边距参数</li>
+                <li>选择像素块模式（矩形或圆形）</li>
+                <li>勾选"启用选区处理"后，可在图片上拖拽框选区域</li>
+                <li>点击"处理图片"生成像素化效果</li>
+                <li>使用撤销/重做按钮恢复操作</li>
+                <li>处理完成后可下载为PNG或JPG格式</li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,335 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+header p {
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+.tabs {
+    display: flex;
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 16px;
+    font-size: 1.1rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.tab-btn:hover {
+    background: #e9ecef;
+}
+
+.tab-btn.active {
+    background: white;
+    color: #667eea;
+    font-weight: 600;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #667eea;
+}
+
+.tab-content {
+    padding: 20px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.input-section {
+    margin-bottom: 30px;
+}
+
+.input-section label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.input-section input {
+    width: calc(100% - 120px);
+    padding: 15px;
+    font-size: 1.2rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    margin-right: 10px;
+    transition: border-color 0.3s;
+}
+
+.input-section input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.input-section button, .search-section button {
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.input-section button:hover, .search-section button:hover {
+    transform: translateY(-2px);
+}
+
+.equation-box {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+}
+
+.equation-box.balanced {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border: 2px solid #28a745;
+}
+
+#balance-steps {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.matrix-display, .steps-display, .solution-display {
+    margin-bottom: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.matrix-display h4, .steps-display h4, .solution-display h4 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.matrix-table {
+    border-collapse: collapse;
+    margin: 0 auto;
+}
+
+.matrix-table td {
+    padding: 10px 15px;
+    border: 1px solid #dee2e6;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+}
+
+.steps-list {
+    list-style: none;
+}
+
+.steps-list li {
+    padding: 10px;
+    border-bottom: 1px solid #e9ecef;
+    font-family: 'Courier New', monospace;
+}
+
+.steps-list li:last-child {
+    border-bottom: none;
+}
+
+.search-section {
+    margin-bottom: 20px;
+}
+
+.search-section input {
+    padding: 12px;
+    font-size: 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    width: 300px;
+    margin-right: 10px;
+}
+
+.search-section input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.element-info {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: none;
+}
+
+.element-info.visible {
+    display: block;
+}
+
+.element-info h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+
+.element-info p {
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.periodic-container {
+    display: grid;
+    grid-template-columns: repeat(18, 1fr);
+    gap: 5px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.element-cell {
+    padding: 8px 5px;
+    text-align: center;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    font-size: 0.8rem;
+}
+
+.element-cell:hover {
+    transform: scale(1.1);
+}
+
+.element-cell.h { background: #a8e6cf; }
+.element-cell.alkali { background: #ffd3a5; }
+.element-cell.alkaline { background: #ffaaa5; }
+.element-cell.transition { background: #dfe6e9; }
+.element-cell.lanthanide { background: #fd79a8; }
+.element-cell.actinide { background: #a29bfe; }
+.element-cell.metalloid { background: #ffeaa7; }
+.element-cell.nonmetal { background: #81ecec; }
+.element-cell.halogen { background: #81ecec; }
+.element-cell.noble { background: #74b9ff; }
+
+.template-categories {
+    margin-bottom: 20px;
+}
+
+.cat-btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+    border: 2px solid #e9ecef;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: all 0.3s;
+}
+
+.cat-btn:hover {
+    border-color: #667eea;
+}
+
+.cat-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.template-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.template-item {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.template-item:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.template-preview {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    min-height: 100px;
+}
+
+.template-preview h4 {
+    margin-bottom: 15px;
+}
+
+@media (max-width: 768px) {
+    .input-section input {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .periodic-container {
+        grid-template-columns: repeat(9, 1fr);
+    }
+    
+    .element-cell {
+        font-size: 0.6rem;
+        padding: 5px 3px;
+    }
+}

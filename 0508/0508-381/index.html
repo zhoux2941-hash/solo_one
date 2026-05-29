@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>布林线技术分析工具</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>布林线技术分析工具</h1>
+            <p>导入CSV格式的OHLC数据，查看K线图和布林线指标</p>
+        </header>
+
+        <div class="controls">
+            <div class="input-section">
+                <input type="file" id="csvFile" accept=".csv" />
+                <label for="csvFile" class="upload-btn">选择CSV文件</label>
+            </div>
+
+            <div class="period-section">
+                <span class="label">周期:</span>
+                <button class="period-btn active" data-period="day">日线</button>
+                <button class="period-btn" data-period="week">周线</button>
+                <button class="period-btn" data-period="month">月线</button>
+            </div>
+
+            <div class="params-section">
+                <div class="param-item">
+                    <label>均线周期:</label>
+                    <input type="range" id="maPeriod" min="5" max="50" value="20" />
+                    <span id="maPeriodValue">20</span>
+                </div>
+                <div class="param-item">
+                    <label>标准差倍数:</label>
+                    <input type="range" id="stdMultiplier" min="1" max="3" step="0.1" value="2" />
+                    <span id="stdMultiplierValue">2.0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="price-position" id="pricePosition">
+            当前价格位置: 请导入数据
+        </div>
+
+        <div class="chart-container">
+            <canvas id="chartCanvas"></canvas>
+            <div class="crosshair" id="crosshair"></div>
+            <div class="tooltip" id="tooltip"></div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <span class="color-box bullish"></span>
+                <span>阳线</span>
+            </div>
+            <div class="legend-item">
+                <span class="color-box bearish"></span>
+                <span>阴线</span>
+            </div>
+            <div class="legend-item">
+                <span class="color-box middle-band"></span>
+                <span>中轨(MA)</span>
+            </div>
+            <div class="legend-item">
+                <span class="color-box upper-band"></span>
+                <span>上轨</span>
+            </div>
+            <div class="legend-item">
+                <span class="color-box lower-band"></span>
+                <span>下轨</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

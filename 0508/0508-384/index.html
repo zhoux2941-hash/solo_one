@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三阶魔方模拟器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; overflow: hidden; }
+        #container { display: flex; height: 100vh; }
+        #canvas-container { flex: 1; position: relative; }
+        #controls { width: 320px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); padding: 20px; color: white; overflow-y: auto; }
+        .control-section { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .control-section:last-child { border-bottom: none; }
+        h2 { font-size: 16px; margin-bottom: 12px; color: #00d4ff; }
+        button { width: 100%; padding: 10px; margin: 5px 0; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        button:hover { transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+        .btn-primary { background: linear-gradient(135deg, #00d4ff, #0099cc); color: white; }
+        .btn-primary:hover { background: linear-gradient(135deg, #00e5ff, #00aae6); }
+        .btn-danger { background: linear-gradient(135deg, #ff4757, #ff6b81); color: white; }
+        .btn-success { background: linear-gradient(135deg, #2ed573, #7bed9f); color: #1a1a2e; }
+        .btn-warning { background: linear-gradient(135deg, #ffa502, #ffcc00); color: #1a1a2e; }
+        .layer-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
+        .layer-btn { background: rgba(255, 255, 255, 0.15); color: white; }
+        .layer-btn:hover { background: rgba(255, 255, 255, 0.25); }
+        .layer-btn.active { background: #00d4ff; }
+        #history-list { max-height: 150px; overflow-y: auto; }
+        .history-item { padding: 6px 10px; background: rgba(255, 255, 255, 0.08); border-radius: 4px; margin-bottom: 4px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .history-item:last-child { background: rgba(0, 212, 255, 0.2); }
+        .history-step { font-family: monospace; font-weight: bold; }
+        #hint-box { padding: 12px; background: rgba(46, 213, 115, 0.2); border-radius: 6px; margin-top: 10px; }
+        #hint-text { font-size: 14px; color: #2ed573; }
+        #undo-btn:disabled, #redo-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        #scramble-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .info-text { font-size: 12px; color: rgba(255, 255, 255, 0.6); margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="canvas-container"></div>
+        <div id="controls">
+            <h1 style="font-size: 24px; margin-bottom: 20px; color: #00d4ff; text-align: center;">魔方模拟器</h1>
+            
+            <div class="control-section">
+                <h2>层旋转</h2>
+                <div class="layer-buttons">
+                    <button class="layer-btn" data-layer="U">U (上)</button>
+                    <button class="layer-btn" data-layer="U'">U' (上逆)</button>
+                    <button class="layer-btn" data-layer="D">D (下)</button>
+                    <button class="layer-btn" data-layer="D'">D' (下逆)</button>
+                    <button class="layer-btn" data-layer="L">L (左)</button>
+                    <button class="layer-btn" data-layer="L'">L' (左逆)</button>
+                    <button class="layer-btn" data-layer="R">R (右)</button>
+                    <button class="layer-btn" data-layer="R'">R' (右逆)</button>
+                    <button class="layer-btn" data-layer="F">F (前)</button>
+                    <button class="layer-btn" data-layer="F'">F' (前逆)</button>
+                    <button class="layer-btn" data-layer="B">B (后)</button>
+                    <button class="layer-btn" data-layer="B'">B' (后逆)</button>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h2>操作控制</h2>
+                <button class="btn-primary" id="undo-btn" disabled>撤销</button>
+                <button class="btn-primary" id="redo-btn" disabled>重做</button>
+                <button class="btn-danger" id="reset-btn">重置</button>
+                <button class="btn-warning" id="scramble-btn">打乱 (50步)</button>
+            </div>
+            
+            <div class="control-section">
+                <h2>步数统计</h2>
+                <div style="display: flex; justify-content: space-around; padding: 10px; background: rgba(255, 255, 255, 0.08); border-radius: 6px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #00d4ff;" id="current-steps">0</div>
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.6);">已用步数</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #2ed573;" id="optimal-steps">--</div>
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.6);">预估最优</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #ffa502;" id="stage-info">-</div>
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.6);">当前阶段</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h2>解法提示</h2>
+                <button class="btn-success" id="hint-btn">获取提示</button>
+                <div id="hint-box" style="display: none;">
+                    <div id="hint-text"></div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h2>操作历史</h2>
+                <div id="history-list"></div>
+                <div class="info-text" id="history-count">共 0 步</div>
+            </div>
+            
+            <div class="control-section">
+                <h2>操作说明</h2>
+                <div class="info-text">• 鼠标拖拽旋转视角</div>
+                <div class="info-text">• 点击按钮旋转魔方层</div>
+                <div class="info-text">• 支持撤销/重做操作</div>
+                <div class="info-text">• 打乱后可获取解法提示</div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="js/cube.js"></script>
+    <script src="js/solver.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
