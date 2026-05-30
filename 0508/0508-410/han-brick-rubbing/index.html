@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>汉砖画像拓印模拟</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>汉砖画像拓印</h1>
+    <div class="subtitle">青龙 · 白虎 · 朱雀 · 玄武</div>
+  </header>
+
+  <nav class="steps-bar">
+    <div class="step-item active" id="step-ink">
+      <span class="step-num">1</span>
+      <span>涂墨</span>
+    </div>
+    <div class="step-item" id="step-paper">
+      <span class="step-num">2</span>
+      <span>铺纸</span>
+    </div>
+    <div class="step-item" id="step-press">
+      <span class="step-num">3</span>
+      <span>按压</span>
+    </div>
+    <div class="step-item" id="step-reveal">
+      <span class="step-num">4</span>
+      <span>揭纸</span>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="panel" id="brick-panel">
+      <div class="panel-header">
+        <span class="icon">🧱</span>
+        <span>汉砖画像</span>
+      </div>
+      <div class="panel-body">
+        <div class="canvas-wrapper">
+          <canvas id="brick-canvas"></canvas>
+          <div class="brick-label">砖面 · 涂墨与按压区域</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="paper-panel">
+      <div class="panel-header">
+        <span class="icon">📜</span>
+        <span>宣纸</span>
+      </div>
+      <div class="panel-body">
+        <div class="canvas-wrapper">
+          <canvas id="paper-canvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls-section">
+    <div class="control-row">
+      <span class="control-label">画像选择</span>
+      <div class="pattern-btns" id="pattern-selector"></div>
+    </div>
+    <div class="control-row">
+      <span class="control-label">操作</span>
+      <div class="action-btns">
+        <button class="btn btn-primary" id="btn-ink">涂墨</button>
+        <button class="btn btn-primary" id="btn-paper">铺纸</button>
+        <button class="btn btn-accent" id="btn-reveal">揭纸</button>
+        <button class="btn btn-danger" id="btn-reset">重新开始</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span class="status-text" id="status-text">步骤一：在砖面上涂抹墨汁</span>
+    <div class="indicator-group" id="ink-indicator-group">
+      <span>墨量</span>
+      <div class="indicator-bar">
+        <div class="indicator-fill" id="ink-indicator"></div>
+      </div>
+    </div>
+    <div class="indicator-group" id="pressure-indicator-group" style="display:none">
+      <span>均匀度</span>
+      <div class="indicator-bar">
+        <div class="indicator-fill" id="pressure-indicator"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="decoration-panel">
+    <div class="decoration-title">题跋与钤印</div>
+    <div class="decoration-row">
+      <label>题跋</label>
+      <input type="text" id="inscription-input" placeholder="输入题跋文字" maxlength="20">
+      <button class="btn btn-primary" id="btn-add-inscription" style="padding:5px 14px;font-size:13px">添加</button>
+    </div>
+    <div class="decoration-row">
+      <label>印章</label>
+      <input type="text" id="seal-text-input" placeholder="印文" maxlength="6" value="拓印">
+      <select id="seal-style-selector"></select>
+      <button class="btn btn-primary" id="btn-add-seal" style="padding:5px 14px;font-size:13px">盖章</button>
+    </div>
+    <div class="seal-placement-controls" id="seal-placement-hint">
+      <div class="hint">请点击宣纸选择印章位置，然后点"确认盖章"</div>
+      <button class="btn btn-accent" id="btn-stamp-seal" style="padding:5px 14px;font-size:13px">确认盖章</button>
+      <button class="btn btn-danger" id="btn-cancel-seal" style="padding:5px 14px;font-size:13px">取消</button>
+    </div>
+    <div class="save-row">
+      <button class="btn btn-accent" id="btn-save">💾 保存为图片</button>
+      <button class="btn btn-danger" id="btn-reset2">重新开始</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
