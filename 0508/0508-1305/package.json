@@ -1,0 +1,19 @@
+{
+  "name": "ancient-greek-modes",
+  "version": "1.0.0",
+  "description": "古希腊音乐调式工具 - Ancient Greek musical modes explorer",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "init-db": "node init-db.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@tonejs/midi": "^2.0.28",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "sql.js": "^1.10.3",
+    "vexflow": "^4.2.2"
+  }
+}

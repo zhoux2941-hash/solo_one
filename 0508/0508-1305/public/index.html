@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>古希腊音乐调式工具</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/vexflow.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>古希腊音乐调式工具</h1>
+      <p class="subtitle">Ancient Greek Musical Modes Explorer</p>
+    </header>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="mode-select">调式选择</label>
+        <select id="mode-select">
+          <option value="">请选择调式...</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="root-select">主音音高</label>
+        <select id="root-select">
+          <option value="C4">C4</option>
+          <option value="C#4">C♯4</option>
+          <option value="D4">D4</option>
+          <option value="D#4">D♯4</option>
+          <option value="E4">E4</option>
+          <option value="F4">F4</option>
+          <option value="F#4">F♯4</option>
+          <option value="G4">G4</option>
+          <option value="G#4">G♯4</option>
+          <option value="A4">A4</option>
+          <option value="A#4">A♯4</option>
+          <option value="B4">B4</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="tuning-select">律制</label>
+        <select id="tuning-select">
+          <option value="pythagorean">毕达哥拉斯音律</option>
+          <option value="just">纯律</option>
+          <option value="equal">十二平均律</option>
+        </select>
+      </div>
+
+      <div class="control-group buttons">
+        <button id="play-btn" class="btn primary">▶ 播放音阶</button>
+        <button id="stop-btn" class="btn secondary">■ 停止</button>
+        <button id="export-midi-btn" class="btn accent">导出 MIDI</button>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="left-panel">
+        <div class="notation-section">
+          <h2>五线谱</h2>
+          <div id="vexflow-container"></div>
+        </div>
+
+        <div class="piano-section">
+          <h2>钢琴键盘</h2>
+          <div id="piano-container"></div>
+        </div>
+
+        <div class="scale-section">
+          <h2>音阶频率表</h2>
+          <div id="scale-table-container">
+            <table class="scale-table">
+              <thead>
+                <tr>
+                  <th>音级</th>
+                  <th>音名</th>
+                  <th>音程</th>
+                  <th>半音数</th>
+                  <th>频率比</th>
+                  <th>频率 (Hz)</th>
+                  <th>音分 (¢)</th>
+                </tr>
+              </thead>
+              <tbody id="scale-table-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="mode-info-section">
+          <h2>调式信息</h2>
+          <div id="mode-info">
+            <p class="placeholder">请选择一个调式查看详细信息</p>
+          </div>
+        </div>
+
+        <div class="interval-section">
+          <h2>音程结构</h2>
+          <div id="interval-info">
+            <p class="placeholder">请选择一个调式查看音程结构</p>
+          </div>
+        </div>
+
+        <div class="tetrachord-section">
+          <h2>四音列结构</h2>
+          <div id="tetrachord-info">
+            <p class="placeholder">请选择一个调式查看四音列结构</p>
+          </div>
+        </div>
+
+        <div class="references-section">
+          <h2>历史文献参考</h2>
+          <div id="references-info">
+            <p class="placeholder">请选择一个调式查看历史文献</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/tuning.js"></script>
+  <script src="js/piano.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

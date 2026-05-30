@@ -1,0 +1,100 @@
+/** @type {import('tailwindcss').Config} */
+
+export default {
+  darkMode: "class",
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    container: {
+      center: true,
+    },
+    extend: {
+      colors: {
+        ochre: {
+          50: "#FAF5F0",
+          100: "#F5EBE0",
+          200: "#E8D5C4",
+          300: "#D4B896",
+          400: "#C19A6B",
+          500: "#8B4513",
+          600: "#7A3D11",
+          700: "#5C2E0D",
+          800: "#3D1F09",
+          900: "#1F0F04",
+        },
+        slategray: {
+          50: "#F8F9FA",
+          100: "#E9ECEF",
+          200: "#DEE2E6",
+          300: "#CED4DA",
+          400: "#ADB5BD",
+          500: "#708090",
+          600: "#6C757D",
+          700: "#495057",
+          800: "#343A40",
+          900: "#212529",
+        },
+        cream: {
+          50: "#FFFFF8",
+          100: "#FDFCF5",
+          200: "#FAF8EB",
+          300: "#F5F3DC",
+          400: "#E8E4C9",
+          500: "#F5F5DC",
+          600: "#DCDAC4",
+          700: "#B5B3A3",
+          800: "#8E8D82",
+          900: "#5C5B55",
+        },
+        navy: {
+          50: "#E8E8F0",
+          100: "#D1D1E0",
+          200: "#A3A3C1",
+          300: "#7575A2",
+          400: "#474783",
+          500: "#191970",
+          600: "#14145A",
+          700: "#0F0F43",
+          800: "#0A0A2D",
+          900: "#050516",
+        },
+        gold: {
+          50: "#FEFCF5",
+          100: "#FDF8EB",
+          200: "#FAF0D7",
+          300: "#F7E8C3",
+          400: "#F0D89B",
+          500: "#DAA520",
+          600: "#C4941C",
+          700: "#9C7717",
+          800: "#755911",
+          900: "#4E3C0C",
+        },
+      },
+      fontFamily: {
+        serif: ['"Noto Serif SC"', "serif"],
+        sans: ['"Noto Sans SC"', "sans-serif"],
+      },
+      animation: {
+        "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "glow": "glow 2s ease-in-out infinite alternate",
+        "scroll-reveal": "scrollReveal 0.8s ease-out forwards",
+        "float": "float 3s ease-in-out infinite",
+      },
+      keyframes: {
+        glow: {
+          "0%": { boxShadow: "0 0 5px rgba(218, 165, 32, 0.5)" },
+          "100%": { boxShadow: "0 0 20px rgba(218, 165, 32, 0.8)" },
+        },
+        scrollReveal: {
+          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-5px)" },
+        },
+      },
+    },
+  },
+  plugins: [],
+};

@@ -1,0 +1,1 @@
+﻿const fs=require("fs");const p=require("path");const b="e:/solor/0508-1224";

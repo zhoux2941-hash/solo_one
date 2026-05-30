@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高山族背篓搬运接力赛</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>🏔️ 高山族背篓搬运接力赛 🏔️</h1>
+        
+        <div id="startScreen" class="screen">
+            <div class="instructions">
+                <h2>游戏说明</h2>
+                <p>🎯 目标：用最短时间完成3棒接力赛！</p>
+                <p>🎮 控制：快速交替按 ← → 方向键来加速</p>
+                <p>⛰️ 地形：上坡减速，下坡加速</p>
+                <p>👥 队伍：你控制第1棒，AI队友控制第2、3棒</p>
+                <p>⏱️ 用时越短，排名越高！</p>
+            </div>
+            <button id="startBtn" class="btn">开始比赛</button>
+        </div>
+
+        <div id="gameScreen" class="screen hidden">
+            <div class="hud">
+                <div class="hud-item">
+                    <span class="label">当前棒次</span>
+                    <span id="currentLeg" class="value">1 / 3</span>
+                </div>
+                <div class="hud-item">
+                    <span class="label">当前用时</span>
+                    <span id="currentTime" class="value">0.00s</span>
+                </div>
+                <div class="hud-item">
+                    <span class="label">总用时</span>
+                    <span id="totalTime" class="value">0.00s</span>
+                </div>
+                <div class="hud-item">
+                    <span class="label">速度</span>
+                    <span id="speed" class="value">0 km/h</span>
+                </div>
+            </div>
+
+            <div class="game-area">
+                <canvas id="gameCanvas" width="900" height="400"></canvas>
+            </div>
+
+            <div class="control-hint">
+                <p>⚡ 快速交替按 <span class="key">←</span> <span class="key">→</span> 加速！</p>
+                <div class="key-state">
+                    <span id="leftKey" class="key-display">←</span>
+                    <span id="rightKey" class="key-display">→</span>
+                </div>
+            </div>
+
+            <div class="split-times">
+                <h3>分段成绩</h3>
+                <div class="times-grid">
+                    <div class="time-slot">
+                        <span class="leg-label">第1棒</span>
+                        <span id="leg1Time" class="time-value">--</span>
+                    </div>
+                    <div class="time-slot">
+                        <span class="leg-label">第2棒</span>
+                        <span id="leg2Time" class="time-value">--</span>
+                    </div>
+                    <div class="time-slot">
+                        <span class="leg-label">第3棒</span>
+                        <span id="leg3Time" class="time-value">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultScreen" class="screen hidden">
+            <h2>🏆 比赛结果 🏆</h2>
+            <div id="rankingTable" class="ranking-table">
+            </div>
+            <div class="final-stats">
+                <h3>你的成绩</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="label">第1棒</span>
+                        <span id="finalLeg1" class="value">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">第2棒</span>
+                        <span id="finalLeg2" class="value">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">第3棒</span>
+                        <span id="finalLeg3" class="value">--</span>
+                    </div>
+                    <div class="stat-item total">
+                        <span class="label">总用时</span>
+                        <span id="finalTotal" class="value">--</span>
+                    </div>
+                </div>
+            </div>
+            <button id="restartBtn" class="btn">再来一次</button>
+        </div>
+    </div>
+
+    <script src="physics.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

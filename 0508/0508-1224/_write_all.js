@@ -1,0 +1,62 @@
+﻿const fs = require('fs');
+const path = require('path');
+const b = 'e:/solor/0508-1224';
+
+fs.writeFileSync(path.join(b, 'js', 'algorithms.js'), `const Algorithms = {
+    fibRecursive: function(n, stats) {
+        if (!stats) stats = { calls: 0, callCounts: {} };
+        stats.calls++;
+        stats.callCounts[n] = (stats.callCounts[n] || 0) + 1;
+        if (n <= 0) return 0;
+        if (n === 1) return 1;
+        return this.fibRecursive(n - 1, stats) + this.fibRecursive(n - 2, stats);
+    },
+
+    fibRecursiveWithStats: function(n) {
+        const stats = { calls: 0, callCounts: {}, duplicates: 0, time: 0 };
+        const startTime = performance.now();
+        const result = this.fibRecursive(n, stats);
+        stats.time = performance.now() - startTime;
+        for (const key in stats.callCounts) {
+            if (stats.callCounts[key] > 1) {
+                stats.duplicates += stats.callCounts[key] - 1;
+            }
+        }
+        return { result, stats };
+    },
+
+    fibTailRecursive: function(n, a, b, stats) {
+        if (a === undefined) a = 0;
+        if (b === undefined) b = 1;
+        if (!stats) stats = { calls: 0, time: 0, space: 'O(n)' };
+        stats.calls++;
+        if (n === 0) return a;
+        if (n === 1) return b;
+        return this.fibTailRecursive(n - 1, b, a + b, stats);
+    },
+
+    fibTailRecursiveWithStats: function(n) {
+        const stats = { calls: 0, time: 0, space: 'O(n)' };
+        const startTime = performance.now();
+        const result = this.fibTailRecursive(n, 0, 1, stats);
+        stats.time = performance.now() - startTime;
+        return { result, stats };
+    },
+
+    fibDP: function(n) {
+        const stats = { iterations: 0, time: 0, space: 'O(1)' };
+        const startTime = performance.now();
+        if (n <= 0) return { result: 0, stats };
+        if (n === 1) return { result: 1, stats };
+        let a = 0, b = 1, c = 0;
+        for (let i = 2; i <= n; i++) {
+            stats.iterations++;
+            c = a + b; a = b; b = c;
+        }
+        stats.time = performance.now() - startTime;
+        return { result: c, stats };
+    }
+};
+`, 'utf8');
+
+console.log('algorithms.js written');

@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Noto Sans SC', sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  color: #3D1F09;
+  background-color: #FAF5F0;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer components {
+  .scroll-decoration {
+    background: linear-gradient(90deg, transparent, #8B4513 5%, transparent 10%, #8B4513 90%, transparent 95%, transparent);
+    height: 2px;
+  }
+
+  .ancient-border {
+    border: 2px solid #8B4513;
+    border-radius: 4px;
+    position: relative;
+  }
+
+  .ancient-border::before,
+  .ancient-border::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border: 2px solid #DAA520;
+  }
+
+  .ancient-border::before {
+    top: -4px;
+    left: -4px;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .ancient-border::after {
+    bottom: -4px;
+    right: -4px;
+    border-left: none;
+    border-top: none;
+  }
+
+  .hotspot-pulse {
+    animation: hotspotPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes hotspotPulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0.7;
+    }
+  }
+
+  .city-card-hover {
+    transition: all 0.3s ease;
+  }
+
+  .city-card-hover:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 32px rgba(139, 69, 19, 0.2);
+  }
+
+  .scroll-reveal-item {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: scrollReveal 0.8s ease-out forwards;
+  }
+
+  @keyframes scrollReveal {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .gold-gradient-text {
+    background: linear-gradient(135deg, #DAA520 0%, #F0D89B 50%, #DAA520 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FAF5F0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4B896;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8B4513;
+}
+
+/* SVG 排水系统样式 */
+.drainage-canal {
+  stroke: #4A90A4;
+  stroke-width: 3;
+  fill: none;
+  stroke-dasharray: 5, 3;
+}
+
+.drainage-moat {
+  stroke: #2E5A6B;
+  stroke-width: 6;
+  fill: rgba(74, 144, 164, 0.3);
+}
+
+.drainage-reservoir {
+  fill: rgba(74, 144, 164, 0.5);
+  stroke: #2E5A6B;
+  stroke-width: 2;
+}
+
+.drainage-outlet {
+  fill: #8B4513;
+  stroke: #DAA520;
+  stroke-width: 2;
+}
+
+.city-wall {
+  stroke: #5C2E0D;
+  stroke-width: 4;
+  fill: rgba(139, 69, 19, 0.1);
+}
+
+.city-gate {
+  fill: #3D1F09;
+  stroke: #DAA520;
+  stroke-width: 2;
+}
+
+.street-grid {
+  stroke: #ADB5BD;
+  stroke-width: 1;
+  stroke-dasharray: 2, 4;
+  fill: none;
+}

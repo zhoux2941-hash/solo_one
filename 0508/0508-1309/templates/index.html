@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>脑电图波形模拟与分析系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .container { max-width: 1700px; margin: 0 auto; padding: 15px; }
+        h1 { text-align: center; color: #00d9ff; margin-bottom: 15px; font-size: 24px; }
+        .control-panel { background: #16213e; padding: 15px; border-radius: 10px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+        .control-group { display: flex; flex-direction: column; gap: 4px; }
+        label { font-size: 13px; color: #00d9ff; }
+        select, button { padding: 8px 12px; border: none; border-radius: 5px; font-size: 13px; cursor: pointer; }
+        select { background: #0f3460; color: #eee; min-width: 140px; }
+        button { background: linear-gradient(135deg, #00d9ff, #0066ff); color: white; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s; }
+        button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 217, 255, 0.35); }
+        button:disabled { background: #555; cursor: not-allowed; transform: none; box-shadow: none; }
+        button.secondary { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+        button.success { background: linear-gradient(135deg, #10b981, #059669); }
+        button.danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .main-content { display: grid; grid-template-columns: 1fr 380px; gap: 15px; }
+        .eeg-display { background: #16213e; padding: 15px; border-radius: 10px; }
+        .channel-selector { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .channel-btn { padding: 6px 10px; background: #0f3460; border: 2px solid transparent; border-radius: 5px; cursor: pointer; transition: all 0.2s; font-size: 12px; }
+        .channel-btn.active { border-color: #00d9ff; background: #1a4a7a; }
+        .waveform-container { position: relative; background: #0a0a1a; border-radius: 8px; padding: 10px; margin-bottom: 12px; }
+        #eegCanvas { width: 100%; height: 380px; background: #0a0a1a; border-radius: 5px; cursor: crosshair; }
+        .time-axis { display: flex; justify-content: space-between; padding: 4px 10px; font-size: 11px; color: #888; }
+        .analysis-panel { background: #16213e; padding: 15px; border-radius: 10px; }
+        .panel-section { margin-bottom: 18px; }
+        .panel-section h3 { color: #00d9ff; margin-bottom: 10px; font-size: 14px; border-bottom: 1px solid #0f3460; padding-bottom: 6px; }
+        #fftCanvas { width: 100%; height: 180px; background: #0a0a1a; border-radius: 5px; }
+        .band-powers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; }
+        .band-item { background: #0f3460; padding: 6px 8px; border-radius: 5px; display: flex; justify-content: space-between; }
+        .band-name { color: #00d9ff; }
+        .detection-controls { display: flex; flex-direction: column; gap: 10px; }
+        .threshold-control { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+        input[type="range"] { flex: 1; }
+        .detections-list { max-height: 160px; overflow-y: auto; background: #0f3460; border-radius: 5px; padding: 5px; }
+        .detection-item { padding: 8px; font-size: 11px; border-bottom: 1px solid #1a4a7a; cursor: pointer; transition: background 0.2s; }
+        .detection-item:hover { background: #1a4a7a; }
+        .detection-item:last-child { border-bottom: none; }
+        .detection-item .feedback-btns { display: flex; gap: 5px; margin-top: 6px; }
+        .detection-item .feedback-btns button { padding: 3px 8px; font-size: 10px; }
+        .detection-item.has-feedback { border-left: 3px solid; }
+        .detection-item.feedback-true { border-left-color: #10b981; }
+        .detection-item.feedback-false { border-left-color: #ef4444; }
+        .status { text-align: center; padding: 8px; background: #0f3460; border-radius: 5px; margin-top: 10px; font-size: 13px; }
+        .markers-info { font-size: 11px; color: #888; margin-top: 5px; }
+        .thresholds-display { background: #0f3460; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 11px; }
+        .threshold-item { display: flex; justify-content: space-between; padding: 3px 0; }
+        .threshold-item .type-label { color: #888; }
+        .threshold-item .threshold-value { color: #00d9ff; font-weight: 600; }
+        .optimize-section { background: #0f3460; padding: 10px; border-radius: 5px; margin-top: 10px; }
+        .optimize-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .feedback-stats { font-size: 11px; color: #888; }
+        .feedback-stats span { color: #00d9ff; }
+        .btn-group { display: flex; gap: 5px; }
+        .btn-group button { flex: 1; padding: 6px 10px; font-size: 12px; }
+        .selected-detection { background: #1a4a7a; padding: 8px; border-radius: 5px; margin-top: 8px; font-size: 11px; }
+        .selected-detection h4 { color: #00d9ff; margin-bottom: 5px; }
+        .selected-detection .det-info { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000; }
+        .modal.active { display: flex; }
+        .modal-content { background: #16213e; padding: 20px; border-radius: 10px; max-width: 400px; }
+        .modal h3 { color: #00d9ff; margin-bottom: 15px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 15px; }
+        .modal-actions button { flex: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 脑电图波形模拟与分析系统</h1>
+        <div class="control-panel">
+            <div class="control-group">
+                <label>脑电模式</label>
+                <select id="modeSelect">
+                    <option value="normal">正常脑电</option>
+                    <option value="interictal">癫痫发作间期</option>
+                    <option value="ictal">癫痫发作期</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button id="generateBtn">生成波形</button>
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button id="detectBtn">自动检测棘波</button>
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button id="exportBtn">导出EDF</button>
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button id="clearMarkersBtn">清除标记</button>
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button id="optimizeBtn" class="secondary">优化阈值</button>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="eeg-display">
+                <div class="channel-selector" id="channelSelector"></div>
+                <div class="waveform-container">
+                    <canvas id="eegCanvas"></canvas>
+                    <div class="time-axis">
+                        <span>0s</span>
+                        <span>2.5s</span>
+                        <span>5s</span>
+                        <span>7.5s</span>
+                        <span>10s</span>
+                    </div>
+                    <div class="markers-info">💡 点击波形可手动标记，点击检测项可提交反馈</div>
+                </div>
+                <div class="status" id="status">就绪 - 请选择模式并生成波形</div>
+            </div>
+            <div class="analysis-panel">
+                <div class="panel-section">
+                    <h3>📊 频率功率谱</h3>
+                    <canvas id="fftCanvas"></canvas>
+                    <div class="band-powers" id="bandPowers">
+                        <div class="band-item"><span class="band-name">δ (0.5-4Hz)</span><span>0</span></div>
+                        <div class="band-item"><span class="band-name">θ (4-8Hz)</span><span>0</span></div>
+                        <div class="band-item"><span class="band-name">α (8-13Hz)</span><span>0</span></div>
+                        <div class="band-item"><span class="band-name">β (13-30Hz)</span><span>0</span></div>
+                        <div class="band-item"><span class="band-name">γ (30-45Hz)</span><span>0</span></div>
+                    </div>
+                </div>
+                <div class="panel-section">
+                    <h3>🔍 棘波检测</h3>
+                    <div class="thresholds-display" id="thresholdsDisplay">
+                        <div class="threshold-item">
+                            <span class="type-label">棘波 (spike):</span>
+                            <span class="threshold-value" id="thresh-spike">0.85</span>
+                        </div>
+                        <div class="threshold-item">
+                            <span class="type-label">尖波 (sharp):</span>
+                            <span class="threshold-value" id="thresh-sharp">0.82</span>
+                        </div>
+                        <div class="threshold-item">
+                            <span class="type-label">棘慢波 (spike_wave):</span>
+                            <span class="threshold-value" id="thresh-swc">0.80</span>
+                        </div>
+                    </div>
+                    <div class="detection-controls">
+                        <div class="threshold-control">
+                            <label>手动阈值:</label>
+                            <input type="range" id="threshold" min="0.7" max="0.98" step="0.02" value="0.85">
+                            <span id="thresholdValue">0.85</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="font-size: 12px;">
+                                <input type="checkbox" id="useDynamic" checked> 动态阈值
+                            </label>
+                        </div>
+                        <div>检测结果: <span id="detectionCount">0</span> 个</div>
+                        <div class="detections-list" id="detectionsList">
+                            <div style="color: #888; text-align: center; padding: 10px;">暂无检测结果</div>
+                        </div>
+                        <div id="selectedDetection" class="selected-detection" style="display: none;">
+                            <h4>选中的检测项</h4>
+                            <div class="det-info" id="selectedDetInfo"></div>
+                            <div class="btn-group" style="margin-top: 8px;">
+                                <button class="success" id="confirmTrue">✓ 正确检测</button>
+                                <button class="danger" id="confirmFalse">✗ 误报</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="optimize-section">
+                        <div class="optimize-header">
+                            <span class="feedback-stats">反馈统计: 总计 <span id="totalFeedback">0</span> | 正确 <span id="trueFeedback">0</span> | 误报 <span id="falseFeedback">0</span></span>
+                        </div>
+                        <button id="runOptimizeBtn" class="secondary" style="width: 100%;">运行阈值优化</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="optimizeModal">
+        <div class="modal-content">
+            <h3>阈值优化结果</h3>
+            <div id="optimizeResult"></div>
+            <div class="modal-actions">
+                <button id="closeModalBtn">确定</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let eegData = null;
+        let currentChannel = 0;
+        let currentMode = 'normal';
+        let samplingRate = 256;
+        let markers = [];
+        let detections = [];
+        let selectedDetection = null;
+        let feedbackSubmitted = new Map();
+        let currentThresholds = { spike: 0.85, sharp: 0.82, spike_wave: 0.80 };
+        const channelNames = ['Fp1', 'Fp2', 'C3', 'C4', 'P3', 'P4', 'O1', 'O2'];
+        const eegCanvas = document.getElementById('eegCanvas');
+        const eegCtx = eegCanvas.getContext('2d');
+        const fftCanvas = document.getElementById('fftCanvas');
+        const fftCtx = fftCanvas.getContext('2d');
+        function initCanvas() {
+            const container = eegCanvas.parentElement;
+            eegCanvas.width = container.clientWidth - 20;
+            eegCanvas.height = 380;
+            fftCanvas.width = 350;
+            fftCanvas.height = 180;
+        }
+        function initChannelSelector() {
+            const selector = document.getElementById('channelSelector');
+            channelNames.forEach((name, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'channel-btn' + (idx === 0 ? ' active' : '');
+                btn.textContent = name;
+                btn.onclick = () => selectChannel(idx);
+                selector.appendChild(btn);
+            });
+        }
+        function selectChannel(idx) {
+            currentChannel = idx;
+            document.querySelectorAll('.channel-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === idx);
+            });
+            drawEEG();
+            computeFFT();
+        }
+        function getWaveformTypeLabel(type) {
+            const labels = { 'spike': '棘波', 'sharp': '尖波', 'spike_wave': '棘慢波', 'unknown': '未知' };
+            return labels[type] || type;
+        }
+        function updateThresholdDisplay() {
+            document.getElementById('thresh-spike').textContent = currentThresholds.spike?.toFixed(3) || '0.85';
+            document.getElementById('thresh-sharp').textContent = currentThresholds.sharp?.toFixed(3) || '0.82';
+            document.getElementById('thresh-swc').textContent = currentThresholds.spike_wave?.toFixed(3) || '0.80';
+        }
+        async function fetchFeedbackStats() {
+            try {
+                const response = await fetch('/api/feedback/stats');
+                const result = await response.json();
+                if (result.success) {
+                    const stats = result.feedback_stats;
+                    document.getElementById('totalFeedback').textContent = stats.total_feedback || 0;
+                    document.getElementById('trueFeedback').textContent = stats.true_positives || 0;
+                    document.getElementById('falseFeedback').textContent = stats.false_positives || 0;
+                    if (result.current_thresholds) {
+                        for (let type in result.current_thresholds) {
+                            currentThresholds[type] = result.current_thresholds[type].optimal_threshold;
+                        }
+                        updateThresholdDisplay();
+                    }
+                }
+            } catch (e) {
+                    console.error('Failed to fetch stats:', e);
+                }
+        }
+        async function generateEEG() {
+            currentMode = document.getElementById('modeSelect').value;
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('status').textContent = '正在生成波形...';
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode: currentMode })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    eegData = result.data;
+                    samplingRate = result.sampling_rate;
+                    markers = [];
+                    detections = [];
+                    selectedDetection = null;
+                    feedbackSubmitted.clear();
+                    document.getElementById('selectedDetection').style.display = 'none';
+                    drawEEG();
+                    computeFFT();
+                    fetchFeedbackStats();
+                    document.getElementById('status').textContent = `已生成 ${currentMode === 'normal' ? '正常脑电' : currentMode === 'interictal' ? '癫痫发作间期' : '癫痫发作期'} 波形 - 8导联, 256Hz, 10秒`;
+                }
+            } catch (error) {
+                    console.error('Error:', error);
+                    document.getElementById('status').textContent = '生成失败: ' + error.message;
+                }
+            document.getElementById('generateBtn').disabled = false;
+        }
+        function drawEEG() {
+            if (!eegData) {
+                eegCtx.fillStyle = '#0a0a1a';
+                eegCtx.fillRect(0, 0, eegCanvas.width, eegCanvas.height);
+                eegCtx.fillStyle = '#444';
+                eegCtx.font = '16px Arial';
+                eegCtx.textAlign = 'center';
+                eegCtx.fillText('请先生成脑电波形', eegCanvas.width / 2, eegCanvas.height / 2);
+                return;
+            }
+            const data = eegData[currentChannel];
+            const width = eegCanvas.width;
+            const height = eegCanvas.height;
+            eegCtx.fillStyle = '#0a0a1a';
+            eegCtx.fillRect(0, 0, width, height);
+            eegCtx.strokeStyle = '#1a4a7a';
+            eegCtx.lineWidth = 0.5;
+            for (let i = 0; i <= 10; i++) {
+                const x = (i / 10) * width;
+                eegCtx.beginPath();
+                eegCtx.moveTo(x, 0);
+                eegCtx.lineTo(x, height);
+                eegCtx.stroke();
+            }
+            for (let i = 0; i <= 8; i++) {
+                const y = (i / 8) * height;
+                eegCtx.beginPath();
+                eegCtx.moveTo(0, y);
+                eegCtx.lineTo(width, y);
+                eegCtx.stroke();
+            }
+            const minVal = Math.min(...data);
+            const maxVal = Math.max(...data);
+            const range = maxVal - minVal || 1;
+            const padding = 40;
+            eegCtx.strokeStyle = '#00d9ff';
+            eegCtx.lineWidth = 1.5;
+            eegCtx.beginPath();
+            data.forEach((val, i) => {
+                const x = (i / data.length) * width;
+                const y = height - padding - ((val - minVal) / range) * (height - 2 * padding);
+                if (i === 0) eegCtx.moveTo(x, y);
+                else eegCtx.lineTo(x, y);
+            });
+            eegCtx.stroke();
+            markers.forEach(marker => {
+                const x = (marker.sample / data.length) * width;
+                eegCtx.fillStyle = '#ff6b6b';
+                eegCtx.beginPath();
+                eegCtx.arc(x, height / 2, 8, 0, Math.PI * 2);
+                eegCtx.fill();
+                eegCtx.fillStyle = '#fff';
+                eegCtx.font = '10px Arial';
+                eegCtx.textAlign = 'center';
+                eegCtx.fillText('M', x, height / 2 + 4);
+            });
+            detections.forEach((det, idx) => {
+                const x = (det.sample / data.length) * width;
+                const feedbackKey = `${det.sample}-${det.template_type || det.morphology_type}`;
+                const hasFeedback = feedbackSubmitted.has(feedbackKey);
+                const isSelected = selectedDetection && selectedDetection.sample === det.sample;
+                eegCtx.strokeStyle = hasFeedback ? (feedbackSubmitted.get(feedbackKey) ? '#10b981' : '#ef4444') : (isSelected ? '#ff6bff' : '#ffcc00');
+                eegCtx.lineWidth = isSelected ? 3 : 2;
+                eegCtx.beginPath();
+                eegCtx.moveTo(x, 10);
+                eegCtx.lineTo(x, height - 10);
+                eegCtx.stroke();
+                eegCtx.fillStyle = hasFeedback ? (feedbackSubmitted.get(feedbackKey) ? '#10b981' : '#ef4444') : (isSelected ? '#ff6bff' : '#ffcc00');
+                eegCtx.font = '10px Arial';
+                eegCtx.textAlign = 'center';
+                eegCtx.fillText(`⚡${idx + 1}`, x, 20);
+            });
+            eegCtx.fillStyle = '#888';
+            eegCtx.font = '12px Arial';
+            eegCtx.textAlign = 'left';
+            eegCtx.fillText(channelNames[currentChannel], 10, 20);
+            eegCtx.fillText(`${minVal.toFixed(1)} μV`, 10, height - 5);
+            eegCtx.textAlign = 'right';
+            eegCtx.fillText(`${maxVal.toFixed(1)} μV`, width - 10, 20);
+        }
+        async function computeFFT() {
+            if (!eegData) return;
+            try {
+                const response = await fetch('/api/fft', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: eegData, channel: currentChannel })
+                });
+                const result = await response.json();
+                if (result.success) drawFFT(result);
+            } catch (error) {
+                console.error('FFT Error:', error);
+            }
+        }
+        function drawFFT(result) {
+            const width = fftCanvas.width;
+            const height = fftCanvas.height;
+            fftCtx.fillStyle = '#0a0a1a';
+            fftCtx.fillRect(0, 0, width, height);
+            const freqs = result.frequencies;
+            const power = result.power;
+            const maxFreq = 45;
+            const maxPower = Math.max(...power.filter((p, i) => freqs[i] <= maxFreq));
+            const bands = [
+                { name: 'δ', range: [0.5, 4], color: '#ff6b6b' },
+                { name: 'θ', range: [4, 8], color: '#ffd93d' },
+                { name: 'α', range: [8, 13], color: '#6bff6b' },
+                { name: 'β', range: [13, 30], color: '#6b6bff' },
+                { name: 'γ', range: [30, 45], color: '#ff6bff' }
+            ];
+            bands.forEach(band => {
+                const startX = (band.range[0] / maxFreq) * width;
+                const endX = (band.range[1] / maxFreq) * width;
+                fftCtx.fillStyle = band.color + '22';
+                fftCtx.fillRect(startX, 0, endX - startX, height);
+            });
+            fftCtx.strokeStyle = '#00d9ff';
+            fftCtx.lineWidth = 1.5;
+            fftCtx.beginPath();
+            freqs.forEach((freq, i) => {
+                if (freq <= maxFreq) {
+                    const x = (freq / maxFreq) * width;
+                    const y = height - 20 - (power[i] / maxPower) * (height - 40);
+                    if (i === 0 || freqs[i-1] > maxFreq) fftCtx.moveTo(x, y);
+                    else fftCtx.lineTo(x, y);
+                }
+            });
+            fftCtx.stroke();
+            fftCtx.fillStyle = '#888';
+            fftCtx.font = '10px Arial';
+            fftCtx.textAlign = 'center';
+            [0, 10, 20, 30, 40].forEach(f => {
+                const x = (f / maxFreq) * width;
+                fftCtx.fillText(f + 'Hz', x, height - 5);
+            });
+            const bandPowersDiv = document.getElementById('bandPowers');
+            bandPowersDiv.innerHTML = '';
+            bands.forEach(band => {
+                const bandPower = result.bands[band.name.toLowerCase()];
+                const div = document.createElement('div');
+                div.className = 'band-item';
+                div.innerHTML = `<span class="band-name">${band.name} (${band.range[0]}-${band.range[1]}Hz)</span><span>${bandPower.power.toFixed(2)}</span>`;
+                bandPowersDiv.appendChild(div);
+            });
+        }
+        async function detectSpikes() {
+            if (!eegData) {
+                alert('请先生成脑电波形');
+                return;
+            }
+            const useDynamic = document.getElementById('useDynamic').checked;
+            const threshold = useDynamic ? null : parseFloat(document.getElementById('threshold').value);
+            document.getElementById('detectBtn').disabled = true;
+            document.getElementById('status').textContent = '正在检测棘波...';
+            try {
+                const response = await fetch('/api/detect_spikes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        data: eegData,
+                        channel: currentChannel,
+                        threshold: threshold,
+                        use_dynamic: useDynamic,
+                        eeg_mode: currentMode
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    detections = result.detections;
+                    if (result.current_thresholds) {
+                        currentThresholds = result.current_thresholds;
+                        updateThresholdDisplay();
+                    }
+                    drawEEG();
+                    updateDetectionsList();
+                    document.getElementById('detectionCount').textContent = detections.length;
+                    document.getElementById('status').textContent = `检测完成: 发现 ${detections.length} 个可疑波形`;
+                }
+            } catch (error) {
+                console.error('Detection Error:', error);
+                document.getElementById('status').textContent = '检测失败: ' + error.message;
+            }
+            document.getElementById('detectBtn').disabled = false;
+        }
+        function updateDetectionsList() {
+            const list = document.getElementById('detectionsList');
+            if (detections.length === 0) {
+                list.innerHTML = '<div style="color: #888; text-align: center; padding: 10px;">暂无检测结果</div>';
+                return;
+            }
+            list.innerHTML = '';
+            detections.forEach((det, idx) => {
+                const div = document.createElement('div');
+                const feedbackKey = `${det.sample}-${det.template_type || det.morphology_type}`;
+                const hasFeedback = feedbackSubmitted.has(feedbackKey);
+                div.className = 'detection-item';
+                if (hasFeedback) {
+                    div.className += feedbackSubmitted.get(feedbackKey) ? ' feedback-true' : ' feedback-false';
+                }
+                if (selectedDetection && selectedDetection.sample === det.sample) {
+                    div.style.background = '#1a4a7a';
+                }
+                const typeLabel = getWaveformTypeLabel(det.morphology_type || det.template_type);
+                const ampText = det.amplitude ? `幅值: ${det.amplitude.toFixed(1)}μV<br>` : '';
+                const durText = det.duration_ms ? `时长: ${det.duration_ms.toFixed(0)}ms<br>` : '';
+                const feedbackStatus = hasFeedback ? (feedbackSubmitted.get(feedbackKey) ? ' ✓ 已确认' : ' ✗ 已标记误报') : '';
+                div.innerHTML = `#${idx + 1} ${typeLabel} - ${det.time.toFixed(2)}s${feedbackStatus}<br>${ampText}${durText}相关度: ${(det.correlation * 100).toFixed(1)}%`;
+                div.onclick = () => selectDetection(det, idx);
+                list.appendChild(div);
+            });
+        }
+        function selectDetection(det, idx) {
+            selectedDetection = det;
+            const infoDiv = document.getElementById('selectedDetInfo');
+            const typeLabel = getWaveformTypeLabel(det.morphology_type || det.template_type);
+            infoDiv.innerHTML = `
+                <span>类型: ${typeLabel}</span>
+                <span>时间: ${det.time.toFixed(2)}s</span>
+                <span>幅值: ${det.amplitude?.toFixed(1)}μV</span>
+                <span>时长: ${det.duration_ms?.toFixed(0)}ms</span>
+                <span>相关度: ${(det.correlation * 100).toFixed(1)}%</span>
+                <span>阈值: ${det.threshold_used?.toFixed(3) || '-'}</span>
+            `;
+            document.getElementById('selectedDetection').style.display = 'block';
+            drawEEG();
+            updateDetectionsList();
+        }
+        async function submitFeedback(userLabel) {
+            if (!selectedDetection) {
+                alert('请先选择一个检测项');
+                return;
+            }
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        detection: selectedDetection,
+                        user_label: userLabel ? 1 : 0,
+                        eeg_mode: currentMode,
+                        threshold_used: selectedDetection.threshold_used || 0.85
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    const feedbackKey = `${selectedDetection.sample}-${selectedDetection.template_type || selectedDetection.morphology_type}`;
+                    feedbackSubmitted.set(feedbackKey, userLabel);
+                    fetchFeedbackStats();
+                    drawEEG();
+                    updateDetectionsList();
+                    document.getElementById('status').textContent = '反馈已保存';
+                }
+            } catch (error) {
+                console.error('Feedback Error:', error);
+                document.getElementById('status').textContent = '反馈提交失败: ' + error.message;
+            }
+        }
+        async function runOptimize() {
+            const modal = document.getElementById('optimizeModal');
+            const resultDiv = document.getElementById('optimizeResult');
+            try {
+                const response = await fetch('/api/optimize_threshold', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        template_type: 'spike',
+                        min_feedback: 10
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <p><strong>模板类型:</strong> ${getWaveformTypeLabel(result.template_type)}</p>
+                        <p><strong>最优阈值:</strong> ${result.optimal_threshold.toFixed(3)}</p>
+                        <p><strong>精确率:</strong> ${(result.metrics.precision * 100).toFixed(1)}%</p>
+                        <p><strong>召回率:</strong> ${(result.metrics.recall * 100).toFixed(1)}%</p>
+                        <p><strong>F1分数:</strong> ${(result.metrics.f1 * 100).toFixed(1)}%</p>
+                        <p><strong>样本数:</strong> ${result.metrics.total}</p>
+                        <p><strong>TP/FP/FN:</strong> ${result.metrics.tp}/${result.metrics.fp}/${result.metrics.fn}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p style="color: #ef4444;">${result.error}</p>`;
+                }
+                modal.classList.add('active');
+                fetchFeedbackStats();
+            } catch (error) {
+                    console.error('Optimize Error:', error);
+                    resultDiv.innerHTML = `<p style="color: #ef4444;">优化失败: ${error.message}</p>`;
+                    modal.classList.add('active');
+                }
+            }
+            function addMarker(e) {
+                if (!eegData) return;
+                const rect = eegCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const sample = Math.floor((x / eegCanvas.width) * eegData[currentChannel].length);
+                markers.push({ sample, time: sample / samplingRate, channel: currentChannel });
+                drawEEG();
+            }
+            function clearMarkers() {
+                markers = [];
+                detections = [];
+                selectedDetection = null;
+                feedbackSubmitted.clear();
+                document.getElementById('selectedDetection').style.display = 'none';
+                document.getElementById('detectionCount').textContent = '0';
+                document.getElementById('detectionsList').innerHTML = '<div style="color: #888; text-align: center; padding: 10px;">暂无检测结果</div>';
+                drawEEG();
+            }
+            async function exportEDF() {
+                if (!eegData) {
+                    alert('请先生成脑电波形');
+                    return;
+                }
+                document.getElementById('exportBtn').disabled = true;
+                document.getElementById('status').textContent = '正在导出EDF文件...';
+                try {
+                    const response = await fetch('/api/export_edf', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: eegData, mode: currentMode })
+                    });
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `eeg_${currentMode}.edf`;
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.getElementById('status').textContent = 'EDF文件导出成功';
+                    }
+                } catch (error) {
+                    console.error('Export Error:', error);
+                    document.getElementById('status').textContent = '导出失败: ' + error.message;
+                }
+                document.getElementById('exportBtn').disabled = false;
+            }
+            document.getElementById('generateBtn').onclick = generateEEG;
+            document.getElementById('detectBtn').onclick = detectSpikes;
+            document.getElementById('exportBtn').onclick = exportEDF;
+            document.getElementById('clearMarkersBtn').onclick = clearMarkers;
+            document.getElementById('optimizeBtn').onclick = runOptimize;
+            document.getElementById('runOptimizeBtn').onclick = runOptimize;
+            document.getElementById('confirmTrue').onclick = () => submitFeedback(true);
+            document.getElementById('confirmFalse').onclick = () => submitFeedback(false);
+            document.getElementById('closeModalBtn').onclick = () => {
+                document.getElementById('optimizeModal').classList.remove('active');
+            };
+            eegCanvas.onclick = addMarker;
+            document.getElementById('threshold').oninput = (e) => {
+                document.getElementById('thresholdValue').textContent = e.target.value;
+            };
+            window.onload = () => {
+                initCanvas();
+                initChannelSelector();
+                drawEEG();
+                fetchFeedbackStats();
+            };
+            window.onresize = () => {
+                initCanvas();
+                drawEEG();
+            };
+        </script>
+    </body>
+</html>

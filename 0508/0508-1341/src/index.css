@@ -1,0 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@200;400;600;700&family=ZCOOL+XiaoWei&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: "Noto Serif SC", serif;
+  line-height: 1.6;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: #1a1a2e;
+  color: #f5f0e8;
+}
+
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #2a2a4a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #3a3a5a;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #4a4a6a;
+  }
+}
+
+@layer components {
+  .parchment-card {
+    @apply bg-parchment/10 backdrop-blur-sm border border-parchment/20 rounded-lg;
+  }
+
+  .parchment-card-solid {
+    @apply bg-parchment/15 border border-parchment/20 rounded-lg;
+  }
+
+  .cinnabar-btn {
+    @apply bg-cinnabar text-parchment px-5 py-2.5 rounded-lg font-body
+    hover:bg-cinnabar-light hover:shadow-lg hover:shadow-cinnabar/20
+    active:scale-[0.97] transition-all duration-200;
+  }
+
+  .outline-btn {
+    @apply border border-parchment/40 text-parchment px-5 py-2.5 rounded-lg font-body
+    hover:bg-parchment/10 hover:border-parchment/60
+    active:scale-[0.97] transition-all duration-200;
+  }
+
+  .bronze-btn {
+    @apply bg-bronze text-parchment px-5 py-2.5 rounded-lg font-body
+    hover:bg-bronze-light hover:shadow-lg hover:shadow-bronze/20
+    active:scale-[0.97] transition-all duration-200;
+  }
+
+  .input-field {
+    @apply bg-ink-light border border-parchment/20 rounded-lg px-4 py-2.5
+    text-parchment font-body focus:border-cinnabar focus:outline-none
+    focus:ring-1 focus:ring-cinnabar/50 transition-all duration-200;
+  }
+
+  .select-field {
+    @apply bg-ink-light border border-parchment/20 rounded-lg px-4 py-2.5
+    text-parchment font-body focus:border-cinnabar focus:outline-none
+    focus:ring-1 focus:ring-cinnabar/50 appearance-none cursor-pointer
+    transition-all duration-200;
+  }
+
+  .section-title {
+    @apply font-title text-3xl text-parchment tracking-wider;
+  }
+
+  .cloud-divider {
+    @apply w-full h-4 my-6;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 16'%3E%3Cpath d='M0 8 Q25 0 50 8 Q75 16 100 8 Q125 0 150 8 Q175 16 200 8' fill='none' stroke='%23f5f0e8' stroke-opacity='0.2' stroke-width='1'/%3E%3C/svg%3E");
+    background-size: 200px 16px;
+    background-repeat: repeat-x;
+  }
+}
+
+@layer utilities {
+  .text-shadow-ink {
+    text-shadow: 0 2px 4px rgba(26, 26, 46, 0.5);
+  }
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: linear-gradient(to right, #2d6a4f, #40916c);
+  border-radius: 3px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #c23616;
+  cursor: pointer;
+  border: 2px solid #f5f0e8;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #c23616;
+  cursor: pointer;
+  border: 2px solid #f5f0e8;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}

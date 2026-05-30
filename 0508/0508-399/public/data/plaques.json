@@ -1,0 +1,178 @@
+[
+  {
+    "id": "tang-1",
+    "periodId": "tang",
+    "name": "晋祠铭",
+    "shopName": "晋祠",
+    "dynasty": "唐代",
+    "fontType": "行书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=ancient%20Chinese%20plaque%20calligraphy%20Tang%20Dynasty%20style%20golden%20characters%20on%20dark%20wood&image_size=square",
+    "description": "唐太宗李世民手书，行书碑刻，为唐代匾额书法代表之作。",
+    "calligrapher": "李世民"
+  },
+  {
+    "id": "tang-2",
+    "periodId": "tang",
+    "name": "雁塔圣教序",
+    "shopName": "大慈恩寺",
+    "dynasty": "唐代",
+    "fontType": "楷书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=traditional%20Chinese%20temple%20plaque%20regular%20script%20calligraphy%20Tang%20Dynasty%20wooden%20background&image_size=square",
+    "description": "褚遂良楷书代表作，字体清丽刚劲，为唐代楷书典范。",
+    "calligrapher": "褚遂良"
+  },
+  {
+    "id": "song-1",
+    "periodId": "song",
+    "name": "醉翁亭",
+    "shopName": "醉翁亭",
+    "dynasty": "宋代",
+    "fontType": "行书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Song%20Dynasty%20Chinese%20plaque%20running%20script%20calligraphy%20scholar%20style%20elegant%20wooden&image_size=square",
+    "description": "苏轼题字，行书流畅自然，体现宋代文人尚意书风。",
+    "calligrapher": "苏轼"
+  },
+  {
+    "id": "song-2",
+    "periodId": "song",
+    "name": "岳阳楼",
+    "shopName": "岳阳楼",
+    "dynasty": "宋代",
+    "fontType": "楷书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20historic%20tower%20plaque%20Song%20Dynasty%20regular%20script%20antique%20wood%20carving&image_size=square",
+    "description": "宋代岳阳楼匾额，米芾楷书端庄大气，与范仲淹《岳阳楼记》相映生辉。",
+    "calligrapher": "米芾"
+  },
+  {
+    "id": "song-3",
+    "periodId": "song",
+    "name": "黄州寒食帖",
+    "shopName": "东坡书院",
+    "dynasty": "宋代",
+    "fontType": "行书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Song%20Dynasty%20calligraphy%20plaque%20running%20script%20Su%20Shi%20style%20wooden%20plaque&image_size=square",
+    "description": "苏轼行书代表作，被誉为"天下第三行书"。",
+    "calligrapher": "苏轼"
+  },
+  {
+    "id": "yuan-1",
+    "periodId": "yuan",
+    "name": "玄妙观",
+    "shopName": "玄妙观",
+    "dynasty": "元代",
+    "fontType": "楷书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Yuan%20Dynasty%20Taoist%20temple%20plaque%20regular%20script%20elegant%20Zhao%20Mengfu%20style&image_size=square",
+    "description": "赵孟頫楷书风格，温润典雅，具晋唐遗风。",
+    "calligrapher": "赵孟頫"
+  },
+  {
+    "id": "yuan-2",
+    "periodId": "yuan",
+    "name": "洛神赋",
+    "shopName": "松雪斋",
+    "dynasty": "元代",
+    "fontType": "行书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Yuan%20Dynasty%20calligraphy%20plaque%20running%20script%20elegant%20refined%20wooden&image_size=square",
+    "description": "赵孟頫行书代表作，飘逸俊美，为元代书法典范。",
+    "calligrapher": "赵孟頫"
+  },
+  {
+    "id": "ming-1",
+    "periodId": "ming",
+    "name": "拙政园",
+    "shopName": "拙政园",
+    "dynasty": "明代",
+    "fontType": "行书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Ming%20Dynasty%20garden%20plaque%20running%20script%20elegant%20Wu%20school%20style&image_size=square",
+    "description": "文徵明行书风格，吴门书派代表，清雅俊秀。",
+    "calligrapher": "文徵明"
+  },
+  {
+    "id": "ming-2",
+    "periodId": "ming",
+    "name": "六必居",
+    "shopName": "六必居酱园",
+    "dynasty": "明代",
+    "fontType": "楷书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Ming%20Dynasty%20shop%20plaque%20regular%20script%20traditional%20Chinese%20storefront&image_size=square",
+    "description": "明代著名酱园匾额，严嵩楷书端正厚重，为京城老字号代表。",
+    "calligrapher": "严嵩"
+  },
+  {
+    "id": "ming-3",
+    "periodId": "ming",
+    "name": "便宜坊",
+    "shopName": "便宜坊烤鸭店",
+    "dynasty": "明代",
+    "fontType": "楷书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Ming%20Dynasty%20roast%20duck%20restaurant%20plaque%20regular%20script%20old%20Beijing%20storefront&image_size=square",
+    "description": "始创于明永乐十四年（1416年），为北京最早的烤鸭店，匾额楷书端庄古朴。",
+    "calligrapher": "明代佚名"
+  },
+  {
+    "id": "qing-1",
+    "periodId": "qing",
+    "name": "正大光明",
+    "shopName": "乾清宫",
+    "dynasty": "清代",
+    "fontType": "楷书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Qing%20Dynasty%20imperial%20plaque%20regular%20script%20grand%20golden%20characters%20palace&image_size=square",
+    "description": "顺治皇帝御笔，后经康熙摹勒、乾隆临摹，楷书端庄方正，气势恢宏。",
+    "calligrapher": "顺治皇帝"
+  },
+  {
+    "id": "qing-2",
+    "periodId": "qing",
+    "name": "建极绥猷",
+    "shopName": "故宫太和殿",
+    "dynasty": "清代",
+    "fontType": "楷书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api//v1/text_to_image?prompt=Qing%20Dynasty%20imperial%20palace%20plaque%20Qianlong%20calligraphy%20grand%20golden%20characters&image_size=square",
+    "description": "乾隆皇帝御笔亲题，悬于太和殿正中，楷书雄浑庄重，为中国古代皇权与治道思想的物化象征。",
+    "calligrapher": "乾隆皇帝"
+  },
+  {
+    "id": "qing-3",
+    "periodId": "qing",
+    "name": "全聚德",
+    "shopName": "全聚德烤鸭店",
+    "dynasty": "清代",
+    "fontType": "楷书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Qing%20Dynasty%20famous%20restaurant%20plaque%20regular%20script%20Peking%20duck%20golden%20characters%20dark%20wood&image_size=square",
+    "description": "清同治三年（1864年）创立，秀才钱子龙题写匾额，楷书苍劲有力，浑厚醒目，为京城商业匾额典范。",
+    "calligrapher": "钱子龙"
+  },
+  {
+    "id": "minguo-1",
+    "periodId": "minguo",
+    "name": "商务印书馆",
+    "shopName": "商务印书馆",
+    "dynasty": "民国",
+    "fontType": "楷书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Republic%20of%20China%20publishing%20house%20plaque%20regular%20script%20scholarly%20elegant&image_size=square",
+    "description": "近代出版业巨擘，郑孝胥题写匾额，楷书端庄典雅，气象宏大。",
+    "calligrapher": "郑孝胥"
+  },
+  {
+    "id": "minguo-2",
+    "periodId": "minguo",
+    "name": "东来顺",
+    "shopName": "东来顺饭庄",
+    "dynasty": "民国",
+    "fontType": "楷书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Republic%20of%20China%20era%20mutton%20hotpot%20restaurant%20plaque%20regular%20script%20Beijing%20old%20brand&image_size=square",
+    "description": "始创于1914年（民国三年），以涮羊肉闻名天下，匾额楷书端正浑厚，为京城名匾。",
+    "calligrapher": "李石曾"
+  },
+  {
+    "id": "minguo-3",
+    "periodId": "minguo",
+    "name": "瑞蚨祥",
+    "shopName": "瑞蚨祥绸布店",
+    "dynasty": "民国",
+    "fontType": "楷书",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Republic%20of%20China%20silk%20fabric%20shop%20plaque%20regular%20script%20elegant%20calligraphy%20old%20brand&image_size=square",
+    "description": "京城著名绸布老字号，民国时期匾额楷书端庄秀丽，气韵高古，为商业匾额精品。",
+    "calligrapher": "王垿"
+  }
+]

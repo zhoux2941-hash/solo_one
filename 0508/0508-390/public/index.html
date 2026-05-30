@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>祭孔礼乐器形制查询与3D展示</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#8B0000;--primary-light:#B22222;--gold:#C5A55A;--bg:#F5F0E8;--card:#FFFDF8;--text:#2C1810;--text-light:#6B5B4F;--border:#D4C5A9;--shadow:0 2px 12px rgba(44,24,16,0.08)}
+body{font-family:"Noto Serif SC","SimSun",serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-light) 100%);color:#fff;padding:20px 32px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 20px rgba(139,0,0,0.3)}
+header h1{font-size:24px;font-weight:700;letter-spacing:4px}
+header h1 span{color:var(--gold);font-size:14px;display:block;letter-spacing:1px;margin-top:2px;font-weight:400}
+.header-actions{display:flex;gap:12px;align-items:center}
+.btn{padding:8px 20px;border:1px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;font-family:inherit;font-size:14px;border-radius:4px;transition:all .2s}
+.btn:hover{background:var(--gold);color:var(--primary)}
+.btn-primary{background:var(--gold);color:var(--primary);border-color:var(--gold);font-weight:600}
+.btn-primary:hover{background:#d4b76a}
+.main-layout{display:flex;height:calc(100vh - 76px)}
+.sidebar{width:380px;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--card)}
+.filter-bar{padding:16px;border-bottom:1px solid var(--border);background:#FAF6EE}
+.filter-bar h3{font-size:13px;color:var(--text-light);margin-bottom:10px;letter-spacing:2px}
+.filter-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.filter-row label{font-size:12px;color:var(--text-light);width:40px;line-height:30px;flex-shrink:0}
+.filter-row select,.filter-row input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-family:inherit;font-size:13px;background:#fff;min-width:0}
+.filter-row select:focus,.filter-row input:focus{outline:none;border-color:var(--primary)}
+.card-list{flex:1;overflow-y:auto;padding:12px}
+.card-list::-webkit-scrollbar{width:6px}
+.card-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.instrument-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:10px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.instrument-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--primary);opacity:0;transition:opacity .25s}
+.instrument-card:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.instrument-card:hover::before,.instrument-card.active::before{opacity:1}
+.instrument-card.active{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary)}
+.card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.card-header h4{font-size:15px;font-weight:600;line-height:1.4;flex:1}
+.card-type{background:var(--primary);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap;margin-left:8px;flex-shrink:0}
+.card-meta{display:flex;gap:12px;font-size:12px;color:var(--text-light);margin-bottom:6px}
+.card-meta span{display:flex;align-items:center;gap:3px}
+.card-dims{font-size:11px;color:var(--text-light);background:#FAF6EE;padding:4px 8px;border-radius:4px;display:inline-block}
+.viewer-panel{flex:1;display:flex;flex-direction:column;position:relative;background:#1a1a2e}
+.viewer-toolbar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);z-index:10;flex-wrap:wrap}
+.viewer-toolbar .tool-btn{padding:6px 14px;border:1px solid rgba(197,165,90,0.4);background:transparent;color:var(--gold);cursor:pointer;font-family:inherit;font-size:12px;border-radius:4px;transition:all .2s}
+.viewer-toolbar .tool-btn:hover,.viewer-toolbar .tool-btn.active{background:var(--gold);color:var(--primary)}
+.toolbar-sep{width:1px;height:20px;background:rgba(255,255,255,0.2)}
+.toolbar-info{color:rgba(255,255,255,0.7);font-size:12px;margin-left:auto}
+#three-container{flex:1;position:relative}
+#three-container canvas{display:block}
+.measure-result{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:var(--gold);padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;pointer-events:none;display:none;border:1px solid rgba(197,165,90,0.3);white-space:nowrap}
+.measure-result.show{display:block}
+.detail-panel{width:340px;border-left:1px solid var(--border);background:var(--card);overflow-y:auto;padding:0}
+.detail-panel::-webkit-scrollbar{width:6px}
+.detail-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.detail-empty{display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-light);font-size:14px;text-align:center;padding:32px;line-height:2}
+.detail-content{padding:20px}
+.detail-content h2{font-size:20px;font-weight:700;margin-bottom:4px}
+.detail-content .detail-type{color:var(--primary);font-size:13px;margin-bottom:16px}
+.detail-section{margin-bottom:20px}
+.detail-section h3{font-size:13px;color:var(--text-light);letter-spacing:2px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.detail-section p{font-size:14px;line-height:1.8}
+.dim-table{width:100%;border-collapse:collapse}
+.dim-table th,.dim-table td{padding:8px 12px;text-align:left;font-size:13px;border-bottom:1px solid var(--border)}
+.dim-table th{color:var(--text-light);font-weight:400;width:80px}
+.dim-table td{font-weight:600}
+.tag{display:inline-block;background:#FAF6EE;border:1px solid var(--border);padding:2px 10px;border-radius:12px;font-size:12px;margin:2px}
+.no-select{user-select:none}
+.empty-state{text-align:center;padding:48px 24px;color:var(--text-light)}
+.empty-state .icon{font-size:48px;margin-bottom:12px;opacity:0.3}
+.empty-state p{font-size:14px;line-height:1.8}
+.vr-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:20;display:none}
+.vr-overlay.show{display:block}
+.vr-crosshair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:24px;height:24px;border:2px solid rgba(197,165,90,0.7);border-radius:50%}
+.vr-crosshair::before,.vr-crosshair::after{content:'';position:absolute;background:rgba(197,165,90,0.7)}
+.vr-crosshair::before{width:2px;height:8px;top:50%;left:50%;transform:translate(-50%,-50%)}
+.vr-crosshair::after{width:8px;height:2px;top:50%;left:50%;transform:translate(-50%,-50%)}
+.vr-info-panel{position:absolute;top:16px;left:16px;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);border:1px solid rgba(197,165,90,0.3);border-radius:12px;padding:16px 20px;color:#fff;max-width:320px;pointer-events:auto}
+.vr-info-panel h3{font-size:16px;color:var(--gold);margin-bottom:8px;letter-spacing:2px}
+.vr-info-panel p{font-size:12px;color:rgba(255,255,255,0.7);line-height:1.6;margin-bottom:4px}
+.vr-legend{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);border:1px solid rgba(197,165,90,0.3);border-radius:10px;padding:12px 20px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;pointer-events:auto}
+.vr-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,0.8)}
+.vr-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.vr-controls-hint{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(139,0,0,0.85);color:var(--gold);padding:8px 20px;border-radius:8px;font-size:12px;pointer-events:none;white-space:nowrap;border:1px solid rgba(197,165,90,0.3)}
+.vr-exit-btn{position:absolute;top:16px;right:16px;background:rgba(139,0,0,0.9);color:var(--gold);border:1px solid rgba(197,165,90,0.5);padding:8px 20px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px;pointer-events:auto;transition:all .2s}
+.vr-exit-btn:hover{background:var(--gold);color:var(--primary)}
+.vr-stereo{display:flex;width:100%;height:100%}
+.vr-stereo-half{width:50%;height:100%;position:relative}
+.vr-stereo-divider{position:absolute;top:0;left:50%;width:2px;height:100%;background:rgba(197,165,90,0.4);z-index:25}
+</style>
+</head>
+<body>
+<header>
+  <h1>祭孔礼乐器形制查询<span>Confucian Ritual Musical Instruments · Morphology Query & 3D Display</span></h1>
+  <div class="header-actions">
+    <button class="btn" onclick="exportExcel()">导出 Excel</button>
+  </div>
+</header>
+<div class="main-layout">
+  <div class="sidebar">
+    <div class="filter-bar">
+      <h3>筛选条件</h3>
+      <div class="filter-row">
+        <label>朝代</label>
+        <select id="filter-dynasty" onchange="loadInstruments()"><option value="全部">全部朝代</option></select>
+      </div>
+      <div class="filter-row">
+        <label>器类</label>
+        <select id="filter-type" onchange="loadInstruments()"><option value="全部">全部器类</option></select>
+      </div>
+      <div class="filter-row">
+        <label>搜索</label>
+        <input type="text" id="filter-keyword" placeholder="名称/纹饰关键词..." oninput="debounceSearch()">
+      </div>
+    </div>
+    <div class="card-list" id="card-list">
+      <div class="empty-state"><div class="icon">🎵</div><p>加载中...</p></div>
+    </div>
+  </div>
+  <div class="viewer-panel">
+    <div class="viewer-toolbar">
+      <button class="tool-btn active" id="btn-rotate" onclick="setTool('rotate')">旋转</button>
+      <button class="tool-btn" id="btn-measure" onclick="setTool('measure')">测距</button>
+      <div class="toolbar-sep"></div>
+      <button class="tool-btn" id="btn-annotate" onclick="toggleAnnotations()">尺寸标注</button>
+      <button class="tool-btn" id="btn-reset" onclick="resetCamera()">重置视角</button>
+      <div class="toolbar-sep"></div>
+      <button class="tool-btn" id="btn-vr" onclick="toggleVR()">祭祀场景</button>
+      <div class="toolbar-info" id="tool-info">选择乐器查看3D模型</div>
+    </div>
+    <div id="three-container"></div>
+    <div class="measure-result" id="measure-result"></div>
+    <div class="vr-overlay" id="vr-overlay">
+      <div class="vr-crosshair"></div>
+      <div class="vr-info-panel" id="vr-info-panel">
+        <h3>祭孔大典 · 乐队排列</h3>
+        <p>大成殿前庭院，雅乐陈设按古制排列</p>
+        <p>东悬编钟，西悬特磬，柷起敔止</p>
+      </div>
+      <div class="vr-legend" id="vr-legend"></div>
+      <div class="vr-controls-hint">WASD 移动 · 鼠标旋转视角 · ESC 退出</div>
+      <button class="vr-exit-btn" onclick="toggleVR()">退出场景</button>
+    </div>
+  </div>
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-empty">← 选择一件乐器<br>查看形制详情与3D模型</div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+let scene, camera, renderer, labelRenderer, controls;
+let currentModel = null;
+let annotationObjects = [];
+let annotationsVisible = true;
+let currentTool = 'rotate';
+let measurePoints = [];
+let measureLines = [];
+let measureLabels = [];
+let selectedInstrument = null;
+let allInstruments = [];
+let searchTimer = null;
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const SCALE = 0.05;
+
+let vrActive = false;
+let vrScene = null;
+let vrCamera = null;
+let vrSavedState = null;
+let vrKeys = {};
+let vrYaw = 0;
+let vrPitch = 0;
+let vrPointerLocked = false;
+let vrAnimId = null;
+let vrInstrumentLabels = [];
+
+function init() {
+  const container = document.getElementById('three-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1a1a2e);
+
+  camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+  camera.position.set(5, 4, 7);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(renderer.domElement);
+
+  labelRenderer = new CSS2DRenderer();
+  labelRenderer.setSize(w, h);
+  labelRenderer.domElement.style.position = 'absolute';
+  labelRenderer.domElement.style.top = '0';
+  labelRenderer.domElement.style.pointerEvents = 'none';
+  container.appendChild(labelRenderer.domElement);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.minDistance = 2;
+  controls.maxDistance = 20;
+
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+
+  const dirLight = new THREE.DirectionalLight(0xfff5e6, 1.2);
+  dirLight.position.set(5, 8, 5);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.width = 2048;
+  dirLight.shadow.mapSize.height = 2048;
+  scene.add(dirLight);
+
+  const backLight = new THREE.DirectionalLight(0x4488ff, 0.3);
+  backLight.position.set(-3, 4, -5);
+  scene.add(backLight);
+
+  const groundGeo = new THREE.CircleGeometry(10, 64);
+  const groundMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3e, roughness: 0.9 });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.01;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  const gridHelper = new THREE.GridHelper(20, 40, 0x333355, 0x222244);
+  gridHelper.position.y = 0;
+  scene.add(gridHelper);
+
+  renderer.domElement.addEventListener('click', onCanvasClick);
+  window.addEventListener('resize', onResize);
+
+  animate();
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+}
+
+function onResize() {
+  const container = document.getElementById('three-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  labelRenderer.setSize(w, h);
+}
+
+function clearModel() {
+  if (currentModel) {
+    scene.remove(currentModel);
+    currentModel.traverse(child => {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+        else child.material.dispose();
+      }
+    });
+    currentModel = null;
+  }
+  clearAnnotations();
+  clearMeasurements();
+}
+
+function clearAnnotations() {
+  annotationObjects.forEach(obj => {
+    scene.remove(obj);
+    if (obj.element && obj.element.parentNode) obj.element.parentNode.removeChild(obj.element);
+  });
+  annotationObjects = [];
+}
+
+function clearMeasurements() {
+  measureLines.forEach(l => scene.remove(l));
+  measureLabels.forEach(l => {
+    scene.remove(l);
+    if (l.element && l.element.parentNode) l.element.parentNode.removeChild(l.element);
+  });
+  measureLines = [];
+  measureLabels = [];
+  measurePoints = [];
+  document.getElementById('measure-result').classList.remove('show');
+}
+
+function createBianzhong(inst) {
+  const group = new THREE.Group();
+  const h = inst.height_cm * SCALE;
+  const w = inst.width_cm * SCALE;
+  const d = inst.depth_cm * SCALE;
+
+  const bodyShape = new THREE.Shape();
+  const hw = w / 2;
+  const hd = d / 2;
+  bodyShape.moveTo(-hw * 0.8, 0);
+  bodyShape.quadraticCurveTo(-hw, h * 0.5, -hw * 0.6, h * 0.85);
+  bodyShape.lineTo(-hw * 0.3, h);
+  bodyShape.lineTo(hw * 0.3, h);
+  bodyShape.lineTo(hw * 0.6, h * 0.85);
+  bodyShape.quadraticCurveTo(hw, h * 0.5, hw * 0.8, 0);
+  bodyShape.lineTo(-hw * 0.8, 0);
+
+  const extrudeSettings = { depth: d, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 3 };
+  const bodyGeo = new THREE.ExtrudeGeometry(bodyShape, extrudeSettings);
+  bodyGeo.translate(0, 0, -d / 2);
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x5C6B3C, roughness: 0.4, metalness: 0.7 });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.castShadow = true;
+  group.add(body);
+
+  const yongGeo = new THREE.CylinderGeometry(hw * 0.35, hw * 0.4, h * 0.12, 16);
+  const yongMat = new THREE.MeshStandardMaterial({ color: 0x6B7B4C, roughness: 0.3, metalness: 0.8 });
+  const yong = new THREE.Mesh(yongGeo, yongMat);
+  yong.position.y = h * 1.06;
+  group.add(yong);
+
+  const boGeo = new THREE.TorusGeometry(hw * 0.22, 0.03, 8, 16);
+  const bo = new THREE.Mesh(boGeo, new THREE.MeshStandardMaterial({ color: 0x4A5A2C, metalness: 0.9 }));
+  bo.position.y = h * 1.12;
+  bo.rotation.x = Math.PI / 2;
+  group.add(bo);
+
+  for (let face = 0; face < 2; face++) {
+    const zOff = face === 0 ? -d * 0.3 : d * 0.3;
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 6; col++) {
+        const meiGeo = new THREE.ConeGeometry(0.04, 0.08, 6);
+        const mei = new THREE.Mesh(meiGeo, bodyMat);
+        const x = -hw * 0.5 + (col / 5) * hw;
+        const y = h * 0.3 + row * h * 0.18;
+        mei.position.set(x, y, zOff);
+        mei.rotation.x = Math.PI;
+        group.add(mei);
+      }
+    }
+  }
+
+  return group;
+}
+
+function createTeqing(inst) {
+  const group = new THREE.Group();
+  const h = inst.height_cm * SCALE;
+  const w = inst.width_cm * SCALE;
+  const d = inst.depth_cm * SCALE;
+
+  const shape = new THREE.Shape();
+  shape.moveTo(0, 0);
+  shape.lineTo(w * 0.4, h * 0.3);
+  shape.lineTo(w * 0.1, h);
+  shape.lineTo(-w * 0.1, h);
+  shape.lineTo(-w * 0.4, h * 0.3);
+  shape.lineTo(0, 0);
+
+  const extSettings = { depth: d, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.015, bevelSegments: 2 };
+  const geo = new THREE.ExtrudeGeometry(shape, extSettings);
+  geo.translate(0, 0, -d / 2);
+  const mat = new THREE.MeshStandardMaterial({ color: 0x8B8682, roughness: 0.6, metalness: 0.1 });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow = true;
+  group.add(mesh);
+
+  const holeGeo = new THREE.CylinderGeometry(0.06, 0.06, d * 1.5, 16);
+  const holeMat = new THREE.MeshStandardMaterial({ color: 0x666666 });
+  const hole = new THREE.Mesh(holeGeo, holeMat);
+  hole.position.set(0, h * 0.85, 0);
+  hole.rotation.x = Math.PI / 2;
+  group.add(hole);
+
+  return group;
+}
+
+function createZhu(inst) {
+  const group = new THREE.Group();
+  const h = inst.height_cm * SCALE;
+  const w = inst.width_cm * SCALE;
+  const d = inst.depth_cm * SCALE;
+
+  const topW = w;
+  const botW = w * 0.85;
+
+  const bodyGeo = new THREE.BoxGeometry(topW, h, d);
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1a0a00, roughness: 0.7, metalness: 0.2 });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.y = h / 2;
+  body.castShadow = true;
+  group.add(body);
+
+  const innerGeo = new THREE.BoxGeometry(topW * 0.85, h * 0.9, d * 0.85);
+  const innerMat = new THREE.MeshStandardMaterial({ color: 0x8B0000, roughness: 0.5, metalness: 0.1 });
+  const inner = new THREE.Mesh(innerGeo, innerMat);
+  inner.position.y = h * 0.55;
+  group.add(inner);
+
+  const frameGeo = new THREE.BoxGeometry(topW + 0.04, 0.06, d + 0.04);
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x3a1a00, metalness: 0.5 });
+  const frame = new THREE.Mesh(frameGeo, frameMat);
+  frame.position.y = h;
+  group.add(frame);
+
+  const circleShape = new THREE.Shape();
+  const radius = d * 0.25;
+  circleShape.absarc(0, 0, radius, 0, Math.PI * 2, false);
+  const circleGeo = new THREE.ShapeGeometry(circleShape);
+  const circleMat = new THREE.MeshStandardMaterial({ color: 0x1a0a00, side: THREE.DoubleSide });
+  const circle = new THREE.Mesh(circleGeo, circleMat);
+  circle.position.set(0, h * 0.5, d / 2 + 0.01);
+  group.add(circle);
+
+  const ringGeo = new THREE.RingGeometry(radius * 0.85, radius, 32);
+  const ringMat = new THREE.MeshStandardMaterial({ color: 0xC5A55A, side: THREE.DoubleSide });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.set(0, h * 0.5, d / 2 + 0.02);
+  group.add(ring);
+
+  return group;
+}
+
+function createYu(inst) {
+  const group = new THREE.Group();
+  const h = inst.height_cm * SCALE;
+  const w = inst.width_cm * SCALE;
+  const d = inst.depth_cm * SCALE;
+
+  const bodyGeo = new THREE.BoxGeometry(w * 0.3, h, d);
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xB8860B, roughness: 0.5, metalness: 0.3 });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.y = h / 2;
+  body.castShadow = true;
+  group.add(body);
+
+  const headGeo = new THREE.SphereGeometry(h * 0.25, 16, 12);
+  const headMat = new THREE.MeshStandardMaterial({ color: 0xD4A030, roughness: 0.4, metalness: 0.3 });
+  const head = new THREE.Mesh(headGeo, headMat);
+  head.position.set(w * 0.15, h * 0.85, 0);
+  head.scale.set(1.2, 0.9, 1);
+  group.add(head);
+
+  const snoutGeo = new THREE.CylinderGeometry(h * 0.08, h * 0.12, h * 0.15, 8);
+  const snout = new THREE.Mesh(snoutGeo, headMat);
+  snout.position.set(w * 0.35, h * 0.8, 0);
+  snout.rotation.z = -Math.PI / 4;
+  group.add(snout);
+
+  const earGeo = new THREE.ConeGeometry(h * 0.06, h * 0.15, 8);
+  [-1, 1].forEach(side => {
+    const ear = new THREE.Mesh(earGeo, headMat);
+    ear.position.set(w * 0.05, h * 1.05, side * d * 0.3);
+    group.add(ear);
+  });
+
+  for (let i = 0; i < 7; i++) {
+    const toothGeo = new THREE.BoxGeometry(0.02, h * 0.2, d * 0.8);
+    const tooth = new THREE.Mesh(toothGeo, new THREE.MeshStandardMaterial({ color: 0x8B7500 }));
+    tooth.position.set(-w * 0.15 + i * 0.05, h * 0.6 + h * 0.05, 0);
+    group.add(tooth);
+  }
+
+  const baseGeo = new THREE.BoxGeometry(w, h * 0.1, d * 1.2);
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x4A3520, roughness: 0.8 });
+  const base = new THREE.Mesh(baseGeo, baseMat);
+  base.position.y = h * 0.05;
+  group.add(base);
+
+  return group;
+}
+
+function createBofu(inst) {
+  const group = new THREE.Group();
+  const h = inst.height_cm * SCALE;
+  const r = (inst.width_cm / 2) * SCALE;
+
+  const bodyGeo = new THREE.CylinderGeometry(r, r, h, 32);
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8B0000, roughness: 0.4, metalness: 0.1 });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.y = h / 2;
+  body.castShadow = true;
+  group.add(body);
+
+  [-1, 1].forEach(side => {
+    const faceGeo = new THREE.CircleGeometry(r, 32);
+    const faceMat = new THREE.MeshStandardMaterial({ color: 0xDEB887, roughness: 0.8, side: THREE.DoubleSide });
+    const face = new THREE.Mesh(faceGeo, faceMat);
+    face.position.y = h / 2;
+    face.rotation.x = Math.PI / 2;
+    face.position.y = side === 1 ? h : 0;
+    if (side === -1) face.rotation.x = -Math.PI / 2;
+    group.add(face);
+  });
+
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const nailGeo = new THREE.SphereGeometry(0.03, 8, 8);
+    const nailMat = new THREE.MeshStandardMaterial({ color: 0xC5A55A, metalness: 0.8 });
+    const nail = new THREE.Mesh(nailGeo, nailMat);
+    nail.position.set(Math.cos(angle) * r * 0.85, h / 2, Math.sin(angle) * r * 0.85);
+    group.add(nail);
+  }
+
+  return group;
+}
+
+function createHui(inst) {
+  const group = new THREE.Group();
+  const h = inst.height_cm * SCALE;
+  const r = 0.05;
+
+  const poleGeo = new THREE.CylinderGeometry(r, r * 1.2, h, 8);
+  const poleMat = new THREE.MeshStandardMaterial({ color: 0x8B0000, roughness: 0.3, metalness: 0.5 });
+  const pole = new THREE.Mesh(poleGeo, poleMat);
+  pole.position.y = h / 2;
+  pole.castShadow = true;
+  group.add(pole);
+
+  const headGeo = new THREE.SphereGeometry(0.12, 12, 8);
+  const headMat = new THREE.MeshStandardMaterial({ color: 0xC5A55A, metalness: 0.9 });
+  const head = new THREE.Mesh(headGeo, headMat);
+  head.position.y = h;
+  group.add(head);
+
+  const flagGeo = new THREE.PlaneGeometry(0.8, 1.2);
+  const flagMat = new THREE.MeshStandardMaterial({ color: 0xDAA520, roughness: 0.7, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
+  const flag = new THREE.Mesh(flagGeo, flagMat);
+  flag.position.set(0.45, h * 0.85, 0);
+  group.add(flag);
+
+  return group;
+}
+
+function createJingu(inst) {
+  const group = new THREE.Group();
+  const h = inst.height_cm * SCALE;
+  const r = (inst.width_cm / 2) * SCALE;
+
+  const shellGeo = new THREE.CylinderGeometry(r, r * 0.95, h, 32, 1, true);
+  const shellMat = new THREE.MeshStandardMaterial({ color: 0x8B0000, roughness: 0.3, metalness: 0.2, side: THREE.DoubleSide });
+  const shell = new THREE.Mesh(shellGeo, shellMat);
+  shell.position.y = h / 2;
+  shell.castShadow = true;
+  group.add(shell);
+
+  [-1, 1].forEach(side => {
+    const faceGeo = new THREE.CircleGeometry(r * (side === 1 ? 1 : 0.95), 32);
+    const faceMat = new THREE.MeshStandardMaterial({ color: 0xDEB887, roughness: 0.9, side: THREE.DoubleSide });
+    const face = new THREE.Mesh(faceGeo, faceMat);
+    face.rotation.x = side === 1 ? -Math.PI / 2 : Math.PI / 2;
+    face.position.y = side === 1 ? h : 0;
+    group.add(face);
+  });
+
+  for (let i = 0; i < 24; i++) {
+    const angle = (i / 24) * Math.PI * 2;
+    const nailGeo = new THREE.SphereGeometry(0.04, 8, 8);
+    const nailMat = new THREE.MeshStandardMaterial({ color: 0xC5A55A, metalness: 0.8 });
+    const nail = new THREE.Mesh(nailGeo, nailMat);
+    const row = i < 12 ? 0 : 1;
+    const col = i % 12;
+    const a = (col / 12) * Math.PI * 2;
+    const rr = r * 0.9;
+    const yy = row === 0 ? h * 0.3 : h * 0.7;
+    nail.position.set(Math.cos(a) * rr, yy, Math.sin(a) * rr);
+    group.add(nail);
+  }
+
+  return group;
+}
+
+function createXun(inst) {
+  const group = new THREE.Group();
+  const r = (inst.width_cm / 2) * SCALE;
+
+  const bodyGeo = new THREE.SphereGeometry(r, 32, 24);
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.7, metalness: 0.1 });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.scale.set(1, 1.2, 1);
+  body.castShadow = true;
+  group.add(body);
+
+  const blowGeo = new THREE.CylinderGeometry(r * 0.2, r * 0.3, r * 0.4, 12);
+  const blow = new THREE.Mesh(blowGeo, bodyMat);
+  blow.position.y = r * 1.1;
+  group.add(blow);
+
+  for (let i = 0; i < 5; i++) {
+    const angle = (i / 5) * Math.PI - Math.PI / 2;
+    const holeGeo = new THREE.CircleGeometry(r * 0.08, 12);
+    const holeMat = new THREE.MeshStandardMaterial({ color: 0x1a0a00, side: THREE.DoubleSide });
+    const hole = new THREE.Mesh(holeGeo, holeMat);
+    hole.position.set(
+      Math.cos(angle) * r * 0.7,
+      r * 0.2,
+      Math.sin(angle) * r * 0.7 + r * 0.3
+    );
+    hole.lookAt(hole.position.clone().multiplyScalar(2));
+    group.add(hole);
+  }
+
+  group.position.y = r * 1.2;
+  return group;
+}
+
+const modelCreators = {
+  bianzhong: createBianzhong,
+  teqing: createTeqing,
+  zhu: createZhu,
+  yu: createYu,
+  bofu: createBofu,
+  hui: createHui,
+  jingu: createJingu,
+  xun: createXun
+};
+
+function loadModel(inst) {
+  clearModel();
+  selectedInstrument = inst;
+
+  const creator = modelCreators[inst.model_type] || modelCreators.bianzhong;
+  currentModel = creator(inst);
+  scene.add(currentModel);
+
+  const box = new THREE.Box3().setFromObject(currentModel);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const dist = maxDim * 2;
+
+  camera.position.set(center.x + dist * 0.6, center.y + dist * 0.4, center.z + dist * 0.8);
+  controls.target.copy(center);
+  controls.update();
+
+  addAnnotations(inst, box);
+  document.getElementById('tool-info').textContent = `${inst.name} — ${inst.type}`;
+}
+
+function addAnnotations(inst, box) {
+  clearAnnotations();
+  if (!annotationsVisible) return;
+
+  const dims = inst.dimensions || [];
+  const min = box.min;
+  const max = box.max;
+
+  const dimPositions = [
+    { label: `通高 ${inst.height_cm}cm`, pos: new THREE.Vector3(max.x + 0.3, (min.y + max.y) / 2, max.z + 0.3), dir: 'vertical' },
+    { label: `通宽 ${inst.width_cm}cm`, pos: new THREE.Vector3((min.x + max.x) / 2, min.y - 0.3, max.z + 0.3), dir: 'horizontal' },
+    { label: `通深 ${inst.depth_cm}cm`, pos: new THREE.Vector3(min.x - 0.3, min.y - 0.3, (min.z + max.z) / 2), dir: 'depth' },
+  ];
+
+  if (inst.weight_kg) {
+    dimPositions.push({
+      label: `重量 ${inst.weight_kg}kg`,
+      pos: new THREE.Vector3(min.x - 0.5, max.y + 0.3, 0),
+      dir: 'weight'
+    });
+  }
+
+  dimPositions.forEach(dp => {
+    const div = document.createElement('div');
+    div.style.cssText = 'background:rgba(139,0,0,0.9);color:#C5A55A;padding:3px 10px;border-radius:4px;font-size:12px;font-family:"Noto Serif SC",serif;white-space:nowrap;border:1px solid rgba(197,165,90,0.4);pointer-events:none';
+    div.textContent = dp.label;
+    const label = new CSS2DObject(div);
+    label.position.copy(dp.pos);
+    scene.add(label);
+    annotationObjects.push(label);
+  });
+
+  dimPositions.filter(d => d.dir !== 'weight').forEach(dp => {
+    const mat = new THREE.LineBasicMaterial({ color: 0xC5A55A, transparent: true, opacity: 0.6 });
+    const points = [];
+
+    if (dp.dir === 'vertical') {
+      points.push(new THREE.Vector3(dp.pos.x, min.y, dp.pos.z));
+      points.push(new THREE.Vector3(dp.pos.x, max.y, dp.pos.z));
+    } else if (dp.dir === 'horizontal') {
+      points.push(new THREE.Vector3(min.x, dp.pos.y, dp.pos.z));
+      points.push(new THREE.Vector3(max.x, dp.pos.y, dp.pos.z));
+    } else {
+      points.push(new THREE.Vector3(dp.pos.x, dp.pos.y, min.z));
+      points.push(new THREE.Vector3(dp.pos.x, dp.pos.y, max.z));
+    }
+
+    const geo = new THREE.BufferGeometry().setFromPoints(points);
+    const line = new THREE.Line(geo, mat);
+    scene.add(line);
+    annotationObjects.push(line);
+  });
+}
+
+function onCanvasClick(event) {
+  if (currentTool !== 'measure' || !currentModel) return;
+
+  const container = document.getElementById('three-container');
+  const rect = container.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+  currentModel.updateMatrixWorld(true);
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObject(currentModel, true);
+
+  if (intersects.length > 0) {
+    const worldPoint = intersects[0].point.clone();
+    measurePoints.push(worldPoint);
+
+    const markerGeo = new THREE.SphereGeometry(0.05, 12, 12);
+    const markerMat = new THREE.MeshStandardMaterial({ color: 0xff4444, emissive: 0xff0000, emissiveIntensity: 0.5 });
+    const marker = new THREE.Mesh(markerGeo, markerMat);
+    marker.position.copy(worldPoint);
+    scene.add(marker);
+    measureLines.push(marker);
+
+    if (measurePoints.length === 2) {
+      const p1 = measurePoints[0];
+      const p2 = measurePoints[1];
+      const localP1 = currentModel.worldToLocal(p1.clone());
+      const localP2 = currentModel.worldToLocal(p2.clone());
+      const distLocal = localP1.distanceTo(localP2);
+      const distCm = (distLocal / SCALE).toFixed(2);
+
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+      const lineMat = new THREE.LineBasicMaterial({ color: 0xff4444, linewidth: 2 });
+      const line = new THREE.Line(lineGeo, lineMat);
+      scene.add(line);
+      measureLines.push(line);
+
+      const midPoint = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+      const div = document.createElement('div');
+      div.style.cssText = 'background:rgba(255,0,0,0.9);color:#fff;padding:4px 12px;border-radius:4px;font-size:13px;font-family:"Noto Serif SC",serif;white-space:nowrap;pointer-events:none';
+      div.textContent = `${distCm} cm`;
+      const label = new CSS2DObject(div);
+      label.position.copy(midPoint);
+      label.position.y += 0.15;
+      scene.add(label);
+      measureLabels.push(label);
+
+      const resultEl = document.getElementById('measure-result');
+      resultEl.textContent = `测量距离：${distCm} cm（模型局部坐标）`;
+      resultEl.classList.add('show');
+      setTimeout(() => resultEl.classList.remove('show'), 5000);
+
+      measurePoints = [];
+    }
+  }
+}
+
+window.setTool = function(tool) {
+  currentTool = tool;
+  document.querySelectorAll('.viewer-toolbar .tool-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + tool).classList.add('active');
+  controls.enabled = tool === 'rotate';
+  if (tool === 'measure') {
+    clearMeasurements();
+    document.getElementById('tool-info').textContent = '测距模式：点击模型表面选取两点';
+  } else {
+    document.getElementById('tool-info').textContent = selectedInstrument ? `${selectedInstrument.name} — ${selectedInstrument.type}` : '选择乐器查看3D模型';
+  }
+};
+
+window.toggleAnnotations = function() {
+  annotationsVisible = !annotationsVisible;
+  document.getElementById('btn-annotate').classList.toggle('active', annotationsVisible);
+  if (selectedInstrument) {
+    const box = new THREE.Box3().setFromObject(currentModel);
+    addAnnotations(selectedInstrument, box);
+  }
+};
+
+window.resetCamera = function() {
+  if (!currentModel) return;
+  const box = new THREE.Box3().setFromObject(currentModel);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const dist = maxDim * 2;
+  camera.position.set(center.x + dist * 0.6, center.y + dist * 0.4, center.z + dist * 0.8);
+  controls.target.copy(center);
+  controls.update();
+};
+
+window.exportExcel = function() {
+  const dynasty = document.getElementById('filter-dynasty').value;
+  const type = document.getElementById('filter-type').value;
+  const params = new URLSearchParams();
+  if (dynasty) params.set('dynasty', dynasty);
+  if (type) params.set('type', type);
+  window.open('/api/export?' + params.toString(), '_blank');
+};
+
+window.debounceSearch = function() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadInstruments(), 300);
+};
+
+async function loadFilters() {
+  const res = await fetch('/api/filters');
+  const data = await res.json();
+  const dynastySel = document.getElementById('filter-dynasty');
+  data.dynasties.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = d;
+    dynastySel.appendChild(opt);
+  });
+  const typeSel = document.getElementById('filter-type');
+  data.types.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    typeSel.appendChild(opt);
+  });
+}
+
+async function loadInstruments() {
+  const dynasty = document.getElementById('filter-dynasty').value;
+  const type = document.getElementById('filter-type').value;
+  const keyword = document.getElementById('filter-keyword').value;
+  const params = new URLSearchParams();
+  if (dynasty && dynasty !== '全部') params.set('dynasty', dynasty);
+  if (type && type !== '全部') params.set('type', type);
+  if (keyword) params.set('keyword', keyword);
+
+  const res = await fetch('/api/instruments?' + params.toString());
+  allInstruments = await res.json();
+  renderCards(allInstruments);
+}
+
+function renderCards(instruments) {
+  const list = document.getElementById('card-list');
+  if (instruments.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>未找到匹配的乐器<br>请调整筛选条件</p></div>';
+    return;
+  }
+  list.innerHTML = instruments.map(inst => `
+    <div class="instrument-card${selectedInstrument && selectedInstrument.id === inst.id ? ' active' : ''}" onclick="selectInstrument(${inst.id})">
+      <div class="card-header">
+        <h4>${inst.name}</h4>
+        <span class="card-type">${inst.type}</span>
+      </div>
+      <div class="card-meta">
+        <span>🏛 ${inst.dynasty}</span>
+        <span>📍 ${inst.excavation_site || '未知'}</span>
+      </div>
+      <div class="card-dims">高${inst.height_cm}cm × 宽${inst.width_cm}cm × 深${inst.depth_cm}cm</div>
+    </div>
+  `).join('');
+}
+
+window.selectInstrument = async function(id) {
+  const res = await fetch('/api/instruments/' + id);
+  const inst = await res.json();
+  selectedInstrument = inst;
+
+  document.querySelectorAll('.instrument-card').forEach(c => c.classList.remove('active'));
+  const cards = document.querySelectorAll('.instrument-card');
+  cards.forEach(c => {
+    if (c.querySelector('h4').textContent === inst.name) c.classList.add('active');
+  });
+
+  loadModel(inst);
+  renderDetail(inst);
+};
+
+function renderDetail(inst) {
+  const panel = document.getElementById('detail-panel');
+  const dimRows = (inst.dimensions || []).map(d => `<tr><th>${d.label}</th><td>${d.value_cm} cm</td></tr>`).join('');
+
+  panel.innerHTML = `
+    <div class="detail-content">
+      <h2>${inst.name}</h2>
+      <div class="detail-type">${inst.type} · ${inst.dynasty}</div>
+
+      <div class="detail-section">
+        <h3>基本信息</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+          <span class="tag">${inst.dynasty}</span>
+          <span class="tag">${inst.type}</span>
+          <span class="tag">${inst.material}</span>
+        </div>
+        <p>📍 出土地：${inst.excavation_site || '未知'}</p>
+      </div>
+
+      <div class="detail-section">
+        <h3>尺寸数据</h3>
+        <table class="dim-table">
+          ${dimRows}
+        </table>
+      </div>
+
+      <div class="detail-section">
+        <h3>纹饰描述</h3>
+        <p>${inst.decoration || '无'}</p>
+      </div>
+
+      <div class="detail-section">
+        <h3>详细说明</h3>
+        <p>${inst.description || '暂无'}</p>
+      </div>
+    </div>
+  `;
+}
+
+init();
+loadFilters();
+loadInstruments();
+document.getElementById('btn-annotate').classList.add('active');
+
+function createMiniInstrument(modelType, color) {
+  const group = new THREE.Group();
+  const s = 0.4;
+  if (modelType === 'bianzhong') {
+    const bodyGeo = new THREE.CylinderGeometry(s * 0.3, s * 0.25, s * 1.2, 12);
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.6 });
+    const body = new THREE.Mesh(bodyGeo, mat);
+    body.position.y = s * 0.6;
+    body.castShadow = true;
+    group.add(body);
+    const yongGeo = new THREE.CylinderGeometry(s * 0.08, s * 0.1, s * 0.2, 8);
+    const yong = new THREE.Mesh(yongGeo, mat);
+    yong.position.y = s * 1.3;
+    group.add(yong);
+    const boGeo = new THREE.TorusGeometry(s * 0.06, 0.02, 6, 12);
+    const bo = new THREE.Mesh(boGeo, mat);
+    bo.position.y = s * 1.4;
+    bo.rotation.x = Math.PI / 2;
+    group.add(bo);
+    const rackGeo = new THREE.BoxGeometry(s * 1.4, 0.04, 0.06);
+    const rackMat = new THREE.MeshStandardMaterial({ color: 0x3a1a00 });
+    const rack = new THREE.Mesh(rackGeo, rackMat);
+    rack.position.y = s * 1.5;
+    group.add(rack);
+    const poleGeo = new THREE.CylinderGeometry(0.03, 0.03, s * 2, 6);
+    [-0.6, 0.6].forEach(x => {
+      const pole = new THREE.Mesh(poleGeo, rackMat);
+      pole.position.set(x, s, 0);
+      group.add(pole);
+    });
+  } else if (modelType === 'teqing') {
+    const shape = new THREE.Shape();
+    shape.moveTo(0, 0);
+    shape.lineTo(s * 0.6, s * 0.4);
+    shape.lineTo(s * 0.15, s * 1.1);
+    shape.lineTo(-s * 0.15, s * 1.1);
+    shape.lineTo(-s * 0.6, s * 0.4);
+    shape.lineTo(0, 0);
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.01 });
+    geo.translate(0, 0, -0.025);
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.1 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow = true;
+    group.add(mesh);
+    const rackGeo = new THREE.BoxGeometry(s * 1.4, 0.04, 0.06);
+    const rackMat = new THREE.MeshStandardMaterial({ color: 0x3a1a00 });
+    const rack = new THREE.Mesh(rackGeo, rackMat);
+    rack.position.y = s * 1.2;
+    group.add(rack);
+    const poleGeo = new THREE.CylinderGeometry(0.03, 0.03, s * 1.4, 6);
+    [-0.6, 0.6].forEach(x => {
+      const pole = new THREE.Mesh(poleGeo, rackMat);
+      pole.position.set(x, s * 0.6, 0);
+      group.add(pole);
+    });
+  } else if (modelType === 'zhu') {
+    const boxGeo = new THREE.BoxGeometry(s * 0.8, s * 0.8, s * 0.8);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x1a0a00, roughness: 0.7, metalness: 0.2 });
+    const box = new THREE.Mesh(boxGeo, mat);
+    box.position.y = s * 0.4;
+    box.castShadow = true;
+    group.add(box);
+    const innerGeo = new THREE.BoxGeometry(s * 0.65, s * 0.6, s * 0.65);
+    const innerMat = new THREE.MeshStandardMaterial({ color: 0x8B0000 });
+    const inner = new THREE.Mesh(innerGeo, innerMat);
+    inner.position.y = s * 0.5;
+    group.add(inner);
+  } else if (modelType === 'yu') {
+    const bodyGeo = new THREE.BoxGeometry(s * 0.4, s * 0.5, s * 0.35);
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.3 });
+    const body = new THREE.Mesh(bodyGeo, mat);
+    body.position.y = s * 0.25;
+    body.castShadow = true;
+    group.add(body);
+    const headGeo = new THREE.SphereGeometry(s * 0.15, 12, 8);
+    const head = new THREE.Mesh(headGeo, mat);
+    head.position.set(s * 0.12, s * 0.55, 0);
+    head.scale.set(1.2, 0.9, 1);
+    group.add(head);
+    for (let i = 0; i < 5; i++) {
+      const toothGeo = new THREE.BoxGeometry(0.015, s * 0.12, s * 0.25);
+      const tooth = new THREE.Mesh(toothGeo, new THREE.MeshStandardMaterial({ color: 0x8B7500 }));
+      tooth.position.set(-s * 0.1 + i * 0.04, s * 0.45, 0);
+      group.add(tooth);
+    }
+  } else if (modelType === 'bofu') {
+    const r = s * 0.25;
+    const bodyGeo = new THREE.CylinderGeometry(r, r, s * 0.5, 16);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x8B0000, roughness: 0.4 });
+    const body = new THREE.Mesh(bodyGeo, mat);
+    body.position.y = s * 0.25;
+    body.castShadow = true;
+    group.add(body);
+    [-1, 1].forEach(side => {
+      const faceGeo = new THREE.CircleGeometry(r, 16);
+      const faceMat = new THREE.MeshStandardMaterial({ color: 0xDEB887, side: THREE.DoubleSide });
+      const face = new THREE.Mesh(faceGeo, faceMat);
+      face.rotation.x = side === 1 ? -Math.PI / 2 : Math.PI / 2;
+      face.position.y = side === 1 ? s * 0.5 : 0;
+      group.add(face);
+    });
+  } else if (modelType === 'hui') {
+    const poleGeo = new THREE.CylinderGeometry(0.025, 0.03, s * 2, 6);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x8B0000 });
+    const pole = new THREE.Mesh(poleGeo, mat);
+    pole.position.y = s;
+    pole.castShadow = true;
+    group.add(pole);
+    const headGeo = new THREE.SphereGeometry(0.06, 8, 6);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xC5A55A, metalness: 0.9 });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.y = s * 2;
+    group.add(head);
+    const flagGeo = new THREE.PlaneGeometry(0.35, 0.5);
+    const flagMat = new THREE.MeshStandardMaterial({ color: 0xDAA520, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
+    const flag = new THREE.Mesh(flagGeo, flagMat);
+    flag.position.set(0.2, s * 1.7, 0);
+    group.add(flag);
+  } else if (modelType === 'jingu') {
+    const r = s * 0.5;
+    const shellGeo = new THREE.CylinderGeometry(r, r * 0.95, s * 1.2, 24, 1, true);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x8B0000, roughness: 0.3, side: THREE.DoubleSide });
+    const shell = new THREE.Mesh(shellGeo, mat);
+    shell.position.y = s * 0.6;
+    shell.castShadow = true;
+    group.add(shell);
+    [-1, 1].forEach(side => {
+      const faceGeo = new THREE.CircleGeometry(r * (side === 1 ? 1 : 0.95), 24);
+      const faceMat = new THREE.MeshStandardMaterial({ color: 0xDEB887, side: THREE.DoubleSide });
+      const face = new THREE.Mesh(faceGeo, faceMat);
+      face.rotation.x = side === 1 ? -Math.PI / 2 : Math.PI / 2;
+      face.position.y = side === 1 ? s * 1.2 : 0;
+      group.add(face);
+    });
+    const standGeo = new THREE.BoxGeometry(s * 0.3, s * 0.5, s * 0.3);
+    const standMat = new THREE.MeshStandardMaterial({ color: 0x3a1a00 });
+    const stand = new THREE.Mesh(standGeo, standMat);
+    stand.position.y = -s * 0.2;
+    group.add(stand);
+  } else if (modelType === 'xun') {
+    const r = s * 0.2;
+    const bodyGeo = new THREE.SphereGeometry(r, 16, 12);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.7 });
+    const body = new THREE.Mesh(bodyGeo, mat);
+    body.scale.set(1, 1.2, 1);
+    body.position.y = s * 0.3;
+    body.castShadow = true;
+    group.add(body);
+    const blowGeo = new THREE.CylinderGeometry(r * 0.2, r * 0.3, r * 0.4, 8);
+    const blow = new THREE.Mesh(blowGeo, mat);
+    blow.position.y = s * 0.55;
+    group.add(blow);
+  }
+  return group;
+}
+
+function createRitualScene() {
+  const s = new THREE.Scene();
+  s.background = new THREE.Color(0x87CEEB);
+  s.fog = new THREE.FogExp2(0x87CEEB, 0.012);
+
+  const ambientLight = new THREE.AmbientLight(0xfff5e6, 0.6);
+  s.add(ambientLight);
+
+  const sunLight = new THREE.DirectionalLight(0xfff8e1, 1.5);
+  sunLight.position.set(20, 30, 10);
+  sunLight.castShadow = true;
+  sunLight.shadow.mapSize.width = 4096;
+  sunLight.shadow.mapSize.height = 4096;
+  sunLight.shadow.camera.left = -30;
+  sunLight.shadow.camera.right = 30;
+  sunLight.shadow.camera.top = 30;
+  sunLight.shadow.camera.bottom = -30;
+  s.add(sunLight);
+
+  const fillLight = new THREE.DirectionalLight(0x8899cc, 0.3);
+  fillLight.position.set(-10, 5, -15);
+  s.add(fillLight);
+
+  const groundGeo = new THREE.PlaneGeometry(80, 60);
+  const groundMat = new THREE.MeshStandardMaterial({ color: 0x8B7355, roughness: 0.95 });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  s.add(ground);
+
+  const courtGeo = new THREE.PlaneGeometry(24, 18);
+  const courtMat = new THREE.MeshStandardMaterial({ color: 0xA0916B, roughness: 0.8 });
+  const court = new THREE.Mesh(courtGeo, courtMat);
+  court.rotation.x = -Math.PI / 2;
+  court.position.y = 0.01;
+  court.receiveShadow = true;
+  s.add(court);
+
+  for (let i = -3; i <= 3; i++) {
+    const lineGeo = new THREE.PlaneGeometry(0.05, 18);
+    const lineMat = new THREE.MeshStandardMaterial({ color: 0x907B5A, side: THREE.DoubleSide });
+    const line = new THREE.Mesh(lineGeo, lineMat);
+    line.rotation.x = -Math.PI / 2;
+    line.position.set(i * 3, 0.02, 0);
+    s.add(line);
+  }
+
+  const hallGroup = new THREE.Group();
+  const hallBaseGeo = new THREE.BoxGeometry(20, 1.2, 10);
+  const hallBaseMat = new THREE.MeshStandardMaterial({ color: 0x8B8682, roughness: 0.8 });
+  const hallBase = new THREE.Mesh(hallBaseGeo, hallBaseMat);
+  hallBase.position.set(0, 0.6, -10);
+  hallBase.receiveShadow = true;
+  hallBase.castShadow = true;
+  hallGroup.add(hallBase);
+
+  const hallStepsGeo = new THREE.BoxGeometry(20, 0.2, 3);
+  const hallSteps = new THREE.Mesh(hallStepsGeo, hallBaseMat);
+  hallSteps.position.set(0, 0.1, -4.5);
+  hallSteps.receiveShadow = true;
+  hallGroup.add(hallSteps);
+
+  const hallBodyGeo = new THREE.BoxGeometry(18, 6, 8);
+  const hallBodyMat = new THREE.MeshStandardMaterial({ color: 0x8B0000, roughness: 0.5 });
+  const hallBody = new THREE.Mesh(hallBodyGeo, hallBodyMat);
+  hallBody.position.set(0, 4.2, -10);
+  hallBody.castShadow = true;
+  hallGroup.add(hallBody);
+
+  const roofGeo = new THREE.ConeGeometry(14, 4, 4);
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x2F4F2F, roughness: 0.7 });
+  const roof = new THREE.Mesh(roofGeo, roofMat);
+  roof.position.set(0, 9.2, -10);
+  roof.rotation.y = Math.PI / 4;
+  roof.castShadow = true;
+  hallGroup.add(roof);
+
+  const roofRidgeGeo = new THREE.BoxGeometry(14, 0.3, 0.3);
+  const ridgeMat = new THREE.MeshStandardMaterial({ color: 0xC5A55A, metalness: 0.5 });
+  [-1, 1].forEach(side => {
+    const ridge = new THREE.Mesh(roofRidgeGeo, ridgeMat);
+    ridge.position.set(0, 10.8, -10 + side * 5);
+    ridge.rotation.y = 0;
+    hallGroup.add(ridge);
+  });
+
+  for (let i = -3; i <= 3; i++) {
+    const pillarGeo = new THREE.CylinderGeometry(0.25, 0.25, 6, 12);
+    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x8B0000, roughness: 0.3 });
+    const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+    pillar.position.set(i * 2.5, 4.2, -5.8);
+    pillar.castShadow = true;
+    hallGroup.add(pillar);
+  }
+
+  s.add(hallGroup);
+
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xE8DCC8, roughness: 0.8 });
+  [-1, 1].forEach(side => {
+    const wallGeo = new THREE.BoxGeometry(0.4, 3, 14);
+    const wall = new THREE.Mesh(wallGeo, wallMat);
+    wall.position.set(side * 14, 1.5, -3);
+    wall.castShadow = true;
+    s.add(wall);
+  });
+
+  [-1, 1].forEach(side => {
+    const gateGeo = new THREE.BoxGeometry(6, 4, 0.4);
+    const gateMat = new THREE.MeshStandardMaterial({ color: 0x8B0000 });
+    const gate = new THREE.Mesh(gateGeo, gateMat);
+    gate.position.set(side * 14, 2, 4);
+    s.add(gate);
+    const gateRoofGeo = new THREE.BoxGeometry(7, 0.3, 2);
+    const gateRoof = new THREE.Mesh(gateRoofGeo, new THREE.MeshStandardMaterial({ color: 0x2F4F2F }));
+    gateRoof.position.set(side * 14, 4.15, 4);
+    s.add(gateRoof);
+  });
+
+  const incenseGeo = new THREE.CylinderGeometry(0.3, 0.4, 2, 16);
+  const incenseMat = new THREE.MeshStandardMaterial({ color: 0x5C5C5C, metalness: 0.7 });
+  const incense = new THREE.Mesh(incenseGeo, incenseMat);
+  incense.position.set(0, 1, -3);
+  incense.castShadow = true;
+  s.add(incense);
+  const incenseLidGeo = new THREE.SphereGeometry(0.35, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+  const incenseLid = new THREE.Mesh(incenseLidGeo, incenseMat);
+  incenseLid.position.set(0, 2, -3);
+  s.add(incenseLid);
+
+  const placementConfig = [
+    { type: 'bianzhong', label: '编钟（东悬）', x: -4, z: 2, rotY: 0, color: 0x5C6B3C },
+    { type: 'bianzhong', label: '编钟（东悬）', x: -4, z: 5, rotY: 0, color: 0x5C6B3C },
+    { type: 'teqing', label: '特磬（西悬）', x: 4, z: 2, rotY: Math.PI, color: 0x8B8682 },
+    { type: 'teqing', label: '特磬（西悬）', x: 4, z: 5, rotY: Math.PI, color: 0x8B8682 },
+    { type: 'zhu', label: '柷（东序）', x: -2, z: 1, rotY: 0, color: 0x1a0a00 },
+    { type: 'yu', label: '敔（西序）', x: 2, z: 1, rotY: Math.PI, color: 0xB8860B },
+    { type: 'bofu', label: '搏拊', x: -1, z: 3, rotY: 0, color: 0x8B0000 },
+    { type: 'bofu', label: '搏拊', x: 1, z: 3, rotY: 0, color: 0x8B0000 },
+    { type: 'jingu', label: '晋鼓', x: 0, z: 6, rotY: 0, color: 0x8B0000 },
+    { type: 'hui', label: '麾', x: 0, z: 2, rotY: 0, color: 0x8B0000 },
+    { type: 'xun', label: '埙', x: -2.5, z: 3, rotY: 0, color: 0x8B4513 },
+    { type: 'xun', label: '埙', x: 2.5, z: 3, rotY: 0, color: 0x8B4513 },
+  ];
+
+  const typeColorMap = {
+    bianzhong: '#5C6B3C',
+    teqing: '#8B8682',
+    zhu: '#1a0a00',
+    yu: '#B8860B',
+    bofu: '#8B0000',
+    jingu: '#8B0000',
+    hui: '#DAA520',
+    xun: '#8B4513',
+  };
+
+  const legendEl = document.getElementById('vr-legend');
+  legendEl.innerHTML = '';
+  const legendTypes = [...new Set(placementConfig.map(p => p.type))];
+  legendTypes.forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'vr-legend-item';
+    item.innerHTML = `<span class="vr-legend-dot" style="background:${typeColorMap[t]}"></span>${placementConfig.find(p => p.type === t).label.split('（')[0]}`;
+    legendEl.appendChild(item);
+  });
+
+  vrInstrumentLabels = [];
+  placementConfig.forEach(cfg => {
+    const inst = createMiniInstrument(cfg.type, cfg.color);
+    inst.position.set(cfg.x, 0, cfg.z);
+    inst.rotation.y = cfg.rotY;
+    s.add(inst);
+
+    const labelDiv = document.createElement('div');
+    labelDiv.style.cssText = 'background:rgba(0,0,0,0.75);color:#C5A55A;padding:3px 10px;border-radius:4px;font-size:11px;font-family:"Noto Serif SC",serif;white-space:nowrap;pointer-events:none;border:1px solid rgba(197,165,90,0.3)';
+    labelDiv.textContent = cfg.label;
+    const labelObj = new CSS2DObject(labelDiv);
+    const box = new THREE.Box3().setFromObject(inst);
+    labelObj.position.set(cfg.x, box.max.y + 0.3, cfg.z);
+    s.add(labelObj);
+    vrInstrumentLabels.push(labelObj);
+
+    const spotGeo = new THREE.CircleGeometry(0.4, 16);
+    const spotMat = new THREE.MeshStandardMaterial({ color: 0xC5A55A, transparent: true, opacity: 0.15, side: THREE.DoubleSide });
+    const spot = new THREE.Mesh(spotGeo, spotMat);
+    spot.rotation.x = -Math.PI / 2;
+    spot.position.set(cfg.x, 0.02, cfg.z);
+    s.add(spot);
+  });
+
+  const performerMat = new THREE.MeshStandardMaterial({ color: 0x2C1810 });
+  const robeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+  const performerPositions = [
+    { x: -4.5, z: 2.5 }, { x: -4.5, z: 5.5 },
+    { x: 4.5, z: 2.5 }, { x: 4.5, z: 5.5 },
+    { x: -2.5, z: 1.5 }, { x: 2.5, z: 1.5 },
+    { x: -1.5, z: 3.5 }, { x: 1.5, z: 3.5 },
+    { x: 0, z: 7 },
+    { x: -3, z: 3.5 }, { x: 3, z: 3.5 },
+  ];
+  performerPositions.forEach(pos => {
+    const pGroup = new THREE.Group();
+    const bodyGeo = new THREE.CylinderGeometry(0.2, 0.25, 1.2, 8);
+    const body = new THREE.Mesh(bodyGeo, robeMat);
+    body.position.y = 0.6;
+    body.castShadow = true;
+    pGroup.add(body);
+    const headGeo = new THREE.SphereGeometry(0.15, 8, 6);
+    const head = new THREE.Mesh(headGeo, performerMat);
+    head.position.y = 1.35;
+    pGroup.add(head);
+    const hatGeo = new THREE.CylinderGeometry(0.18, 0.2, 0.12, 8);
+    const hatMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+    const hat = new THREE.Mesh(hatGeo, hatMat);
+    hat.position.y = 1.52;
+    pGroup.add(hat);
+    pGroup.position.set(pos.x, 0, pos.z);
+    pGroup.lookAt(0, 0, -3);
+    s.add(pGroup);
+  });
+
+  return s;
+}
+
+function vrAnimate() {
+  if (!vrActive) return;
+  vrAnimId = requestAnimationFrame(vrAnimate);
+
+  const moveSpeed = 0.08;
+  const direction = new THREE.Vector3();
+  const forward = new THREE.Vector3();
+  forward.setFromMatrixColumn(vrCamera.matrixWorld, 2);
+  forward.y = 0;
+  forward.normalize();
+  const right = new THREE.Vector3();
+  right.setFromMatrixColumn(vrCamera.matrixWorld, 0);
+  right.y = 0;
+  right.normalize();
+
+  if (vrKeys['w'] || vrKeys['arrowup']) direction.add(forward);
+  if (vrKeys['s'] || vrKeys['arrowdown']) direction.sub(forward);
+  if (vrKeys['d'] || vrKeys['arrowright']) direction.add(right);
+  if (vrKeys['a'] || vrKeys['arrowleft']) direction.sub(right);
+
+  if (direction.length() > 0) {
+    direction.normalize().multiplyScalar(moveSpeed);
+    vrCamera.position.add(direction);
+    vrCamera.position.y = 1.65;
+    vrCamera.position.x = Math.max(-20, Math.min(20, vrCamera.position.x));
+    vrCamera.position.z = Math.max(-10, Math.min(18, vrCamera.position.z));
+  }
+
+  const container = document.getElementById('three-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+
+  const eyeSep = 0.064;
+  const halfW = w / 2;
+
+  renderer.setScissorTest(true);
+
+  vrCamera.position.x -= eyeSep / 2;
+  vrCamera.updateMatrixWorld();
+  renderer.setViewport(0, 0, halfW, h);
+  renderer.setScissor(0, 0, halfW, h);
+  renderer.render(vrScene, vrCamera);
+  vrCamera.position.x += eyeSep;
+
+  vrCamera.position.x += eyeSep / 2;
+  vrCamera.updateMatrixWorld();
+  renderer.setViewport(halfW, 0, halfW, h);
+  renderer.setScissor(halfW, 0, halfW, h);
+  renderer.render(vrScene, vrCamera);
+  vrCamera.position.x -= eyeSep / 2;
+
+  renderer.setScissorTest(false);
+
+  labelRenderer.render(vrScene, vrCamera);
+}
+
+window.toggleVR = function() {
+  if (vrActive) {
+    exitVR();
+  } else {
+    enterVR();
+  }
+};
+
+function enterVR() {
+  vrActive = true;
+  vrSavedState = {
+    camPos: camera.position.clone(),
+    camTarget: controls.target.clone(),
+    bg: scene.background.clone(),
+  };
+
+  document.getElementById('vr-overlay').classList.add('show');
+  document.getElementById('btn-vr').classList.add('active');
+  document.getElementById('tool-info').textContent = '祭祀场景 · 第一人称VR浏览';
+
+  document.querySelector('.sidebar').style.display = 'none';
+  document.querySelector('.detail-panel').style.display = 'none';
+
+  vrScene = createRitualScene();
+  vrCamera = new THREE.PerspectiveCamera(75, (renderer.domElement.clientWidth / 2) / renderer.domElement.clientHeight, 0.1, 500);
+  vrCamera.position.set(0, 1.65, 12);
+  vrYaw = 0;
+  vrPitch = 0;
+
+  scene.visible = false;
+  if (currentModel) currentModel.visible = false;
+
+  vrKeys = {};
+  document.addEventListener('keydown', vrKeyDown);
+  document.addEventListener('keyup', vrKeyUp);
+  document.addEventListener('mousemove', vrMouseMove);
+  document.addEventListener('pointerlockchange', vrPointerLockChange);
+
+  const container = document.getElementById('three-container');
+  container.addEventListener('click', vrRequestPointerLock);
+
+  vrAnimate();
+}
+
+function exitVR() {
+  vrActive = false;
+  if (vrAnimId) cancelAnimationFrame(vrAnimId);
+
+  document.getElementById('vr-overlay').classList.remove('show');
+  document.getElementById('btn-vr').classList.remove('active');
+
+  document.querySelector('.sidebar').style.display = '';
+  document.querySelector('.detail-panel').style.display = '';
+
+  if (document.pointerLockElement) document.exitPointerLock();
+
+  document.removeEventListener('keydown', vrKeyDown);
+  document.removeEventListener('keyup', vrKeyUp);
+  document.removeEventListener('mousemove', vrMouseMove);
+  document.removeEventListener('pointerlockchange', vrPointerLockChange);
+
+  const container = document.getElementById('three-container');
+  container.removeEventListener('click', vrRequestPointerLock);
+
+  renderer.setScissorTest(false);
+  renderer.setViewport(0, 0, renderer.domElement.clientWidth, renderer.domElement.clientHeight);
+
+  scene.visible = true;
+  if (currentModel) currentModel.visible = true;
+  if (vrSavedState) {
+    camera.position.copy(vrSavedState.camPos);
+    controls.target.copy(vrSavedState.camTarget);
+    controls.update();
+  }
+
+  if (selectedInstrument) {
+    document.getElementById('tool-info').textContent = `${selectedInstrument.name} — ${selectedInstrument.type}`;
+  } else {
+    document.getElementById('tool-info').textContent = '选择乐器查看3D模型';
+  }
+
+  if (vrScene) {
+    vrScene.traverse(child => {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+        else child.material.dispose();
+      }
+    });
+    vrInstrumentLabels.forEach(l => {
+      vrScene.remove(l);
+      if (l.element && l.element.parentNode) l.element.parentNode.removeChild(l.element);
+    });
+    vrInstrumentLabels = [];
+    vrScene = null;
+  }
+  vrCamera = null;
+}
+
+function vrKeyDown(e) {
+  vrKeys[e.key.toLowerCase()] = true;
+  if (e.key === 'Escape' && vrActive) {
+    if (document.pointerLockElement) {
+      document.exitPointerLock();
+    } else {
+      exitVR();
+    }
+  }
+}
+
+function vrKeyUp(e) {
+  vrKeys[e.key.toLowerCase()] = false;
+}
+
+function vrMouseMove(e) {
+  if (!vrPointerLocked || !vrActive) return;
+  const sensitivity = 0.002;
+  vrYaw -= e.movementX * sensitivity;
+  vrPitch -= e.movementY * sensitivity;
+  vrPitch = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, vrPitch));
+
+  vrCamera.rotation.order = 'YXZ';
+  vrCamera.rotation.y = vrYaw;
+  vrCamera.rotation.x = vrPitch;
+}
+
+function vrPointerLockChange() {
+  vrPointerLocked = !!document.pointerLockElement;
+}
+
+function vrRequestPointerLock() {
+  if (vrActive && !document.pointerLockElement) {
+    renderer.domElement.requestPointerLock();
+  }
+}
+</script>
+</body>
+</html>

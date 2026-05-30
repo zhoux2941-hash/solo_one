@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>苏州园林假山设计辅助系统</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>苏州园林假山设计辅助系统</h1>
+            <p class="subtitle">传统掇山工艺 · 现代工程计算 · 三维可视化预览</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="main-layout">
+            <section class="panel left-panel">
+                <div class="card">
+                    <h2>假山设计参数</h2>
+                    
+                    <div class="form-group">
+                        <label for="stoneType">山体类型</label>
+                        <select id="stoneType" class="form-control">
+                            <option value="hushi">湖石 - 太湖石，瘦皱漏透</option>
+                            <option value="huangshi">黄石 - 质地坚硬，棱角分明</option>
+                            <option value="qingshi">青石 - 质地细腻，色泽青灰</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="area">占地投影面积 (m²)</label>
+                        <input type="number" id="area" class="form-control" value="20" min="1" step="0.5" placeholder="请输入投影面积">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="height">预期高度 (m)</label>
+                        <input type="number" id="height" class="form-control" value="3" min="0.5" step="0.1" placeholder="请输入预期高度">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="shapeFactor">山形系数 <small id="shapeFactorLabel">(平缓→陡峭)</small></label>
+                        <input type="range" id="shapeFactor" class="slider" min="0.5" max="5" value="2" step="0.1">
+                        <div class="slider-value">当前值: <span id="shapeFactorValue">2.0</span></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="revetmentType">理水驳岸样式</label>
+                        <select id="revetmentType" class="form-control">
+                            <option value="taihu_revetment">太湖石驳岸 - 瘦皱漏透，曲岸回环</option>
+                            <option value="huangshi_revetment">黄石驳岸 - 棱角分明，刚劲有力</option>
+                            <option value="natural_slope">自然土坡 - 草坡入水，野趣天然</option>
+                        </select>
+                    </div>
+
+                    <button id="calculateBtn" class="btn btn-primary">计算方量与造价</button>
+                </div>
+
+                <div class="card" id="resultCard" style="display: none;">
+                    <h2>计算结果</h2>
+                    <div class="result-section">
+                        <h3>分块积分法计算</h3>
+                        <div class="formula-box">
+                            <p class="formula" id="calculationMethod">V = ΣΣ h(x,y) × ΔS × 孔隙率</p>
+                            <p class="formula-detail" id="formulaDetail"></p>
+                        </div>
+                        <div class="comparison-box" id="comparisonBox" style="margin-top: 12px; display: none;">
+                            <p style="font-size: 12px; color: #666; margin-bottom: 6px;">与简化公式对比：</p>
+                            <div style="display: flex; gap: 12px; font-size: 12px;">
+                                <span>简化法: <strong id="simpleVolume" style="color: #999;">0</strong> m³</span>
+                                <span>积分法: <strong id="integrationVolume" style="color: #2c5530;">0</strong> m³</span>
+                                <span>差异: <strong id="volumeDiff" style="color: #e67e22;">0%</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-section">
+                        <h3>石料方量</h3>
+                        <div class="result-grid">
+                            <div class="result-item">
+                                <span class="label">实体方量</span>
+                                <span class="value" id="solidVolume">0 m³</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="label">堆砌总体积</span>
+                                <span class="value" id="grossVolume">0 m³</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="label">石料总重</span>
+                                <span class="value" id="stoneWeight">0 kg</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="label">孔隙率系数</span>
+                                <span class="value" id="porosity">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-section">
+                        <h3>造价估算</h3>
+                        <div class="result-grid">
+                            <div class="result-item">
+                                <span class="label">石料单价</span>
+                                <span class="value" id="pricePerCubic">0 元/m³</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="label">石料费用</span>
+                                <span class="value" id="materialCost">0 元</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="label">人工费用</span>
+                                <span class="value" id="laborCost">0 元</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="label">运输费用</span>
+                                <span class="value" id="transportCost">0 元</span>
+                            </div>
+                            <div class="result-item total">
+                                <span class="label">总计造价</span>
+                                <span class="value" id="totalCost">0 元</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-section" id="revetmentSection">
+                        <h3>驳岸工程</h3>
+                        <div class="result-grid">
+                            <div class="result-item">
+                                <span class="label">驳岸类型</span>
+                                <span class="value" id="revetmentName">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="label">驳岸长度</span>
+                                <span class="value" id="revetmentLength">0 m</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="label">驳岸石料方量</span>
+                                <span class="value" id="revetmentVolume">0 m³</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="label">驳岸造价</span>
+                                <span class="value" id="revetmentCost">0 元</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>瀑布水景设计</h2>
+                    <div class="form-group">
+                        <label for="flowRate">水流量 (m³/h)</label>
+                        <input type="range" id="flowRate" class="slider" min="0.5" max="20" value="5" step="0.1">
+                        <div class="slider-value">当前值: <span id="flowRateValue">5.0</span> m³/h</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dropHeight">落差高度 (m)</label>
+                        <input type="range" id="dropHeight" class="slider" min="1" max="10" value="3" step="0.1">
+                        <div class="slider-value">当前值: <span id="dropHeightValue">3.0</span> m</div>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="calcSpectrumBtn" class="btn btn-secondary">计算频谱</button>
+                        <button id="playSoundBtn" class="btn btn-accent">播放白噪音</button>
+                        <button id="stopSoundBtn" class="btn btn-danger" style="display: none;">停止播放</button>
+                    </div>
+                </div>
+
+                <div class="card" id="spectrumCard" style="display: none;">
+                    <h2>瀑布声频谱分析</h2>
+                    <div class="spectrum-bars">
+                        <div class="spectrum-bar">
+                            <div class="bar-label">低频<br>(20-250Hz)</div>
+                            <div class="bar-container">
+                                <div class="bar-fill bar-low" id="barLow"></div>
+                            </div>
+                            <div class="bar-value" id="barLowValue">0%</div>
+                        </div>
+                        <div class="spectrum-bar">
+                            <div class="bar-label">中频<br>(250-1000Hz)</div>
+                            <div class="bar-container">
+                                <div class="bar-fill bar-mid" id="barMid"></div>
+                            </div>
+                            <div class="bar-value" id="barMidValue">0%</div>
+                        </div>
+                        <div class="spectrum-bar">
+                            <div class="bar-label">高频<br>(1000-4000Hz)</div>
+                            <div class="bar-container">
+                                <div class="bar-fill bar-high" id="barHigh"></div>
+                            </div>
+                            <div class="bar-value" id="barHighValue">0%</div>
+                        </div>
+                    </div>
+                    <div class="spectrum-info">
+                        <p>冲击速度: <span id="impactVelocity">0</span> m/s</p>
+                        <p>总声压级: <span id="totalSpl">0</span> dB</p>
+                        <p>中心频率: <span id="centerFreq">0</span> Hz</p>
+                    </div>
+                </div>
+
+                <button id="exportPdfBtn" class="btn btn-success btn-block">导出设计方案PDF</button>
+            </section>
+
+            <section class="panel right-panel">
+                <div class="card canvas-card">
+                    <h2>3D 假山预览</h2>
+                    <div id="threejs-container"></div>
+                    <div class="canvas-controls">
+                        <button id="regenerateBtn" class="btn btn-secondary">重新生成</button>
+                        <button id="toggleWireframeBtn" class="btn btn-secondary">线框模式</button>
+                        <button id="autoRotateBtn" class="btn btn-accent">自动旋转</button>
+                    </div>
+                    <p class="hint">提示：鼠标拖动旋转视角，滚轮缩放</p>
+                </div>
+
+                <div class="card">
+                    <h3>石料特性</h3>
+                    <div id="stoneDescription" class="stone-desc">
+                        湖石：太湖石，又名窟窿石，以造型取胜，具有瘦、皱、漏、透的特点
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>苏州园林假山设计辅助系统 | 依据《园冶》掇山理论 | © 2026</p>
+    </footer>
+
+    <script src="/static/js/rockery.js"></script>
+</body>
+</html>

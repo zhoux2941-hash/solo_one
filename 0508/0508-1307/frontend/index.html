@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>古代星表可视化工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        #control-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(20, 30, 50, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(100, 150, 255, 0.3);
+            width: 300px;
+            z-index: 100;
+        }
+
+        #control-panel h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #8df;
+            text-align: center;
+            border-bottom: 1px solid #456;
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 12px;
+            color: #9ab;
+            margin-bottom: 5px;
+        }
+
+        .control-group select,
+        .control-group input {
+            width: 100%;
+            padding: 8px;
+            background: rgba(40, 60, 80, 0.8);
+            border: 1px solid #456;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .control-group select:focus,
+        .control-group input:focus {
+            outline: none;
+            border-color: #6af;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #369, #47a);
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #47a, #58b);
+            transform: translateY(-2px);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #565, #676);
+        }
+
+        .btn.secondary:hover {
+            background: linear-gradient(135deg, #676, #787);
+        }
+
+        #info-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(20, 30, 50, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(100, 150, 255, 0.3);
+            width: 300px;
+            z-index: 100;
+            display: none;
+        }
+
+        #info-panel.visible {
+            display: block;
+        }
+
+        #info-panel h3 {
+            font-size: 16px;
+            color: #8df;
+            margin-bottom: 10px;
+        }
+
+        #info-panel p {
+            font-size: 12px;
+            color: #abc;
+            margin: 5px 0;
+        }
+
+        #legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(20, 30, 50, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(100, 150, 255, 0.3);
+            z-index: 100;
+        }
+
+        #legend h4 {
+            font-size: 14px;
+            color: #8df;
+            margin-bottom: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 12px;
+            color: #abc;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        #search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(30, 40, 60, 0.95);
+            border: 1px solid #456;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 200;
+        }
+
+        #search-results.visible {
+            display: block;
+        }
+
+        .search-result {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #345;
+            font-size: 13px;
+        }
+
+        .search-result:hover {
+            background: rgba(100, 150, 255, 0.2);
+        }
+
+        .search-result .name {
+            color: #8df;
+            font-weight: bold;
+        }
+
+        .search-result .detail {
+            color: #89a;
+            font-size: 11px;
+        }
+
+        #mercator-container {
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        #mercator-container.visible {
+            display: block;
+        }
+
+        #mercator-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+        }
+
+        #export-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 30, 50, 0.95);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 40px rgba(100, 150, 255, 0.4);
+            z-index: 300;
+            width: 400px;
+            display: none;
+        }
+
+        #export-modal.visible {
+            display: block;
+        }
+
+        #export-modal h3 {
+            font-size: 16px;
+            color: #8df;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 24px;
+            background: rgba(40, 60, 80, 0.8);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #369, #6af);
+            border-radius: 12px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 13px;
+            color: #9ab;
+            margin-bottom: 10px;
+        }
+
+        .batch-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .batch-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 10px;
+            border-bottom: 1px solid #234;
+            font-size: 12px;
+            color: #89a;
+        }
+
+        .batch-item .status {
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .batch-item .status.pending {
+            background: rgba(100, 100, 100, 0.3);
+            color: #999;
+        }
+
+        .batch-item .status.downloading {
+            background: rgba(100, 150, 255, 0.3);
+            color: #6af;
+        }
+
+        .batch-item .status.done {
+            background: rgba(80, 200, 80, 0.3);
+            color: #6d6;
+        }
+
+        .batch-item .status.error {
+            background: rgba(255, 80, 80, 0.3);
+            color: #f66;
+        }
+
+        .export-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .export-actions .btn {
+            flex: 1;
+        }
+
+        .btn.cancel {
+            background: linear-gradient(135deg, #643, #753);
+        }
+
+        .btn.cancel:hover {
+            background: linear-gradient(135deg, #753, #864);
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="canvas-container"></div>
+        <div id="mercator-container">
+            <canvas id="mercator-canvas"></canvas>
+        </div>
+
+        <div id="control-panel">
+            <h2>⭐ 古代星表可视化</h2>
+            
+            <div class="control-group">
+                <label>观测年份</label>
+                <select id="year-select">
+                    <option value="137">公元137年（托勒密时代）</option>
+                    <option value="1000">公元1000年</option>
+                    <option value="1500">公元1500年</option>
+                    <option value="1800">公元1800年</option>
+                    <option value="1900">公元1900年</option>
+                    <option value="2000">公元2000年</option>
+                    <option value="2024" selected>公元2024年</option>
+                    <option value="2100">公元2100年</option>
+                    <option value="3000">公元3000年</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>投影模式</label>
+                <select id="projection-select">
+                    <option value="sphere" selected>球面投影（3D天球）</option>
+                    <option value="mercator">墨卡托投影（2D平面）</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>搜索星名</label>
+                <input type="text" id="search-input" placeholder="输入中文星名、拉丁名或星座...">
+                <div id="search-results"></div>
+            </div>
+
+            <div class="control-group checkbox-group">
+                <input type="checkbox" id="show-constellations" checked>
+                <label for="show-constellations">显示星座连线</label>
+            </div>
+
+            <div class="control-group checkbox-group">
+                <input type="checkbox" id="show-labels" checked>
+                <label for="show-labels">显示星名</label>
+            </div>
+
+            <div class="control-group" style="margin-top:5px;">
+                <label style="margin-bottom:8px;">场景图层控制</label>
+                <div class="checkbox-group" style="margin-bottom:6px;">
+                    <input type="checkbox" id="show-layer-background" checked>
+                    <label for="show-layer-background" style="display:flex;align-items:center;gap:5px;">
+                        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#556;box-shadow:0 0 3px #556;"></span>
+                        背景星空 (3000颗)
+                    </label>
+                </div>
+                <div class="checkbox-group" style="margin-bottom:6px;">
+                    <input type="checkbox" id="show-layer-ancient" checked>
+                    <label for="show-layer-ancient" style="display:flex;align-items:center;gap:5px;">
+                        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ccf;box-shadow:0 0 5px #88f;"></span>
+                        古代星表 (步天歌)
+                    </label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="show-layer-modern" checked>
+                    <label for="show-layer-modern" style="display:flex;align-items:center;gap:5px;">
+                        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4d8;box-shadow:0 0 5px #4d8;"></span>
+                        现代星表 (J2000.0)
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn" id="reset-view">重置视角</button>
+            <button class="btn secondary" id="export-csv">导出星表CSV</button>
+        </div>
+
+        <div id="info-panel">
+            <h3 id="star-name">恒星信息</h3>
+            <p>赤经: <span id="star-ra">-</span></p>
+            <p>赤纬: <span id="star-dec">-</span></p>
+            <p>星等: <span id="star-mag">-</span></p>
+            <p>星座: <span id="star-constellation">-</span></p>
+            <p>拜耳命名: <span id="star-bayer">-</span></p>
+        </div>
+
+        <div id="legend">
+            <h4>图层图例</h4>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #556; width: 6px; height: 6px;"></div>
+                <span>背景星空 (暗弱)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fff; box-shadow: 0 0 10px #fff;"></div>
+                <span>古代星表 · 0等</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ccf; width: 10px; height: 10px;"></div>
+                <span>古代星表 · 1-3等</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4d8; width: 10px; height: 10px; box-shadow: 0 0 5px #4d8;"></div>
+                <span>现代星表 (J2000.0)</span>
+            </div>
+            <div class="legend-item" style="margin-top:5px;padding-top:5px;border-top:1px solid #345;">
+                <div class="legend-color" style="background: #48f; width: 12px; height: 2px; border-radius: 1px;"></div>
+                <span>星座连线</span>
+            </div>
+        </div>
+
+        <div id="export-modal">
+            <h3>📥 批量导出星表CSV</h3>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="export-progress-fill"></div>
+            </div>
+            <div class="progress-text" id="export-progress-text">准备中...</div>
+            <div class="batch-list" id="batch-list"></div>
+            <div class="export-actions">
+                <button class="btn cancel" id="export-cancel">取消</button>
+                <button class="btn" id="export-download-all" disabled>合并下载全部</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

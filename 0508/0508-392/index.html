@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>藏式坛城沙画设计辅助系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid #d4af37;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #d4af37;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .control-panel {
+            width: 320px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .control-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .control-panel::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 3px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #d4af37;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: #d4af37;
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: #ccc;
+            margin-bottom: 6px;
+        }
+
+        select, input[type="range"] {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #d4af37;
+        }
+
+        .color-picker-group {
+            margin-bottom: 10px;
+        }
+
+        .color-picker-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .color-picker-label span {
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        .color-input-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        input[type="color"] {
+            width: 50px;
+            height: 35px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        .color-hex {
+            flex: 1;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .preset-colors {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .preset-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .preset-color:hover {
+            transform: scale(1.15);
+            border-color: #fff;
+        }
+
+        .preset-schemes {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .preset-scheme {
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .preset-scheme:hover {
+            border-color: #d4af37;
+            transform: translateY(-2px);
+        }
+
+        .preset-scheme.active {
+            border-color: #d4af37;
+            background: rgba(212, 175, 55, 0.2);
+        }
+
+        .preset-scheme-name {
+            font-size: 12px;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .preset-scheme-colors {
+            display: flex;
+            justify-content: center;
+            gap: 3px;
+        }
+
+        .preset-scheme-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .canvas-wrapper {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #d4af37;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+        }
+
+        #mandalaCanvas {
+            display: block;
+            background: #1a1a1a;
+            border-radius: 8px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #d4af37, #b8941f);
+            color: #1a1a1a;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #d4af37;
+        }
+
+        .filter-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.3);
+            transition: .3s;
+            border-radius: 26px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #d4af37;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .toggle-label {
+            font-size: 13px;
+            color: #ccc;
+        }
+
+        .slider-value {
+            display: inline-block;
+            width: 40px;
+            text-align: right;
+            font-size: 12px;
+            color: #d4af37;
+        }
+
+        .mandala-info {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #aaa;
+            line-height: 1.6;
+        }
+
+        .mandala-info h4 {
+            color: #d4af37;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+            }
+            .control-panel {
+                width: 100%;
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏔️ 藏式坛城沙画设计辅助系统</h1>
+        <p>Tibetan Mandala Sand Art Designer - 传承千年的佛教艺术</p>
+    </div>
+
+    <div class="container">
+        <div class="control-panel">
+            <div class="section">
+                <div class="section-title">坛城类型</div>
+                <div class="form-group">
+                    <label for="mandalaType">选择坛城</label>
+                    <select id="mandalaType">
+                        <option value="kalachakra">时轮金刚坛城</option>
+                        <option value="chakrasamvara">胜乐金刚坛城</option>
+                        <option value="vajrabhairava">大威德金刚坛城</option>
+                        <option value="mahamaya">幻变坛城</option>
+                    </select>
+                </div>
+                <div class="mandala-info" id="mandalaInfo">
+                    <h4>时轮金刚坛城</h4>
+                    <p>时轮金刚坛城是藏传佛教中最复杂的坛城之一，代表宇宙的结构和时间的循环。</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">几何图样</div>
+                <div class="form-group">
+                    <label for="patternType">基础图样</label>
+                    <select id="patternType">
+                        <option value="circle">圆轮</option>
+                        <option value="square">方城</option>
+                        <option value="lotus">八叶莲花</option>
+                        <option value="mixed">复合图样</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="symmetry">
+                        对称数: <span class="slider-value" id="symmetryValue">8</span>
+                    </label>
+                    <input type="range" id="symmetry" min="4" max="16" value="8" step="2">
+                </div>
+                <div class="form-group">
+                    <label for="layers">
+                        圈层数: <span class="slider-value" id="layersValue">5</span>
+                    </label>
+                    <input type="range" id="layers" min="3" max="8" value="5">
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">传统五色配色</div>
+                <div class="preset-colors" id="traditionalColors">
+                    <div class="preset-color" style="background: #FFFFFF" data-color="#FFFFFF" title="白 - 息灾"></div>
+                    <div class="preset-color" style="background: #FFD700" data-color="#FFD700" title="黄 - 增益"></div>
+                    <div class="preset-color" style="background: #DC143C" data-color="#DC143C" title="红 - 怀爱"></div>
+                    <div class="preset-color" style="background: #228B22" data-color="#228B22" title="绿 - 诛业"></div>
+                    <div class="preset-color" style="background: #4169E1" data-color="#4169E1" title="蓝 - 佛身"></div>
+                </div>
+                <div id="layerColors"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">经典配色方案</div>
+                <div class="preset-schemes" id="presetSchemes">
+                    <div class="preset-scheme" data-scheme="traditional">
+                        <div class="preset-scheme-name">传统五色</div>
+                        <div class="preset-scheme-colors">
+                            <div class="preset-scheme-color" style="background: #FFFFFF"></div>
+                            <div class="preset-scheme-color" style="background: #FFD700"></div>
+                            <div class="preset-scheme-color" style="background: #DC143C"></div>
+                            <div class="preset-scheme-color" style="background: #228B22"></div>
+                            <div class="preset-scheme-color" style="background: #4169E1"></div>
+                        </div>
+                    </div>
+                    <div class="preset-scheme" data-scheme="earth">
+                        <div class="preset-scheme-name">大地金辉</div>
+                        <div class="preset-scheme-colors">
+                            <div class="preset-scheme-color" style="background: #8B4513"></div>
+                            <div class="preset-scheme-color" style="background: #DAA520"></div>
+                            <div class="preset-scheme-color" style="background: #CD853F"></div>
+                            <div class="preset-scheme-color" style="background: #D2691E"></div>
+                            <div class="preset-scheme-color" style="background: #B8860B"></div>
+                        </div>
+                    </div>
+                    <div class="preset-scheme" data-scheme="ocean">
+                        <div class="preset-scheme-name">深海明珠</div>
+                        <div class="preset-scheme-colors">
+                            <div class="preset-scheme-color" style="background: #E0FFFF"></div>
+                            <div class="preset-scheme-color" style="background: #00CED1"></div>
+                            <div class="preset-scheme-color" style="background: #4682B4"></div>
+                            <div class="preset-scheme-color" style="background: #1E90FF"></div>
+                            <div class="preset-scheme-color" style="background: #000080"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">沙画滤镜效果</div>
+                <div class="filter-toggle">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="sandFilter" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">沙画颗粒效果</span>
+                </div>
+                <div class="form-group">
+                    <label for="grainIntensity">
+                        颗粒强度: <span class="slider-value" id="grainValue">30</span>
+                    </label>
+                    <input type="range" id="grainIntensity" min="0" max="100" value="30">
+                </div>
+                <div class="filter-toggle">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="gradientFilter" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">渐变撒沙效果</span>
+                </div>
+                <div class="form-group">
+                    <label for="gradientIntensity">
+                        渐变强度: <span class="slider-value" id="gradientValue">50</span>
+                    </label>
+                    <input type="range" id="gradientIntensity" min="0" max="100" value="50">
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <div class="canvas-wrapper">
+                <canvas id="mandalaCanvas" width="700" height="700"></canvas>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="btnRegenerate">
+                    <span>🔄</span> 重新生成
+                </button>
+                <button class="btn-secondary" id="btnExportPNG">
+                    <span>📥</span> 导出 PNG
+                </button>
+                <button class="btn-secondary" id="btnExportSVG">
+                    <span>📥</span> 导出 SVG
+                </button>
+                <button class="btn-secondary" id="btnExportHD">
+                    <span>🖼️</span> 高清导出 (4K)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <script>
+        let db;
+        const canvas = document.getElementById('mandalaCanvas');
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const maxRadius = Math.min(centerX, centerY) - 30;
+
+        const mandalaData = {
+            kalachakra: {
+                name: '时轮金刚坛城',
+                description: '时轮金刚坛城是藏传佛教中最复杂的坛城之一，代表宇宙的结构和时间的循环。外层为火焰，中层为莲花，中心为佛国净土。',
+                layers: 5,
+                symmetry: 8,
+                pattern: 'mixed'
+            },
+            chakrasamvara: {
+                name: '胜乐金刚坛城',
+                description: '胜乐金刚坛城代表无上瑜伽续的最高境界，以六十四朵莲花环绕，象征智慧与方便的双运。',
+                layers: 6,
+                symmetry: 8,
+                pattern: 'lotus'
+            },
+            vajrabhairava: {
+                name: '大威德金刚坛城',
+                description: '大威德金刚坛城以愤怒尊为本尊，方城结构严谨，九層坛城代表九乘次第。',
+                layers: 7,
+                symmetry: 4,
+                pattern: 'square'
+            },
+            mahamaya: {
+                name: '幻变坛城',
+                description: '幻变坛城代表一切诸法皆如幻化，以同心圆轮为主，层层递进代表心性的觉醒。',
+                layers: 5,
+                symmetry: 8,
+                pattern: 'circle'
+            }
+        };
+
+        const colorSchemes = {
+            traditional: ['#FFFFFF', '#FFD700', '#DC143C', '#228B22', '#4169E1', '#8B008B', '#FF8C00', '#008080'],
+            earth: ['#8B4513', '#DAA520', '#CD853F', '#D2691E', '#B8860B', '#8B7355', '#D2B48C', '#BC8F8F'],
+            ocean: ['#E0FFFF', '#00CED1', '#4682B4', '#1E90FF', '#000080', '#008B8B', '#5F9EA0', '#00FFFF']
+        };
+
+        let currentColors = [...colorSchemes.traditional];
+        let currentMandala = 'kalachakra';
+        let currentPattern = 'circle';
+        let symmetry = 8;
+        let numLayers = 5;
+        let sandFilterEnabled = true;
+        let gradientFilterEnabled = true;
+        let grainIntensity = 30;
+        let gradientIntensity = 50;
+
+        async function initDatabase() {
+            const SQL = await initSqlJs({
+                locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
+            });
+            
+            db = new SQL.Database();
+            
+            db.run(`
+                CREATE TABLE mandala_patterns (
+                    id INTEGER PRIMARY KEY,
+                    name TEXT,
+                    type TEXT,
+                    symmetry INTEGER,
+                    layers INTEGER,
+                    pattern_type TEXT,
+                    description TEXT
+                )
+            `);
+
+            db.run(`
+                CREATE TABLE color_schemes (
+                    id INTEGER PRIMARY KEY,
+                    name TEXT,
+                    colors TEXT,
+                    description TEXT
+                )
+            `);
+
+            db.run(`
+                CREATE TABLE geometric_elements (
+                    id INTEGER PRIMARY KEY,
+                    name TEXT,
+                    type TEXT,
+                    parameters TEXT
+                )
+            `);
+
+            const patterns = [
+                ['时轮金刚坛城', 'kalachakra', 8, 5, 'mixed', '时轮金刚坛城是藏传佛教中最复杂的坛城之一'],
+                ['胜乐金刚坛城', 'chakrasamvara', 8, 6, 'lotus', '胜乐金刚坛城代表无上瑜伽续的最高境界'],
+                ['大威德金刚坛城', 'vajrabhairava', 4, 7, 'square', '大威德金刚坛城以愤怒尊为本尊'],
+                ['幻变坛城', 'mahamaya', 8, 5, 'circle', '幻变坛城代表一切诸法皆如幻化']
+            ];
+
+            const insertPattern = db.prepare('INSERT INTO mandala_patterns VALUES (?, ?, ?, ?, ?, ?, ?)');
+            patterns.forEach((p, i) => {
+                insertPattern.run([i + 1, ...p]);
+            });
+
+            const schemes = [
+                ['传统五色', JSON.stringify(colorSchemes.traditional), '藏传佛教传统五色：白、黄、红、绿、蓝'],
+                ['大地金辉', JSON.stringify(colorSchemes.earth), '以大地金色为主的温暖配色'],
+                ['深海明珠', JSON.stringify(colorSchemes.ocean), '以蓝色调为主的清凉配色']
+            ];
+
+            const insertScheme = db.prepare('INSERT INTO color_schemes VALUES (?, ?, ?, ?)');
+            schemes.forEach((s, i) => {
+                insertScheme.run([i + 1, ...s]);
+            });
+
+            const elements = [
+                ['圆轮', 'circle', JSON.stringify({ type: 'concentric', count: 5 })],
+                ['方城', 'square', JSON.stringify({ type: 'nested', corners: 4 })],
+                ['八叶莲花', 'lotus', JSON.stringify({ petals: 8, type: 'astamangala' })],
+                ['金刚杵', 'vajra', JSON.stringify({ type: 'cross', spokes: 5 })],
+                ['火焰纹', 'flame', JSON.stringify({ 
+                    type: 'chaikin', 
+                    heightRatio: 0.15, 
+                    widthRatio: 0.4,
+                    iterations: 3,
+                    closed: false,
+                    controlPoints: [
+                        { x: -5, y: -0.3 },
+                        { x: 0.2, y: -0.6 },
+                        { x: 0.5, y: -0.25 },
+                        { x: 0.85, y: -0.1 },
+                        { x: 1.0, y: 0 },
+                        { x: 0.85, y: 0.1 },
+                        { x: 0.5, y: 0.25 },
+                        { x: 0.2, y: 0.6 },
+                        { x: -5, y: 0.3 }
+                    ],
+                    direction: 'radial_outward'
+                })]
+            ];
+
+            const insertElement = db.prepare('INSERT INTO geometric_elements VALUES (?, ?, ?, ?)');
+            elements.forEach((e, i) => {
+                insertElement.run([i + 1, ...e]);
+            });
+
+            console.log('SQLite数据库初始化完成');
+            console.log('坛城图样数据已存储');
+        }
+
+        function generateLayerColors() {
+            const container = document.getElementById('layerColors');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < numLayers; i++) {
+                const color = currentColors[i % currentColors.length];
+                const div = document.createElement('div');
+                div.className = 'color-picker-group';
+                div.innerHTML = `
+                    <div class="color-picker-label">
+                        <span>圈层 ${i + 1}</span>
+                    </div>
+                    <div class="color-input-wrapper">
+                        <input type="color" value="${color}" data-layer="${i}" class="layer-color-picker">
+                        <input type="text" value="${color}" class="color-hex" data-layer="${i}" readonly>
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+
+            document.querySelectorAll('.layer-color-picker').forEach(picker => {
+                picker.addEventListener('input', (e) => {
+                    const layer = parseInt(e.target.dataset.layer);
+                    currentColors[layer] = e.target.value;
+                    e.target.nextElementSibling.value = e.target.value;
+                    drawMandala();
+                });
+            });
+        }
+
+        function drawCircleLayer(radius, color, index) {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            if (index % 2 === 1) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius - 8, 0, Math.PI * 2);
+                ctx.fillStyle = color + '30';
+                ctx.fill();
+            }
+        }
+
+        function drawSquareLayer(radius, color, index, rotation = 0) {
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotation + Math.PI / 4);
+            
+            const size = radius * 1.4;
+            ctx.beginPath();
+            ctx.rect(-size / 2, -size / 2, size, size);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            if (index % 2 === 1) {
+                ctx.fillStyle = color + '25';
+                ctx.fill();
+            }
+            
+            ctx.restore();
+        }
+
+        function drawLotusLayer(radius, color, petals, rotation = 0) {
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotation);
+            
+            const petalLength = radius * 0.4;
+            const petalWidth = radius * 0.25;
+            
+            for (let i = 0; i < petals; i++) {
+                const angle = (i / petals) * Math.PI * 2;
+                ctx.save();
+                ctx.rotate(angle);
+                
+                ctx.beginPath();
+                ctx.moveTo(radius - petalLength * 0.3, 0);
+                ctx.quadraticCurveTo(
+                    radius - petalLength * 0.5, -petalWidth / 2,
+                    radius, -petalWidth / 3
+                );
+                ctx.quadraticCurveTo(
+                    radius + petalLength, 0,
+                    radius, petalWidth / 3
+                );
+                ctx.quadraticCurveTo(
+                    radius - petalLength * 0.5, petalWidth / 2,
+                    radius - petalLength * 0.3, 0
+                );
+                ctx.closePath();
+                
+                ctx.fillStyle = color + '60';
+                ctx.fill();
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            ctx.restore();
+        }
+
+        function drawSymmetricPatterns(radius, color, symmetryCount) {
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            
+            for (let i = 0; i < symmetryCount; i++) {
+                const angle = (i / symmetryCount) * Math.PI * 2;
+                ctx.save();
+                ctx.rotate(angle);
+                
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(radius, -radius * 0.1);
+                ctx.lineTo(radius * 0.9, 0);
+                ctx.lineTo(radius, radius * 0.1);
+                ctx.closePath();
+                ctx.fillStyle = color + '40';
+                ctx.fill();
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(radius * 0.7, 0, radius * 0.05, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+                
+                ctx.restore();
+            }
+            
+            ctx.restore();
+        }
+
+        function drawCenterMandala() {
+            const centerRadius = maxRadius * 0.12;
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, centerRadius + 10, 0, Math.PI * 2);
+            ctx.fillStyle = currentColors[0];
+            ctx.fill();
+            ctx.strokeStyle = currentColors[1];
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            
+            for (let i = 0; i < 8; i++) {
+                ctx.save();
+                ctx.rotate((i / 8) * Math.PI * 2);
+                
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(centerRadius, -centerRadius * 0.3);
+                ctx.lineTo(centerRadius * 0.8, 0);
+                ctx.lineTo(centerRadius, centerRadius * 0.3);
+                ctx.closePath();
+                ctx.fillStyle = i % 2 === 0 ? currentColors[2] : currentColors[3];
+                ctx.fill();
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, centerRadius * 0.4, 0, Math.PI * 2);
+            ctx.fillStyle = currentColors[4];
+            ctx.fill();
+            ctx.strokeStyle = currentColors[1];
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        const ChaikinCurve = {
+            smooth: function(points, iterations = 3, closed = true) {
+                if (points.length < 3) return points;
+                
+                let result = [...points];
+                
+                for (let iter = 0; iter < iterations; iter++) {
+                    const smoothed = [];
+                    const n = result.length;
+                    
+                    for (let i = 0; i < n; i++) {
+                        const p0 = result[i];
+                        const p1 = result[(i + 1) % n];
+                        
+                        const qx = 0.75 * p0.x + 0.25 * p1.x;
+                        const qy = 0.75 * p0.y + 0.25 * p1.y;
+                        
+                        const rx = 0.25 * p0.x + 0.75 * p1.x;
+                        const ry = 0.25 * p0.y + 0.75 * p1.y;
+                        
+                        smoothed.push({ x: qx, y: qy });
+                        smoothed.push({ x: rx, y: ry });
+                    }
+                    
+                    if (!closed) {
+                        smoothed.pop();
+                        smoothed.pop();
+                    }
+                    
+                    result = smoothed;
+                }
+                
+                return result;
+            },
+            
+            drawPath: function(ctx, points, closed = true) {
+                if (points.length < 2) return;
+                
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                
+                if (closed) {
+                    ctx.closePath();
+                }
+            }
+        };
+
+        function drawFlamePattern(baseRadius, color, count) {
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            
+            const flameHeight = baseRadius * 0.15;
+            const flameWidth = (Math.PI * 2 * baseRadius) / count * 0.4;
+            
+            for (let i = 0; i < count; i++) {
+                const angle = (i / count) * Math.PI * 2;
+                ctx.save();
+                ctx.rotate(angle);
+                
+                const controlPoints = [
+                    { x: baseRadius - 5, y: -flameWidth * 0.3 },
+                    { x: baseRadius + flameHeight * 0.2, y: -flameWidth * 0.6 },
+                    { x: baseRadius + flameHeight * 0.5, y: -flameWidth * 0.25 },
+                    { x: baseRadius + flameHeight * 0.85, y: -flameWidth * 0.1 },
+                    { x: baseRadius + flameHeight, y: 0 },
+                    { x: baseRadius + flameHeight * 0.85, y: flameWidth * 0.1 },
+                    { x: baseRadius + flameHeight * 0.5, y: flameWidth * 0.25 },
+                    { x: baseRadius + flameHeight * 0.2, y: flameWidth * 0.6 },
+                    { x: baseRadius - 5, y: flameWidth * 0.3 }
+                ];
+                
+                const smoothPoints = ChaikinCurve.smooth(controlPoints, 3, false);
+                
+                ChaikinCurve.drawPath(ctx, smoothPoints, true);
+                
+                const gradient = ctx.createRadialGradient(
+                    baseRadius + flameHeight * 0.5, 0, 0,
+                    baseRadius + flameHeight * 0.5, 0, flameHeight
+                );
+                gradient.addColorStop(0, color);
+                gradient.addColorStop(0.5, color + 'CC');
+                gradient.addColorStop(1, color + '66');
+                
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            ctx.restore();
+        }
+
+        function drawOuterDecorations() {
+            const outerRadius = maxRadius + 15;
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = '#d4af37';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            
+            drawFlamePattern(maxRadius + 5, '#FF6B35', symmetry * 2);
+            
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            
+            for (let i = 0; i < symmetry; i++) {
+                const angle = (i / symmetry) * Math.PI * 2;
+                ctx.save();
+                ctx.rotate(angle);
+                
+                ctx.beginPath();
+                const vajraBase = maxRadius - 15;
+                const vajraTip = maxRadius + 10;
+                
+                ctx.moveTo(vajraBase, 0);
+                ctx.lineTo(vajraTip, -6);
+                ctx.lineTo(vajraTip, 6);
+                ctx.closePath();
+                ctx.fillStyle = '#d4af37';
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(vajraBase - 8, 0, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#d4af37';
+                ctx.fill();
+                
+                ctx.restore();
+            }
+            
+            ctx.restore();
+        }
+
+        function applySandFilter() {
+            if (!sandFilterEnabled && !gradientFilterEnabled) return;
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                if (r > 10 || g > 10 || b > 10) {
+                    if (sandFilterEnabled) {
+                        const grain = (Math.random() - 0.5) * grainIntensity * 2.55;
+                        data[i] = Math.min(255, Math.max(0, r + grain));
+                        data[i + 1] = Math.min(255, Math.max(0, g + grain));
+                        data[i + 2] = Math.min(255, Math.max(0, b + grain));
+                    }
+                    
+                    if (gradientFilterEnabled) {
+                        const x = (i / 4) % canvas.width;
+                        const y = Math.floor((i / 4) / canvas.width);
+                        const distFromCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+                        const gradientFactor = 1 - (distFromCenter / maxRadius) * (gradientIntensity / 100) * 0.3;
+                        
+                        data[i] = Math.min(255, Math.max(0, r * gradientFactor));
+                        data[i + 1] = Math.min(255, Math.max(0, g * gradientFactor));
+                        data[i + 2] = Math.min(255, Math.max(0, b * gradientFactor));
+                    }
+                }
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function drawMandala() {
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const layerRadius = maxRadius / (numLayers + 1);
+            
+            for (let i = numLayers - 1; i >= 0; i--) {
+                const radius = (i + 1) * layerRadius;
+                const color = currentColors[i % currentColors.length];
+                
+                switch (currentPattern) {
+                    case 'circle':
+                        drawCircleLayer(radius, color, i);
+                        break;
+                    case 'square':
+                        drawSquareLayer(radius, color, i, (i * Math.PI) / 8);
+                        break;
+                    case 'lotus':
+                        drawLotusLayer(radius, color, symmetry, (i * Math.PI) / 16);
+                        break;
+                    case 'mixed':
+                        if (i % 3 === 0) {
+                            drawCircleLayer(radius, color, i);
+                        } else if (i % 3 === 1) {
+                            drawSquareLayer(radius, color, i, (i * Math.PI) / 8);
+                        } else {
+                            drawLotusLayer(radius, color, symmetry, (i * Math.PI) / 16);
+                        }
+                        break;
+                }
+                
+                drawSymmetricPatterns(radius - layerRadius * 0.3, color, symmetry);
+            }
+            
+            drawCenterMandala();
+            drawOuterDecorations();
+            applySandFilter();
+        }
+
+        function exportPNG(scale = 1) {
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = canvas.width * scale;
+            exportCanvas.height = canvas.height * scale;
+            const exportCtx = exportCanvas.getContext('2d');
+            
+            exportCtx.scale(scale, scale);
+            exportCtx.drawImage(canvas, 0, 0);
+            
+            const link = document.createElement('a');
+            link.download = `mandala-${currentMandala}-${Date.now()}.png`;
+            link.href = exportCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function exportSVG() {
+            let svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}" viewBox="0 0 ${canvas.width} ${canvas.height}">
+  <rect width="100%" height="100%" fill="#1a1a1a"/>`;
+            
+            const layerRadius = maxRadius / (numLayers + 1);
+            
+            for (let i = numLayers - 1; i >= 0; i--) {
+                const radius = (i + 1) * layerRadius;
+                const color = currentColors[i % currentColors.length];
+                
+                if (currentPattern === 'circle' || currentPattern === 'mixed') {
+                    svgContent += `
+  <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="none" stroke="${color}" stroke-width="3"/>`;
+                    if (i % 2 === 1) {
+                        svgContent += `
+  <circle cx="${centerX}" cy="${centerY}" r="${radius - 8}" fill="${color}30"/>`;
+                    }
+                }
+            }
+            
+            svgContent += `
+  <circle cx="${centerX}" cy="${centerY}" r="${maxRadius + 15}" fill="none" stroke="#d4af37" stroke-width="4"/>
+</svg>`;
+            
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            const link = document.createElement('a');
+            link.download = `mandala-${currentMandala}-${Date.now()}.svg`;
+            link.href = URL.createObjectURL(blob);
+            link.click();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('mandalaType').addEventListener('change', (e) => {
+                currentMandala = e.target.value;
+                const data = mandalaData[currentMandala];
+                document.getElementById('mandalaInfo').innerHTML = `<h4>${data.name}</h4><p>${data.description}</p>`;
+                symmetry = data.symmetry;
+                numLayers = data.layers;
+                currentPattern = data.pattern;
+                
+                document.getElementById('symmetry').value = symmetry;
+                document.getElementById('symmetryValue').textContent = symmetry;
+                document.getElementById('layers').value = numLayers;
+                document.getElementById('layersValue').textContent = numLayers;
+                document.getElementById('patternType').value = data.pattern;
+                
+                generateLayerColors();
+                drawMandala();
+            });
+
+            document.getElementById('patternType').addEventListener('change', (e) => {
+                currentPattern = e.target.value;
+                drawMandala();
+            });
+
+            document.getElementById('symmetry').addEventListener('input', (e) => {
+                symmetry = parseInt(e.target.value);
+                document.getElementById('symmetryValue').textContent = symmetry;
+                drawMandala();
+            });
+
+            document.getElementById('layers').addEventListener('input', (e) => {
+                numLayers = parseInt(e.target.value);
+                document.getElementById('layersValue').textContent = numLayers;
+                generateLayerColors();
+                drawMandala();
+            });
+
+            document.querySelectorAll('.preset-color').forEach(color => {
+                color.addEventListener('click', (e) => {
+                    const selectedColor = e.target.dataset.color;
+                    const activePicker = document.querySelector('.layer-color-picker:focus');
+                    if (activePicker) {
+                        activePicker.value = selectedColor;
+                        activePicker.nextElementSibling.value = selectedColor;
+                        const layer = parseInt(activePicker.dataset.layer);
+                        currentColors[layer] = selectedColor;
+                        drawMandala();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.preset-scheme').forEach(scheme => {
+                scheme.addEventListener('click', (e) => {
+                    const schemeName = e.currentTarget.dataset.scheme;
+                    currentColors = [...colorSchemes[schemeName]];
+                    
+                    document.querySelectorAll('.preset-scheme').forEach(s => s.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    
+                    generateLayerColors();
+                    drawMandala();
+                });
+            });
+
+            document.getElementById('sandFilter').addEventListener('change', (e) => {
+                sandFilterEnabled = e.target.checked;
+                drawMandala();
+            });
+
+            document.getElementById('grainIntensity').addEventListener('input', (e) => {
+                grainIntensity = parseInt(e.target.value);
+                document.getElementById('grainValue').textContent = grainIntensity;
+                drawMandala();
+            });
+
+            document.getElementById('gradientFilter').addEventListener('change', (e) => {
+                gradientFilterEnabled = e.target.checked;
+                drawMandala();
+            });
+
+            document.getElementById('gradientIntensity').addEventListener('input', (e) => {
+                gradientIntensity = parseInt(e.target.value);
+                document.getElementById('gradientValue').textContent = gradientIntensity;
+                drawMandala();
+            });
+
+            document.getElementById('btnRegenerate').addEventListener('click', drawMandala);
+            document.getElementById('btnExportPNG').addEventListener('click', () => exportPNG(1));
+            document.getElementById('btnExportSVG').addEventListener('click', exportSVG);
+            document.getElementById('btnExportHD').addEventListener('click', () => exportPNG(4));
+        }
+
+        async function init() {
+            await initDatabase();
+            generateLayerColors();
+            setupEventListeners();
+            drawMandala();
+            
+            document.querySelector('.preset-scheme[data-scheme="traditional"]').classList.add('active');
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>漕运路线变迁与粮食损耗计算</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>漕运路线变迁与粮食损耗计算</h1>
+            <p class="subtitle">探索中国古代运河漕运的历史演变</p>
+        </header>
+
+        <div class="main-content">
+            <aside class="control-panel">
+                <div class="panel-section">
+                    <h3>朝代选择</h3>
+                    <div class="dynasty-buttons">
+                        <button class="dynasty-btn" data-dynasty="sui">隋朝</button>
+                        <button class="dynasty-btn" data-dynasty="tang">唐朝</button>
+                        <button class="dynasty-btn" data-dynasty="song">宋朝</button>
+                        <button class="dynasty-btn" data-dynasty="yuan">元朝</button>
+                        <button class="dynasty-btn" data-dynasty="ming">明朝</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>对比模式</h3>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="compareMode">
+                        <span class="slider"></span>
+                        <span class="toggle-label">启用朝代对比</span>
+                    </label>
+                    <div id="compareDynastySelect" class="hidden">
+                        <label>对比朝代：</label>
+                        <select id="compareDynasty">
+                            <option value="sui">隋朝</option>
+                            <option value="tang">唐朝</option>
+                            <option value="song">宋朝</option>
+                            <option value="yuan">元朝</option>
+                            <option value="ming">明朝</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>图例</h3>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-line sui"></div>
+                            <span>隋唐大运河</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-line yuan-sea"></div>
+                            <span>元代海运</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-line jinghang"></div>
+                            <span>京杭大运河</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="map-container">
+                <svg id="chinaMap" viewBox="0 0 800 600">
+                    <defs>
+                        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e0e0e0" stroke-width="0.5"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)"/>
+                    
+                    <g id="chinaOutline">
+                        <path d="M 150 100 Q 200 80 280 90 Q 350 85 420 100 Q 500 95 580 120 
+                                 Q 650 150 680 200 Q 700 280 690 350 Q 680 420 650 480 
+                                 Q 600 520 520 530 Q 450 540 380 520 Q 300 530 220 500 
+                                 Q 150 460 120 400 Q 90 320 100 240 Q 110 170 150 100 Z" 
+                              fill="#f5f5dc" stroke="#8B7355" stroke-width="2"/>
+                    </g>
+
+                    <g id="rivers">
+                        <path d="M 100 280 Q 200 260 300 290 Q 400 320 500 300 Q 600 280 700 320" 
+                              fill="none" stroke="#4A90D9" stroke-width="3" opacity="0.6"/>
+                        <path d="M 150 400 Q 250 380 350 400 Q 450 420 550 400 Q 650 380 750 420" 
+                              fill="none" stroke="#4A90D9" stroke-width="3" opacity="0.6"/>
+                    </g>
+
+                    <g id="canals"></g>
+                    <g id="cities"></g>
+                </svg>
+                <div class="map-hint">点击运河段查看详细信息</div>
+            </div>
+
+            <aside class="info-panel">
+                <div id="segmentInfo" class="panel-section hidden">
+                    <h3 id="segmentTitle">河段详情</h3>
+                    <div class="info-content">
+                        <div class="info-row">
+                            <span class="label">朝代：</span>
+                            <span id="infoDynasty" class="value">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">河段长度：</span>
+                            <span id="infoLength" class="value">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">年漕运量：</span>
+                            <span id="infoVolume" class="value">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">运输时间：</span>
+                            <span id="infoTime" class="value">-</span>
+                        </div>
+                        <div class="info-row highlight">
+                            <span class="label">粮食损耗率：</span>
+                            <span id="infoLossRate" class="value">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>粮食损耗计算器</h3>
+                    <div class="calculator">
+                        <div class="input-group">
+                            <label for="inputVolume">输入年漕运量（万石）：</label>
+                            <input type="number" id="inputVolume" placeholder="输入数值后自动计算" min="0" step="1">
+                        </div>
+                        <div id="calcResult" class="result hidden">
+                            <div class="result-row">
+                                <span>输入量：</span>
+                                <span id="resultInput" class="result-value">-</span>
+                            </div>
+                            <div class="result-row loss">
+                                <span>损耗量：</span>
+                                <span id="resultLoss" class="result-value">-</span>
+                            </div>
+                            <div class="result-row success">
+                                <span>实际到达量：</span>
+                                <span id="resultArrival" class="result-value">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="compareSection" class="panel-section hidden">
+                    <h3>朝代对比</h3>
+                    <div class="compare-table">
+                        <div class="compare-header">
+                            <span>项目</span>
+                            <span id="compareName1">朝代1</span>
+                            <span id="compareName2">朝代2</span>
+                        </div>
+                        <div class="compare-row">
+                            <span>损耗率</span>
+                            <span id="compareRate1">-</span>
+                            <span id="compareRate2">-</span>
+                        </div>
+                        <div class="compare-row">
+                            <span>年漕运量</span>
+                            <span id="compareVolume1">-</span>
+                            <span id="compareVolume2">-</span>
+                        </div>
+                        <div class="compare-row">
+                            <span>运输时间</span>
+                            <span id="compareTime1">-</span>
+                            <span id="compareTime2">-</span>
+                        </div>
+                    </div>
+                    <div id="compareConclusion" class="conclusion"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

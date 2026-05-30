@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浑仪三维模拟与天文观测教学工具</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>浑仪三维模拟与天文观测教学工具</h1>
+            <p class="subtitle">中国古代天文仪器数字化复原 · 三垣二十八宿星图系统</p>
+        </header>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="panel-section">
+                    <h3>浑仪模型</h3>
+                    <div id="armillary-container" class="armillary-viewer"></div>
+                    <div class="view-controls">
+                        <button id="reset-view" class="btn btn-secondary">重置视角</button>
+                        <button id="auto-rotate" class="btn btn-secondary">自动旋转</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>当前指向</h3>
+                    <div class="coords-display">
+                        <div class="coord-item">
+                            <span class="label">赤经 (RA):</span>
+                            <span id="current-ra" class="value">0.00°</span>
+                        </div>
+                        <div class="coord-item">
+                            <span class="label">赤纬 (Dec):</span>
+                            <span id="current-dec" class="value">0.00°</span>
+                        </div>
+                        <div class="coord-item">
+                            <span class="label">方位角:</span>
+                            <span id="current-az" class="value">0.00°</span>
+                        </div>
+                        <div class="coord-item">
+                            <span class="label">地平高度:</span>
+                            <span id="current-alt" class="value">0.00°</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>对准星官</h3>
+                    <div id="current-star" class="star-info">
+                        <p class="no-star">移动窥管对准恒星...</p>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="lock-star" class="btn btn-primary" disabled>锁定星体</button>
+                        <button id="save-observation" class="btn btn-success" disabled>保存观测</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>观测设置</h3>
+                    <div class="form-group">
+                        <label>观测年份:</label>
+                        <input type="number" id="obs-year" value="1092" min="1" max="2024">
+                    </div>
+                    <div class="form-group">
+                        <label>观测地点:</label>
+                        <select id="obs-location">
+                            <option value="开封">开封 (北宋)</option>
+                            <option value="洛阳">洛阳 (唐)</option>
+                            <option value="长安">长安 (汉唐)</option>
+                            <option value="大都">大都 (元)</option>
+                            <option value="登封">登封 (观星台)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="center-panel">
+                <div class="panel-section">
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="star-chart">星图</button>
+                        <button class="tab-btn" data-tab="tasks">观测任务</button>
+                        <button class="tab-btn" data-tab="observations">观测记录</button>
+                        <button class="tab-btn" data-tab="demo">演示模式</button>
+                    </div>
+
+                    <div id="star-chart-tab" class="tab-content active">
+                        <div class="star-chart-container">
+                            <canvas id="star-chart" width="600" height="600"></canvas>
+                            <div id="chart-overlay" class="chart-overlay"></div>
+                        </div>
+                        <div class="chart-controls">
+                            <div class="form-group">
+                                <label>星等限制:</label>
+                                <input type="range" id="mag-limit" min="1" max="6" step="0.5" value="4">
+                                <span id="mag-value">4.0</span>
+                            </div>
+                            <div class="form-group">
+                                <label>显示垣:</label>
+                                <select id="enclosure-filter">
+                                    <option value="">全部</option>
+                                    <option value="紫微垣">紫微垣</option>
+                                    <option value="太微垣">太微垣</option>
+                                    <option value="天市垣">天市垣</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tasks-tab" class="tab-content">
+                        <div id="tasks-list" class="tasks-list">
+                            <p>加载任务中...</p>
+                        </div>
+                    </div>
+
+                    <div id="observations-tab" class="tab-content">
+                        <div class="observations-header">
+                            <h3>观测记录日志</h3>
+                            <button id="export-csv" class="btn btn-primary">导出CSV</button>
+                        </div>
+                        <div id="observations-list" class="observations-list">
+                            <p>加载记录中...</p>
+                        </div>
+                    </div>
+
+                    <div id="demo-tab" class="tab-content">
+                        <h3>自动演示模式</h3>
+                        <p class="demo-desc">选择一颗亮星，浑仪将自动对准该星体，演示古代天文观测过程。</p>
+                        <div id="bright-stars-list" class="bright-stars-grid">
+                            <p>加载亮星列表中...</p>
+                        </div>
+                        <div class="demo-controls">
+                            <button id="start-demo" class="btn btn-primary" disabled>开始演示</button>
+                            <button id="stop-demo" class="btn btn-danger" disabled>停止演示</button>
+                        </div>
+                        <div id="demo-status" class="demo-status"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="panel-section">
+                    <h3>三垣二十八宿</h3>
+                    <div class="mansion-tree">
+                        <div class="enclosure-group">
+                            <h4 class="enclosure-title">紫微垣</h4>
+                            <div class="mansion-list" id="ziwei-mansions"></div>
+                        </div>
+                        <div class="enclosure-group">
+                            <h4 class="enclosure-title">太微垣</h4>
+                            <div class="mansion-list" id="taiwei-mansions"></div>
+                        </div>
+                        <div class="enclosure-group">
+                            <h4 class="enclosure-title">天市垣</h4>
+                            <div class="mansion-list" id="tianshi-mansions"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>星官说明</h3>
+                    <div id="mansion-info" class="mansion-info">
+                        <p>选择星宿查看详情...</p>
+                    </div>
+                </div>
+
+                <div class="panel-section locked-star-section">
+                    <h3>已锁定星体</h3>
+                    <div id="locked-star-display" class="locked-star-display">
+                        <p class="no-star">未锁定星体</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span id="status-text">就绪</span>
+            <span class="separator">|</span>
+            <span>数据库恒星: <span id="star-count">0</span></span>
+            <span class="separator">|</span>
+            <span>观测记录: <span id="obs-count">0</span></span>
+        </div>
+    </div>
+
+    <div id="observation-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>保存观测记录</h3>
+            <div class="form-group">
+                <label>观测时间:</label>
+                <input type="text" id="obs-time" readonly>
+            </div>
+            <div class="form-group">
+                <label>星体名称:</label>
+                <input type="text" id="obs-star-name" readonly>
+            </div>
+            <div class="form-group">
+                <label>备注:</label>
+                <textarea id="obs-note" rows="3" placeholder="输入观测备注..."></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button id="cancel-obs" class="btn btn-secondary">取消</button>
+                <button id="confirm-obs" class="btn btn-primary">确认保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

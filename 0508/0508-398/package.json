@@ -1,0 +1,12 @@
+{
+  "name": "suzhou-garden-rockery",
+  "version": "1.0.0",
+  "description": "苏州园林假山设计辅助系统",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py",
+    "install": "pip install -r requirements.txt"
+  },
+  "author": "",
+  "license": "MIT"
+}

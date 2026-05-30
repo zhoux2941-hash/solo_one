@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蜡染铜刀绘制模拟</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>蜡染铜刀绘制模拟</h1>
+            <p class="subtitle">体验传统蜡染工艺的数字创作</p>
+        </header>
+
+        <div class="main-content">
+            <aside class="control-panel">
+                <div class="control-group">
+                    <h3>铜刀设置</h3>
+                    <div class="control-item">
+                        <label for="knife-width">铜刀宽度: <span id="width-value">5</span>px</label>
+                        <input type="range" id="knife-width" min="1" max="10" value="5">
+                    </div>
+                    <div class="control-item">
+                        <label>蜡温</label>
+                        <div class="temp-buttons">
+                            <button class="temp-btn" data-temp="low">低温</button>
+                            <button class="temp-btn active" data-temp="medium">中温</button>
+                            <button class="temp-btn" data-temp="high">高温</button>
+                        </div>
+                        <div class="temp-desc" id="temp-desc">中温蜡：线条适中，边缘较为平滑</div>
+                    </div>
+                    <div class="control-item">
+                        <label>蜡色</label>
+                        <div class="wax-color-buttons">
+                            <button class="wax-color-btn active" data-wax-color="yellow" title="传统蜡">
+                                <span class="color-dot yellow"></span>传统蜡
+                            </button>
+                            <button class="wax-color-btn" data-wax-color="red" title="红蜡">
+                                <span class="color-dot red"></span>红蜡
+                            </button>
+                            <button class="wax-color-btn" data-wax-color="black" title="黑蜡">
+                                <span class="color-dot black"></span>黑蜡
+                            </button>
+                        </div>
+                        <div class="wax-color-desc" id="wax-color-desc">传统蜡：染色后留白</div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>对称绘制</h3>
+                    <div class="control-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="symmetry-x"> 左右对称
+                        </label>
+                    </div>
+                    <div class="control-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="symmetry-y"> 上下对称
+                        </label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>纹样模板</h3>
+                    <div class="template-buttons">
+                        <button class="template-btn" data-template="vortex">涡纹</button>
+                        <button class="template-btn" data-template="sun">太阳纹</button>
+                        <button class="template-btn" data-template="drum">铜鼓纹</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>冰裂纹种子</h3>
+                    <div class="control-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="seed-lock"> 锁定随机种子
+                        </label>
+                    </div>
+                    <div class="seed-control">
+                        <input type="number" id="seed-value" min="1" max="999999" value="12345" placeholder="种子值">
+                        <button id="seed-random" class="seed-btn">随机</button>
+                    </div>
+                    <div class="seed-desc">锁定后冰裂纹效果可重复生成</div>
+                </div>
+
+                <div class="control-group">
+                    <h3>工艺操作</h3>
+                    <div class="action-buttons">
+                        <button id="dye-btn" class="action-btn dye">靛蓝染色</button>
+                        <button id="clear-btn" class="action-btn clear">清除画布</button>
+                        <button id="undo-btn" class="action-btn undo">撤销</button>
+                        <button id="export-btn" class="action-btn export">导出PNG</button>
+                    </div>
+                </div>
+
+                <div class="control-group info-panel" id="info-panel">
+                    <h3>工艺估算</h3>
+                    <div class="info-item">
+                        <span>蜡用量：</span>
+                        <span id="wax-usage">0.00 g</span>
+                    </div>
+                    <div class="info-item">
+                        <span>染缸时间：</span>
+                        <span id="dye-time">0 分钟</span>
+                    </div>
+                    <div class="info-item">
+                        <span>绘制长度：</span>
+                        <span id="draw-length">0 m</span>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="canvas-container">
+                <div class="canvas-wrapper">
+                    <canvas id="main-canvas" width="800" height="600"></canvas>
+                    <canvas id="wax-canvas" width="800" height="600"></canvas>
+                </div>
+                <div class="canvas-controls">
+                    <span class="status-text" id="status-text">准备绘制...</span>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

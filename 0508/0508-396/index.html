@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>光栅图像矢量化工具</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>光栅图像矢量化工具</h1>
+            <p>使用 Potrace 算法将 PNG/JPEG 位图转换为 SVG 矢量图</p>
+        </header>
+
+        <div class="main-content">
+            <aside class="control-panel">
+                <div class="section">
+                    <h3>图像上传</h3>
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg" multiple hidden>
+                        <div class="upload-icon">📁</div>
+                        <p>点击或拖拽上传图片</p>
+                        <small>支持 PNG、JPEG 格式，可多选批量处理</small>
+                    </div>
+                </div>
+
+                <div class="section" id="batchSection">
+                    <div class="batch-header">
+                        <h3>批处理队列</h3>
+                        <span class="batch-count" id="batchCount">0 张图片</span>
+                    </div>
+                    <div class="batch-list" id="batchList">
+                        <div class="batch-empty">
+                            <span class="empty-icon">📋</span>
+                            <p>暂无待处理图片</p>
+                        </div>
+                    </div>
+                    <div class="batch-actions">
+                        <button id="batchProcessBtn" class="primary-btn" disabled>
+                            <span class="btn-icon">⚡</span>
+                            批量矢量化
+                        </button>
+                        <button id="batchExportBtn" class="secondary-btn" disabled>
+                            <span class="btn-icon">📦</span>
+                            批量导出
+                        </button>
+                        <button id="clearBatchBtn" class="outline-btn" disabled>
+                            <span class="btn-icon">🗑️</span>
+                            清空队列
+                        </button>
+                    </div>
+                    <div class="batch-progress" id="batchProgress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="progressText">0 / 0</span>
+                            <span id="currentFileName">准备中...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>预置测试图</h3>
+                    <div class="preset-images">
+                        <button class="preset-btn" data-preset="logo">
+                            <span class="preset-icon">🏢</span>
+                            <span>Logo</span>
+                        </button>
+                        <button class="preset-btn" data-preset="drawing">
+                            <span class="preset-icon">✏️</span>
+                            <span>简笔画</span>
+                        </button>
+                        <button class="preset-btn" data-preset="landscape">
+                            <span class="preset-icon">🏔️</span>
+                            <span>风景</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>矢量化参数</h3>
+                    
+                    <div class="param-group">
+                        <label>
+                            <span>颜色模式</span>
+                            <select id="colorMode">
+                                <option value="bw">黑白</option>
+                                <option value="color" selected>彩色</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="param-group" id="colorCountGroup">
+                        <label>
+                            <span>颜色数量: <span id="colorCountValue">8</span></span>
+                            <input type="range" id="colorCount" min="2" max="16" value="8">
+                        </label>
+                    </div>
+
+                    <div class="param-group">
+                        <label>
+                            <span>曲线精度: <span id="toleranceValue">1.0</span></span>
+                            <input type="range" id="tolerance" min="0.1" max="5.0" step="0.1" value="1.0">
+                        </label>
+                        <small>值越小，角点越锐利；值越大，曲线越平滑</small>
+                    </div>
+
+                    <div class="param-group">
+                        <label>
+                            <span>最小区域: <span id="minAreaValue">5</span>px</span>
+                            <input type="range" id="minArea" min="1" max="50" value="5">
+                        </label>
+                        <small>滤除小于此面积的噪点区域</small>
+                    </div>
+
+                    <div class="param-group">
+                        <label>
+                            <span>阈值: <span id="thresholdValue">128</span></span>
+                            <input type="range" id="threshold" min="0" max="255" value="128">
+                        </label>
+                        <small>黑白模式的二值化阈值</small>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <button id="vectorizeBtn" class="primary-btn" disabled>
+                        <span class="btn-icon">⚡</span>
+                        开始矢量化
+                    </button>
+                    <button id="exportBtn" class="secondary-btn" disabled>
+                        <span class="btn-icon">💾</span>
+                        导出 SVG
+                    </button>
+                </div>
+
+                <div class="section" id="infoPanel">
+                    <h3>图像信息</h3>
+                    <div class="info-item">
+                        <span>尺寸:</span>
+                        <span id="imageSize">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span>路径数量:</span>
+                        <span id="pathCount">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span>处理时间:</span>
+                        <span id="processTime">-</span>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="preview-area">
+                <div class="preview-tabs">
+                    <button class="tab-btn active" data-tab="compare">对比视图</button>
+                    <button class="tab-btn" data-tab="original">原图</button>
+                    <button class="tab-btn" data-tab="vector">矢量化结果</button>
+                </div>
+
+                <div class="preview-container">
+                    <div class="tab-content active" id="tab-compare">
+                        <div class="compare-view">
+                            <div class="compare-pane">
+                                <h4>原图</h4>
+                                <div class="canvas-wrapper">
+                                    <canvas id="originalCanvas"></canvas>
+                                </div>
+                            </div>
+                            <div class="compare-pane">
+                                <h4>矢量化结果</h4>
+                                <div class="canvas-wrapper" id="svgContainer">
+                                    <div class="placeholder">
+                                        <div class="placeholder-icon">🎨</div>
+                                        <p>上传图片并点击"开始矢量化"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="tab-original">
+                        <div class="single-view">
+                            <div class="canvas-wrapper large">
+                                <canvas id="originalCanvasLarge"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="tab-vector">
+                        <div class="single-view">
+                            <div class="canvas-wrapper large" id="svgContainerLarge">
+                                <div class="placeholder">
+                                    <div class="placeholder-icon">🎨</div>
+                                    <p>上传图片并点击"开始矢量化"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="zoom-controls">
+                    <button id="zoomOut" class="zoom-btn">−</button>
+                    <span id="zoomLevel">100%</span>
+                    <button id="zoomIn" class="zoom-btn">+</button>
+                    <button id="zoomFit" class="zoom-btn">适配</button>
+                </div>
+            </main>
+        </div>
+
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner"></div>
+            <p>正在处理图像...</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/potrace-wasm@1.1.0/dist/potrace-wasm.bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

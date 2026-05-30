@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>藏族打酥油劳动号子</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #1a0a00;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
+  user-select: none;
+}
+canvas { display: block; cursor: default; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+const W = 960;
+const H = 720;
+canvas.width = W;
+canvas.height = H;
+
+const BPM = 64;
+const BEAT_INTERVAL = 60000 / BPM;
+const HIT_WINDOW = 250;
+const PERFECT_WINDOW = 130;
+const MAX_BUTTER = 10;
+
+const STATE = { MENU: 0, COUNTDOWN: 1, PLAYING: 2, WIN: 3 };
+
+const SONG_CALLS = [
+  { text: '嘿！', hit: true },
+  { text: '—', hit: false },
+  { text: '嘿！', hit: true },
+  { text: '嗬—', hit: false },
+  { text: '嘿！', hit: true },
+  { text: '哈—', hit: false },
+  { text: '嘿！', hit: true },
+  { text: '嗬—', hit: false },
+];
+
+const Audio = (() => {
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  function tone(freq, duration, type, vol) {
+    try {
+      let osc = audioCtx.createOscillator();
+      let gain = audioCtx.createGain();
+      osc.type = type || 'triangle';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(vol || 0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch (e) {}
+  }
+
+  function resume() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function hey() {
+    tone(220, 0.3, 'sawtooth', 0.08);
+    tone(330, 0.25, 'triangle', 0.06);
+    tone(440, 0.2, 'sine', 0.04);
+  }
+
+  function hit(good) {
+    if (good) {
+      tone(523, 0.15, 'sine', 0.12);
+      tone(659, 0.15, 'sine', 0.08);
+    } else {
+      tone(150, 0.2, 'sawtooth', 0.06);
+    }
+  }
+
+  function success() {
+    tone(523, 0.1, 'sine', 0.1);
+    setTimeout(() => tone(659, 0.1, 'sine', 0.1), 80);
+    setTimeout(() => tone(784, 0.15, 'sine', 0.1), 160);
+  }
+
+  function fail() {
+    tone(200, 0.15, 'square', 0.05);
+    setTimeout(() => tone(180, 0.2, 'square', 0.04), 100);
+  }
+
+  return { resume, hey, hit, success, fail };
+})();
+
+const Metronome = (() => {
+  let beatStartTime = 0;
+  let scheduledSoundBeats = new Set();
+  let beatJudgments = {};
+  let lastBeatIndex = -1;
+  let songText = '';
+  let songTextTimer = 0;
+  let songTextScale = 1;
+  let rhythmPulse = 0;
+  let playerJudgment = '';
+  let playerJudgmentTimer = 0;
+
+  function getCurrentBeatIndex(now) {
+    if (now < beatStartTime) return -1;
+    return Math.floor((now - beatStartTime) / BEAT_INTERVAL);
+  }
+
+  function getBeatPhase(now) {
+    if (now < beatStartTime) return 0;
+    return ((now - beatStartTime) % BEAT_INTERVAL) / BEAT_INTERVAL;
+  }
+
+  function getTimeSinceLastBeat(now) {
+    if (now < beatStartTime) return BEAT_INTERVAL;
+    return (now - beatStartTime) % BEAT_INTERVAL;
+  }
+
+  function getTimeToNextBeat(now) {
+    return BEAT_INTERVAL - getTimeSinceLastBeat(now);
+  }
+
+  function getBeatTime(idx) {
+    return beatStartTime + idx * BEAT_INTERVAL;
+  }
+
+  function getCall(idx) {
+    return SONG_CALLS[idx % SONG_CALLS.length];
+  }
+
+  function findClosestHitBeat(now) {
+    let currentIdx = getCurrentBeatIndex(now);
+    let bestIdx = -1;
+    let bestDiff = Infinity;
+    let bestBeatTime = 0;
+
+    for (let offset = -2; offset <= 2; offset++) {
+      let idx = currentIdx + offset;
+      if (idx < 0) continue;
+      let call = getCall(idx);
+      if (!call.hit) continue;
+
+      let bTime = getBeatTime(idx);
+      let diff = Math.abs(now - bTime);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestIdx = idx;
+        bestBeatTime = bTime;
+      }
+    }
+
+    return { idx: bestIdx, diff: bestDiff, beatTime: bestBeatTime };
+  }
+
+  function scheduleAudio() {
+    let now = performance.now();
+    let currentIdx = getCurrentBeatIndex(now);
+    if (currentIdx < 0) return;
+
+    for (let i = currentIdx; i <= currentIdx + 4; i++) {
+      if (i < 0 || scheduledSoundBeats.has(i)) continue;
+      let call = getCall(i);
+      if (!call.hit) {
+        scheduledSoundBeats.add(i);
+        continue;
+      }
+
+      let bTime = getBeatTime(i);
+      let delay = bTime - now;
+
+      scheduledSoundBeats.add(i);
+
+      if (delay > 30) {
+        setTimeout(() => { Audio.hey(); }, delay);
+      }
+    }
+
+    for (let idx of scheduledSoundBeats) {
+      if (idx < currentIdx - 2) scheduledSoundBeats.delete(idx);
+    }
+  }
+
+  function registerPlayerHit() {
+    let now = performance.now();
+    if (now < beatStartTime) return;
+
+    let closest = findClosestHitBeat(now);
+
+    if (closest.idx < 0 || closest.diff > BEAT_INTERVAL * 0.6) {
+      playerJudgment = '非拍点';
+      playerJudgmentTimer = 600;
+      Audio.hit(false);
+      return;
+    }
+
+    if (beatJudgments[closest.idx] && beatJudgments[closest.idx].hit) return;
+
+    beatJudgments[closest.idx] = { hit: true, diff: closest.diff };
+
+    if (closest.diff <= PERFECT_WINDOW) {
+      playerJudgment = '完美！';
+      playerJudgmentTimer = 500;
+      Audio.hit(true);
+    } else if (closest.diff <= HIT_WINDOW) {
+      playerJudgment = '好的！';
+      playerJudgmentTimer = 500;
+      Audio.hit(true);
+    } else {
+      playerJudgment = '太早/晚了';
+      playerJudgmentTimer = 500;
+      Audio.hit(false);
+    }
+  }
+
+  function consumeBeatJudgment(idx) {
+    let j = beatJudgments[idx];
+    return j;
+  }
+
+  function onNewBeat(bi, now) {
+    let beatTime = getBeatTime(bi);
+    let call = getCall(bi);
+
+    songText = call.text;
+    songTextTimer = BEAT_INTERVAL * 0.8;
+    songTextScale = 1.4;
+    rhythmPulse = 1.0;
+
+    if (call.hit && !scheduledSoundBeats.has(bi)) {
+      Audio.hey();
+    }
+
+    lastBeatIndex = bi;
+  }
+
+  function update(dt) {
+    rhythmPulse = Math.max(0, rhythmPulse - dt * 0.004);
+    songTextTimer = Math.max(0, songTextTimer - dt);
+    songTextScale = Math.max(1, songTextScale - dt * 0.002);
+    playerJudgmentTimer = Math.max(0, playerJudgmentTimer - dt);
+  }
+
+  function reset() {
+    beatStartTime = 0;
+    scheduledSoundBeats = new Set();
+    beatJudgments = {};
+    lastBeatIndex = -1;
+    songText = '';
+    songTextTimer = 0;
+    songTextScale = 1;
+    rhythmPulse = 0;
+    playerJudgment = '';
+    playerJudgmentTimer = 0;
+  }
+
+  function start(now) {
+    beatStartTime = now;
+  }
+
+  function cleanOldJudgments(currentBeatIdx) {
+    Object.keys(beatJudgments).forEach(k => {
+      if (parseInt(k) < currentBeatIdx - 2) delete beatJudgments[k];
+    });
+  }
+
+  return {
+    getCurrentBeatIndex,
+    getBeatPhase,
+    getTimeSinceLastBeat,
+    getTimeToNextBeat,
+    getBeatTime,
+    getCall,
+    findClosestHitBeat,
+    scheduleAudio,
+    registerPlayerHit,
+    consumeBeatJudgment,
+    onNewBeat,
+    update,
+    reset,
+    start,
+    cleanOldJudgments,
+    get songText() { return songText; },
+    get songTextTimer() { return songTextTimer; },
+    get songTextScale() { return songTextScale; },
+    get rhythmPulse() { return rhythmPulse; },
+    get lastBeatIndex() { return lastBeatIndex; },
+    get playerJudgment() { return playerJudgment; },
+    get playerJudgmentTimer() { return playerJudgmentTimer; }
+  };
+})();
+
+const AIController = (() => {
+  let leftHitOffset = 0;
+  let rightHitOffset = 0;
+  let leftMissChance = 0;
+  let rightMissChance = 0;
+  let leftAnimPhase = 0;
+  let rightAnimPhase = 0;
+
+  function evaluateBeat(successBeats) {
+    let leftMisses = Math.random() < leftMissChance;
+    let rightMisses = Math.random() < rightMissChance;
+    let lOk = !leftMisses;
+    let rOk = !rightMisses;
+
+    if (!leftMisses) leftAnimPhase = 1.0;
+    if (!rightMisses) rightAnimPhase = 1.0;
+
+    leftHitOffset = (Math.random() - 0.5) * 80;
+    rightHitOffset = (Math.random() - 0.5) * 80;
+
+    if (successBeats > 3) {
+      leftMissChance = Math.max(0.05, 0.15 - successBeats * 0.01);
+      rightMissChance = Math.max(0.05, 0.15 - successBeats * 0.01);
+    }
+
+    return { lOk, rOk };
+  }
+
+  function update(dt) {
+    leftAnimPhase = Math.max(0, leftAnimPhase - dt * 0.004);
+    rightAnimPhase = Math.max(0, rightAnimPhase - dt * 0.004);
+  }
+
+  function reset() {
+    leftAnimPhase = 0;
+    rightAnimPhase = 0;
+    leftHitOffset = (Math.random() - 0.5) * 60;
+    rightHitOffset = (Math.random() - 0.5) * 60;
+    leftMissChance = 0.15;
+    rightMissChance = 0.15;
+  }
+
+  return {
+    evaluateBeat,
+    update,
+    reset,
+    get leftAnimPhase() { return leftAnimPhase; },
+    get rightAnimPhase() { return rightAnimPhase; }
+  };
+})();
+
+const ScoreSystem = (() => {
+  let butterLevel = 0;
+  let butterDisplay = 0;
+  let totalBeats = 0;
+  let successBeats = 0;
+  let comboCount = 0;
+  let showResultTimer = 0;
+  let currentResult = '';
+  let currentResultColor = '';
+  let barrelSquish = 0;
+  let shakeAmount = 0;
+
+  function evaluateHit(playerOk, playerPerfect, aiLeftOk, aiRightOk) {
+    let hitCount = (playerOk ? 1 : 0) + (aiLeftOk ? 1 : 0) + (aiRightOk ? 1 : 0);
+
+    if (hitCount === 3 && playerPerfect) {
+      currentResult = '完美协作！';
+      currentResultColor = '#FFD700';
+      butterLevel = Math.min(MAX_BUTTER, butterLevel + 1.2);
+      successBeats++;
+      comboCount++;
+      showResultTimer = 1200;
+      shakeAmount = 8;
+      barrelSquish = 0.15;
+      Effects.spawn(W / 2, 330, '#FFD700', 20);
+      Effects.spawn(W / 2, 330, '#FF8C00', 12);
+      Effects.spawn(W / 2, 330, '#FFFFFF', 8);
+      Audio.success();
+    } else if (hitCount === 3) {
+      currentResult = '三人同心！';
+      currentResultColor = '#FFD700';
+      butterLevel = Math.min(MAX_BUTTER, butterLevel + 1);
+      successBeats++;
+      comboCount++;
+      showResultTimer = 1000;
+      shakeAmount = 5;
+      barrelSquish = 0.1;
+      Effects.spawn(W / 2, 330, '#FFD700', 15);
+      Effects.spawn(W / 2, 330, '#FF8C00', 8);
+      Audio.success();
+    } else if (hitCount === 2 && playerOk) {
+      currentResult = '还不错！';
+      currentResultColor = '#90EE90';
+      butterLevel = Math.min(MAX_BUTTER, butterLevel + 0.5);
+      successBeats++;
+      comboCount = 0;
+      showResultTimer = 800;
+      barrelSquish = 0.05;
+      Effects.spawn(W / 2, 330, '#90EE90', 8);
+    } else if (playerOk) {
+      currentResult = '只有你跟上...';
+      currentResultColor = '#FFA500';
+      butterLevel = Math.min(MAX_BUTTER, butterLevel + 0.2);
+      comboCount = 0;
+      showResultTimer = 600;
+      barrelSquish = 0.02;
+    } else {
+      currentResult = '节奏乱了！';
+      currentResultColor = '#FF6B6B';
+      comboCount = 0;
+      showResultTimer = 600;
+      shakeAmount = 3;
+      Audio.fail();
+    }
+  }
+
+  function update(dt) {
+    showResultTimer = Math.max(0, showResultTimer - dt);
+    shakeAmount = Math.max(0, shakeAmount - dt * 0.03);
+    barrelSquish = Math.max(0, barrelSquish - dt * 0.003);
+    butterDisplay += (butterLevel - butterDisplay) * 0.06;
+    butterDisplay = Math.min(MAX_BUTTER, butterDisplay);
+    if (Math.abs(butterDisplay - butterLevel) < 0.01) butterDisplay = Math.min(MAX_BUTTER, butterLevel);
+  }
+
+  function updateWinDisplay(dt) {
+    butterDisplay = Math.min(MAX_BUTTER, butterDisplay + (butterLevel - butterDisplay) * 0.05);
+  }
+
+  function getSuccessRate() {
+    return totalBeats > 0 ? Math.round((successBeats / totalBeats) * 100) : 0;
+  }
+
+  function getRating() {
+    let rate = getSuccessRate();
+    return rate >= 90 ? '大师级协作！' : rate >= 70 ? '默契十足！' : rate >= 50 ? '还需磨合' : '继续练习';
+  }
+
+  function getRatingColor() {
+    let rate = getSuccessRate();
+    return rate >= 90 ? '#FFD54F' : rate >= 70 ? '#81C784' : rate >= 50 ? '#FFB74D' : '#EF5350';
+  }
+
+  function isWin() {
+    return butterLevel >= MAX_BUTTER;
+  }
+
+  function incrementTotalBeats() {
+    totalBeats++;
+  }
+
+  function reset() {
+    butterLevel = 0;
+    butterDisplay = 0;
+    totalBeats = 0;
+    successBeats = 0;
+    comboCount = 0;
+    showResultTimer = 0;
+    currentResult = '';
+    currentResultColor = '';
+    barrelSquish = 0;
+    shakeAmount = 0;
+  }
+
+  return {
+    evaluateHit,
+    update,
+    updateWinDisplay,
+    getSuccessRate,
+    getRating,
+    getRatingColor,
+    isWin,
+    incrementTotalBeats,
+    reset,
+    get butterLevel() { return butterLevel; },
+    get butterDisplay() { return butterDisplay; },
+    get totalBeats() { return totalBeats; },
+    get successBeats() { return successBeats; },
+    get comboCount() { return comboCount; },
+    get showResultTimer() { return showResultTimer; },
+    get currentResult() { return currentResult; },
+    get currentResultColor() { return currentResultColor; },
+    get barrelSquish() { return barrelSquish; },
+    get shakeAmount() { return shakeAmount; }
+  };
+})();
+
+const Effects = (() => {
+  let particles = [];
+
+  function spawn(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: x + (Math.random() - 0.5) * 80,
+        y: y + (Math.random() - 0.5) * 40,
+        vx: (Math.random() - 0.5) * 5,
+        vy: -Math.random() * 4 - 1,
+        life: 1.0,
+        decay: 0.008 + Math.random() * 0.015,
+        size: 2 + Math.random() * 5,
+        color: color
+      });
+    }
+  }
+
+  function update(dt) {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      let p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.03;
+      p.life -= p.decay;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+  }
+
+  function draw() {
+    for (let p of particles) {
+      ctx.globalAlpha = p.life * 0.8;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function reset() {
+    particles = [];
+  }
+
+  return { spawn, update, draw, reset };
+})();
+
+const Game = (() => {
+  let gameState = STATE.MENU;
+  let playerAnimPhase = 0;
+  let stickOffset = 0;
+  let globalTime = 0;
+  let countdownValue = 3;
+  let countdownTimer = 0;
+  let lastTime = performance.now();
+
+  function resetGame() {
+    Metronome.reset();
+    AIController.reset();
+    ScoreSystem.reset();
+    Effects.reset();
+    playerAnimPhase = 0;
+    stickOffset = 0;
+  }
+
+  function startGame() {
+    resetGame();
+    gameState = STATE.COUNTDOWN;
+    countdownValue = 3;
+    countdownTimer = 0;
+    Audio.resume();
+  }
+
+  function beginPlaying() {
+    gameState = STATE.PLAYING;
+    Metronome.start(performance.now());
+  }
+
+  function handlePlayerHit() {
+    playerAnimPhase = 1.0;
+    Metronome.registerPlayerHit();
+  }
+
+  function checkBeatResult(now) {
+    let bi = Metronome.getCurrentBeatIndex(now);
+    if (bi < 0 || bi === Metronome.lastBeatIndex) return;
+
+    let call = Metronome.getCall(bi);
+    Metronome.onNewBeat(bi, now);
+
+    if (!call.hit) return;
+
+    ScoreSystem.incrementTotalBeats();
+
+    let judgment = Metronome.consumeBeatJudgment(bi);
+    let pOk = judgment && judgment.hit && judgment.diff <= HIT_WINDOW;
+    let pPerfect = judgment && judgment.hit && judgment.diff <= PERFECT_WINDOW;
+
+    let aiResult = AIController.evaluateBeat(ScoreSystem.successBeats);
+
+    ScoreSystem.evaluateHit(pOk, pPerfect, aiResult.lOk, aiResult.rOk);
+
+    Metronome.cleanOldJudgments(bi);
+
+    if (ScoreSystem.isWin()) {
+      gameState = STATE.WIN;
+    }
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawBackground() {
+    let grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#1c1008');
+    grad.addColorStop(0.4, '#2a1a10');
+    grad.addColorStop(0.7, '#3a2518');
+    grad.addColorStop(1, '#1a0e06');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    let flicker = 0.015 + Math.sin(globalTime * 8) * 0.005 + Math.sin(globalTime * 13) * 0.003;
+    ctx.fillStyle = `rgba(255, 180, 80, ${flicker})`;
+    ctx.beginPath();
+    ctx.arc(W / 2, 280, 250, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(255, 220, 120, ${flicker * 0.7})`;
+    ctx.beginPath();
+    ctx.arc(W / 2, 280, 150, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(139, 90, 43, 0.08)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 9; i++) {
+      let x = 50 + i * 110;
+      ctx.beginPath();
+      ctx.moveTo(x, H - 80);
+      ctx.lineTo(x, H);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = 'rgba(80, 50, 20, 0.15)';
+    ctx.fillRect(0, H - 80, W, 80);
+
+    for (let i = 0; i < 5; i++) {
+      let fx = 150 + i * 170;
+      let flagColors = ['#C62828', '#FFD54F', '#1565C0', '#2E7D32', '#FFFFFF'];
+      ctx.fillStyle = flagColors[i] + '15';
+      let fy = 60;
+      ctx.fillRect(fx, fy, 20, 35);
+      ctx.fillRect(fx, fy + 35, 18, 30);
+      ctx.fillRect(fx + 1, fy + 65, 16, 25);
+    }
+
+    ctx.strokeStyle = 'rgba(139, 90, 43, 0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(140, 58);
+    ctx.lineTo(W - 140, 58);
+    ctx.stroke();
+  }
+
+  function drawBarrel(cx, cy) {
+    let bw = 130;
+    let bh = 140;
+    let topW = bw + 25;
+    let squish = ScoreSystem.barrelSquish;
+
+    ctx.save();
+    ctx.translate(cx, cy + bh * 0.3);
+    ctx.scale(1 + squish * 0.5, 1 - squish);
+    ctx.translate(-cx, -(cy + bh * 0.3));
+
+    ctx.fillStyle = '#7A5C1E';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy - bh / 2, topW / 2 + 2, 20, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#9B7B3A';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy - bh / 2, topW / 2, 17, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#5A3E0A';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    let grad = ctx.createLinearGradient(cx - bw / 2, 0, cx + bw / 2, 0);
+    grad.addColorStop(0, '#5A3E0A');
+    grad.addColorStop(0.15, '#8B6B28');
+    grad.addColorStop(0.35, '#A8843A');
+    grad.addColorStop(0.5, '#BF9B4E');
+    grad.addColorStop(0.65, '#A8843A');
+    grad.addColorStop(0.85, '#8B6B28');
+    grad.addColorStop(1, '#5A3E0A');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(cx - topW / 2, cy - bh / 2 + 15);
+    ctx.lineTo(cx - bw / 2, cy + bh / 2 - 10);
+    ctx.lineTo(cx + bw / 2, cy + bh / 2 - 10);
+    ctx.lineTo(cx + topW / 2, cy - bh / 2 + 15);
+    ctx.closePath();
+    ctx.fill();
+
+    for (let j = 0; j < 6; j++) {
+      let plankY = cy - bh / 2 + 25 + j * 18;
+      ctx.strokeStyle = 'rgba(60, 35, 5, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      let lerp = (plankY - (cy - bh / 2)) / bh;
+      let w = topW / 2 - (topW / 2 - bw / 2) * lerp;
+      ctx.moveTo(cx - w + 2, plankY);
+      ctx.lineTo(cx + w - 2, plankY);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = '#4A3008';
+    let bandY1 = cy - 15;
+    let bandY2 = cy + 25;
+    for (let by of [bandY1, bandY2]) {
+      let lerp = (by - (cy - bh / 2)) / bh;
+      let w = topW / 2 - (topW / 2 - bw / 2) * lerp;
+      ctx.beginPath();
+      ctx.moveTo(cx - w - 3, by - 4);
+      ctx.lineTo(cx + w + 3, by - 4);
+      ctx.lineTo(cx + w + 3, by + 4);
+      ctx.lineTo(cx - w - 3, by + 4);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    let butterDisp = ScoreSystem.butterDisplay;
+    if (butterDisp > 0.1) {
+      let maxH = 90;
+      let fillH = Math.min(1, butterDisp / MAX_BUTTER) * maxH;
+      let fillBottom = cy + bh / 2 - 20;
+      let fillTop = fillBottom - fillH;
+
+      let butterGrad = ctx.createLinearGradient(0, fillTop, 0, fillBottom);
+      butterGrad.addColorStop(0, '#FFFDE7');
+      butterGrad.addColorStop(0.3, '#FFF8DC');
+      butterGrad.addColorStop(0.6, '#FFE4B5');
+      butterGrad.addColorStop(1, '#FFD54F');
+      ctx.fillStyle = butterGrad;
+
+      let lerpBottom = (fillBottom - (cy - bh / 2)) / bh;
+      let wBottom = topW / 2 - (topW / 2 - bw / 2) * lerpBottom - 8;
+      let lerpTop = (fillTop - (cy - bh / 2)) / bh;
+      let wTop = topW / 2 - (topW / 2 - bw / 2) * Math.max(0, lerpTop) - 8;
+
+      ctx.beginPath();
+      ctx.moveTo(cx - wTop, fillTop);
+      ctx.lineTo(cx - wBottom, fillBottom);
+      ctx.lineTo(cx + wBottom, fillBottom);
+      ctx.lineTo(cx + wTop, fillTop);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.beginPath();
+      ctx.ellipse(cx - 10, fillTop + 5, wTop * 0.5, 4, -0.15, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    for (let i = 1; i <= MAX_BUTTER; i++) {
+      let y = cy + bh / 2 - 20 - (i / MAX_BUTTER) * 90;
+      ctx.strokeStyle = 'rgba(90, 62, 10, 0.35)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      let lerp = (y - (cy - bh / 2)) / bh;
+      let w = (topW / 2 - (topW / 2 - bw / 2) * lerp) - 8;
+      ctx.moveTo(cx - w + 5, y);
+      ctx.lineTo(cx + w - 5, y);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+
+    let stickBob = stickOffset;
+    ctx.strokeStyle = '#8B6914';
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - bh / 2 - 90 + stickBob);
+    ctx.lineTo(cx, cy - 20 + stickBob);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#A68530';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(cx - 14, cy - 25 + stickBob);
+    ctx.quadraticCurveTo(cx, cy - 8 + stickBob, cx + 14, cy - 25 + stickBob);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#6B4F12';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - bh / 2 - 90 + stickBob);
+    ctx.lineTo(cx + 3, cy - bh / 2 - 95 + stickBob);
+    ctx.lineTo(cx + 12, cy - bh / 2 - 92 + stickBob);
+    ctx.stroke();
+  }
+
+  function drawPerson(x, y, side, animPhase, isPlayer) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    let sideDir = side;
+    let idle = Math.sin(globalTime * 2 + (isPlayer ? 0 : sideDir * 1.5)) * 0.04;
+    let push = Math.sin(animPhase * Math.PI) * 12;
+    let bodyBob = Math.sin(animPhase * Math.PI) * 6 + Math.sin(globalTime * 1.5 + (isPlayer ? 0 : sideDir * 2)) * 2;
+
+    ctx.translate(0, -push * 0.3 + Math.sin(globalTime * 1.5 + (isPlayer ? 0 : sideDir)) * 1);
+
+    let robeColor1 = isPlayer ? '#C62828' : (sideDir < 0 ? '#1565C0' : '#2E7D32');
+    let robeColor2 = isPlayer ? '#E53935' : (sideDir < 0 ? '#1E88E5' : '#43A047');
+
+    ctx.fillStyle = robeColor1;
+    ctx.beginPath();
+    ctx.ellipse(0, bodyBob, 24, 35, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = robeColor2;
+    ctx.beginPath();
+    ctx.ellipse(0, bodyBob - 2, 20, 30, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#D4A017';
+    ctx.fillRect(-16, bodyBob - 15, 32, 3);
+    ctx.fillRect(-14, bodyBob + 2, 28, 3);
+
+    if (isPlayer) {
+      ctx.fillStyle = '#FFD700';
+      ctx.fillRect(-18, bodyBob - 15, 36, 3);
+    }
+
+    ctx.fillStyle = '#EDCFA0';
+    ctx.beginPath();
+    ctx.ellipse(0, bodyBob - 45, 17, 19, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#3E2723';
+    ctx.beginPath();
+    ctx.ellipse(0, bodyBob - 53, 19, 11, 0, Math.PI, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(-19, bodyBob - 53, 38, 7);
+
+    if (sideDir < 0) {
+      ctx.fillStyle = '#3E2723';
+      ctx.beginPath();
+      ctx.moveTo(-17, bodyBob - 53);
+      ctx.quadraticCurveTo(-30, bodyBob - 60, -25, bodyBob - 72);
+      ctx.quadraticCurveTo(-15, bodyBob - 78, -8, bodyBob - 60);
+      ctx.lineTo(-12, bodyBob - 53);
+      ctx.closePath();
+      ctx.fill();
+    } else if (sideDir > 0) {
+      ctx.fillStyle = '#3E2723';
+      ctx.beginPath();
+      ctx.moveTo(17, bodyBob - 53);
+      ctx.quadraticCurveTo(30, bodyBob - 60, 25, bodyBob - 72);
+      ctx.quadraticCurveTo(15, bodyBob - 78, 8, bodyBob - 60);
+      ctx.lineTo(12, bodyBob - 53);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.fillStyle = '#3E2723';
+      ctx.beginPath();
+      ctx.moveTo(-17, bodyBob - 53);
+      ctx.quadraticCurveTo(-28, bodyBob - 62, -22, bodyBob - 73);
+      ctx.quadraticCurveTo(-12, bodyBob - 78, -7, bodyBob - 60);
+      ctx.lineTo(-12, bodyBob - 53);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(17, bodyBob - 53);
+      ctx.quadraticCurveTo(28, bodyBob - 62, 22, bodyBob - 73);
+      ctx.quadraticCurveTo(12, bodyBob - 78, 7, bodyBob - 60);
+      ctx.lineTo(12, bodyBob - 53);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.fillStyle = '#1A237E';
+    ctx.beginPath();
+    ctx.ellipse(-6, bodyBob - 46, 3, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(6, bodyBob - 46, 3, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.ellipse(-5, bodyBob - 47, 1.2, 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(7, bodyBob - 47, 1.2, 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.ellipse(0, bodyBob - 39, 2.5, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (animPhase > 0.15) {
+      ctx.fillStyle = '#C62828';
+      ctx.beginPath();
+      ctx.ellipse(0, bodyBob - 36, 7 + animPhase * 3, 4 + animPhase * 2, 0, 0, Math.PI);
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(-4, bodyBob - 36, 8, 1.5);
+    }
+
+    ctx.strokeStyle = '#EDCFA0';
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+
+    let armExtend = Math.sin(animPhase * Math.PI) * 20;
+    if (sideDir === 0) {
+      let idleSway = Math.sin(globalTime * 2) * 3;
+      ctx.beginPath();
+      ctx.moveTo(12, bodyBob - 18);
+      ctx.lineTo(20 + idleSway + armExtend * 0.3, bodyBob + 10 + armExtend * 0.5);
+      ctx.stroke();
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(-12, bodyBob - 18);
+      ctx.lineTo(-20 - idleSway - armExtend * 0.3, bodyBob + 10 + armExtend * 0.5);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(sideDir * 12, bodyBob - 22);
+      ctx.lineTo(sideDir * 28 + sideDir * armExtend, bodyBob - 50 - armExtend * 0.3);
+      ctx.stroke();
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(-sideDir * 10, bodyBob - 20);
+      ctx.lineTo(-sideDir * 18, bodyBob + 10 + bodyBob * 0.2);
+      ctx.stroke();
+    }
+
+    if (isPlayer) {
+      ctx.fillStyle = '#FFD700';
+      ctx.font = 'bold 15px Microsoft YaHei, SimHei, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 4;
+      ctx.fillText('▼ 你', 0, bodyBob - 78);
+      ctx.shadowBlur = 0;
+    } else {
+      ctx.fillStyle = 'rgba(200,200,200,0.6)';
+      ctx.font = '12px Microsoft YaHei, SimHei, sans-serif';
+      ctx.textAlign = 'center';
+      let label = sideDir < 0 ? '达瓦' : '格桑';
+      ctx.fillText(label, 0, bodyBob - 78);
+    }
+
+    ctx.restore();
+  }
+
+  function drawRhythmCircle(now) {
+    let cx = W / 2;
+    let cy = 560;
+    let phase = Metronome.getBeatPhase(now);
+    let timeToNext = Metronome.getTimeToNextBeat(now);
+    let timeSinceLast = Metronome.getTimeSinceLastBeat(now);
+
+    ctx.save();
+
+    let pulse = Math.max(0, 1 - timeToNext / 300);
+    if (Metronome.rhythmPulse > 0) pulse = Math.max(pulse, Metronome.rhythmPulse);
+
+    ctx.fillStyle = `rgba(255, 215, 0, ${0.05 + pulse * 0.2})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 42 + pulse * 15, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = `rgba(255, 215, 0, ${0.2 + pulse * 0.6})`;
+    ctx.lineWidth = 2 + pulse * 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 42 + pulse * 15, 0, Math.PI * 2);
+    ctx.stroke();
+
+    let dotAngle = -Math.PI / 2 + phase * Math.PI * 2;
+    let dotR = 34;
+    ctx.fillStyle = `rgba(255, 215, 0, ${0.6 + pulse * 0.4})`;
+    ctx.shadowColor = '#FFD700';
+    ctx.shadowBlur = pulse * 10;
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(dotAngle) * dotR, cy + Math.sin(dotAngle) * dotR, 6 + pulse * 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    if (Metronome.songTextTimer > 0 && Metronome.songText) {
+      let stAlpha = Math.min(1, Metronome.songTextTimer / 300);
+      ctx.font = `bold ${24 + pulse * 16}px Microsoft YaHei, SimHei, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      ctx.fillStyle = `rgba(255, 215, 0, ${stAlpha})`;
+      ctx.shadowColor = 'rgba(255, 150, 0, 0.5)';
+      ctx.shadowBlur = 8;
+      ctx.fillText(Metronome.songText, cx, cy);
+      ctx.shadowBlur = 0;
+    }
+
+    let beatIdx = Metronome.getCurrentBeatIndex(now);
+    if (beatIdx >= 0) {
+      let patternIdx = beatIdx % SONG_CALLS.length;
+      let isHitBeat = SONG_CALLS[patternIdx].hit;
+      let nextHitIn = 0;
+
+      if (!isHitBeat) {
+        for (let i = 1; i <= SONG_CALLS.length; i++) {
+          let ni = (beatIdx + i) % SONG_CALLS.length;
+          if (SONG_CALLS[ni].hit) {
+            nextHitIn = i;
+            break;
+          }
+        }
+        if (nextHitIn === 1) {
+          ctx.font = '13px Microsoft YaHei, SimHei, sans-serif';
+          ctx.fillStyle = 'rgba(255, 200, 100, 0.6)';
+          ctx.textAlign = 'center';
+          ctx.fillText('准备按空格...', cx, cy + 55);
+        }
+      } else {
+        if (timeSinceLast < 200) {
+          ctx.font = 'bold 14px Microsoft YaHei, SimHei, sans-serif';
+          ctx.fillStyle = `rgba(255, 100, 100, ${1 - timeSinceLast / 200})`;
+          ctx.textAlign = 'center';
+          ctx.fillText('按！', cx, cy + 55);
+        }
+      }
+    }
+
+    ctx.restore();
+  }
+
+  function drawTimingBar(now) {
+    let cx = W / 2;
+    let cy = 520;
+    let barW = 320;
+    let barH = 6;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.fillRect(cx - barW / 2, cy, barW, barH);
+
+    let beatIdx = Metronome.getCurrentBeatIndex(now);
+    if (beatIdx < 0) return;
+
+    let timeSinceLast = Metronome.getTimeSinceLastBeat(now);
+    let progress = timeSinceLast / BEAT_INTERVAL;
+
+    let hitZoneW = (HIT_WINDOW * 2 / BEAT_INTERVAL) * barW;
+    let perfectZoneW = (PERFECT_WINDOW * 2 / BEAT_INTERVAL) * barW;
+
+    ctx.fillStyle = 'rgba(255, 180, 0, 0.2)';
+    ctx.fillRect(cx - hitZoneW / 2, cy - 2, hitZoneW, barH + 4);
+
+    ctx.fillStyle = 'rgba(0, 255, 100, 0.3)';
+    ctx.fillRect(cx - perfectZoneW / 2, cy - 2, perfectZoneW, barH + 4);
+
+    let needleX = cx - barW / 2 + progress * barW;
+    ctx.fillStyle = '#FFF';
+    ctx.shadowColor = '#FFF';
+    ctx.shadowBlur = 4;
+    ctx.fillRect(needleX - 1.5, cy - 5, 3, barH + 10);
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.fillRect(cx - 0.5, cy - 3, 1, barH + 6);
+  }
+
+  function drawUI() {
+    ctx.fillStyle = 'rgba(20, 10, 5, 0.7)';
+    ctx.fillRect(0, 0, W, 55);
+    ctx.fillStyle = 'rgba(139, 105, 20, 0.3)';
+    ctx.fillRect(0, 54, W, 1);
+
+    ctx.font = 'bold 18px Microsoft YaHei, SimHei, sans-serif';
+    ctx.fillStyle = '#FFD54F';
+    ctx.textAlign = 'left';
+    ctx.fillText(`🧈 酥油 ${Math.min(MAX_BUTTER, Math.floor(ScoreSystem.butterDisplay))}/${MAX_BUTTER}`, 20, 36);
+
+    let barX = 175;
+    let barW = 220;
+    let barH = 18;
+    let barY = 19;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    roundRect(barX, barY, barW, barH, 4);
+
+    let fillW = Math.min(1, ScoreSystem.butterDisplay / MAX_BUTTER) * barW;
+    let butterGrad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    butterGrad.addColorStop(0, '#FFD54F');
+    butterGrad.addColorStop(1, '#FF8F00');
+    ctx.fillStyle = butterGrad;
+    roundRect(barX, barY, fillW, barH, 4);
+
+    for (let i = 1; i < MAX_BUTTER; i++) {
+      let lx = barX + (i / MAX_BUTTER) * barW;
+      ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(lx, barY);
+      ctx.lineTo(lx, barY + barH);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = '#FFF';
+    ctx.textAlign = 'center';
+    ctx.font = '11px Microsoft YaHei, SimHei, sans-serif';
+    ctx.fillText(`${Math.floor(Math.min(100, ScoreSystem.butterDisplay / MAX_BUTTER * 100))}%`, barX + barW / 2, barY + 14);
+
+    let rate = ScoreSystem.getSuccessRate();
+    ctx.font = '15px Microsoft YaHei, SimHei, sans-serif';
+    ctx.fillStyle = '#81D4FA';
+    ctx.textAlign = 'right';
+    ctx.fillText(`协作率 ${rate}% (${ScoreSystem.successBeats}/${ScoreSystem.totalBeats})`, W - 20, 25);
+
+    if (ScoreSystem.comboCount >= 3) {
+      ctx.fillStyle = '#FF8A65';
+      ctx.font = '13px Microsoft YaHei, SimHei, sans-serif';
+      ctx.fillText(`🔥 ${ScoreSystem.comboCount}连协`, W - 20, 44);
+    }
+
+    if (ScoreSystem.showResultTimer > 0) {
+      let alpha = Math.min(1, ScoreSystem.showResultTimer / 400);
+      ctx.font = 'bold 32px Microsoft YaHei, SimHei, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = ScoreSystem.currentResultColor;
+      ctx.globalAlpha = alpha;
+      ctx.shadowColor = ScoreSystem.currentResultColor;
+      ctx.shadowBlur = 12;
+      ctx.fillText(ScoreSystem.currentResult, W / 2, 100);
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+
+    if (Metronome.playerJudgmentTimer > 0) {
+      let alpha = Math.min(1, Metronome.playerJudgmentTimer / 200);
+      ctx.font = 'bold 20px Microsoft YaHei, SimHei, sans-serif';
+      ctx.textAlign = 'center';
+      let jColor = Metronome.playerJudgment === '完美！' ? '#00E676' :
+                   Metronome.playerJudgment === '好的！' ? '#76FF03' :
+                   Metronome.playerJudgment === '非拍点' ? '#FF9800' : '#FF5252';
+      ctx.fillStyle = jColor;
+      ctx.globalAlpha = alpha;
+      ctx.fillText(Metronome.playerJudgment, W / 2, 380);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function drawMenu() {
+    drawBackground();
+
+    let t = globalTime;
+
+    drawBarrel(W / 2, 360);
+    drawPerson(220, 390, -1, Math.sin(t * 2) * 0.3 + 0.3, false);
+    drawPerson(W / 2, 220, 0, Math.sin(t * 2 + 1) * 0.3 + 0.3, true);
+    drawPerson(W - 220, 390, 1, Math.sin(t * 2 + 2) * 0.3 + 0.3, false);
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.textAlign = 'center';
+
+    ctx.font = 'bold 60px Microsoft YaHei, SimHei, sans-serif';
+    let titleGrad = ctx.createLinearGradient(W / 2 - 220, 0, W / 2 + 220, 0);
+    titleGrad.addColorStop(0, '#FF8F00');
+    titleGrad.addColorStop(0.3, '#FFD54F');
+    titleGrad.addColorStop(0.5, '#FFF8E1');
+    titleGrad.addColorStop(0.7, '#FFD54F');
+    titleGrad.addColorStop(1, '#FF8F00');
+    ctx.fillStyle = titleGrad;
+    ctx.shadowColor = 'rgba(255, 150, 0, 0.4)';
+    ctx.shadowBlur = 20;
+    ctx.fillText('打酥油号子', W / 2, 170);
+    ctx.shadowBlur = 0;
+
+    ctx.font = '22px Microsoft YaHei, SimHei, sans-serif';
+    ctx.fillStyle = '#D4A017';
+    ctx.fillText('藏族劳动协作游戏', W / 2, 210);
+
+    ctx.font = '17px Microsoft YaHei, SimHei, sans-serif';
+    ctx.fillStyle = '#BCAAA4';
+    let instructions = [
+      '三人围着木桶打酥油，跟着号子节奏按空格！',
+      '',
+      '号子喊 "嘿！" 的时候按空格键',
+      '三人节奏越一致，协作分越高',
+      '酥油打满 10 格即可过关',
+      '',
+      '你控制中间的人，左右同伴由AI控制'
+    ];
+    instructions.forEach((line, i) => {
+      ctx.fillText(line, W / 2, 260 + i * 30);
+    });
+
+    let alpha = 0.5 + Math.sin(t * 3) * 0.5;
+    ctx.font = 'bold 26px Microsoft YaHei, SimHei, sans-serif';
+    ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
+    ctx.fillText('按 空格键 / 点击 开始', W / 2, 560);
+
+    ctx.font = '14px Microsoft YaHei, SimHei, sans-serif';
+    ctx.fillStyle = 'rgba(200, 200, 200, 0.4)';
+    ctx.fillText('也可点击屏幕操作', W / 2, 590);
+  }
+
+  function drawCountdown() {
+    drawBackground();
+    drawBarrel(W / 2, 310);
+    drawPerson(220, 390, -1, 0, false);
+    drawPerson(W / 2, 220, 0, 0, true);
+    drawPerson(W - 220, 390, 1, 0, false);
+    drawUI();
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    let scale = 1 + (1 - countdownTimer / 800) * 0.5;
+    ctx.font = `bold ${Math.floor(80 * scale)}px Microsoft YaHei, SimHei, sans-serif`;
+    ctx.fillStyle = '#FFD54F';
+    ctx.shadowColor = 'rgba(255, 200, 0, 0.5)';
+    ctx.shadowBlur = 15;
+    ctx.fillText(countdownValue > 0 ? countdownValue.toString() : '开始！', W / 2, H / 2 - 40);
+    ctx.shadowBlur = 0;
+  }
+
+  function drawWinScreen() {
+    drawBackground();
+    drawBarrel(W / 2, 310);
+    drawPerson(220, 390, -1, Math.sin(globalTime * 3) * 0.5 + 0.5, false);
+    drawPerson(W / 2, 220, 0, Math.sin(globalTime * 3 + 1) * 0.5 + 0.5, true);
+    drawPerson(W - 220, 390, 1, Math.sin(globalTime * 3 + 2) * 0.5 + 0.5, false);
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.textAlign = 'center';
+
+    ctx.font = 'bold 64px Microsoft YaHei, SimHei, sans-serif';
+    let winGrad = ctx.createLinearGradient(W / 2 - 250, 0, W / 2 + 250, 0);
+    winGrad.addColorStop(0, '#FF8F00');
+    winGrad.addColorStop(0.3, '#FFD54F');
+    winGrad.addColorStop(0.5, '#FFFFFF');
+    winGrad.addColorStop(0.7, '#FFD54F');
+    winGrad.addColorStop(1, '#FF8F00');
+    ctx.fillStyle = winGrad;
+    ctx.shadowColor = 'rgba(255, 200, 0, 0.5)';
+    ctx.shadowBlur = 20;
+    ctx.fillText('酥油打好了！', W / 2, 180);
+    ctx.shadowBlur = 0;
+
+    ctx.font = '28px Microsoft YaHei, SimHei, sans-serif';
+    ctx.fillStyle = '#FFE0B2';
+    ctx.fillText('扎西德勒！', W / 2, 230);
+
+    ctx.font = '20px Microsoft YaHei, SimHei, sans-serif';
+    ctx.fillStyle = '#BCAAA4';
+    ctx.fillText(`总号子次数: ${ScoreSystem.totalBeats}`, W / 2, 300);
+    ctx.fillText(`协作成功次数: ${ScoreSystem.successBeats}`, W / 2, 335);
+    ctx.fillText(`协作成功率: ${ScoreSystem.getSuccessRate()}%`, W / 2, 370);
+
+    ctx.font = 'bold 34px Microsoft YaHei, SimHei, sans-serif';
+    ctx.fillStyle = ScoreSystem.getRatingColor();
+    ctx.fillText(ScoreSystem.getRating(), W / 2, 430);
+
+    let alpha = 0.5 + Math.sin(globalTime * 3) * 0.5;
+    ctx.font = '22px Microsoft YaHei, SimHei, sans-serif';
+    ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
+    ctx.fillText('按空格键重新开始', W / 2, 510);
+  }
+
+  function gameLoop(timestamp) {
+    let dt = Math.min(50, timestamp - lastTime);
+    lastTime = timestamp;
+    globalTime = timestamp / 1000;
+
+    ctx.clearRect(0, 0, W, H);
+
+    if (gameState === STATE.MENU) {
+      drawMenu();
+    } else if (gameState === STATE.COUNTDOWN) {
+      countdownTimer += dt;
+      if (countdownTimer >= 800) {
+        countdownTimer = 0;
+        countdownValue--;
+        if (countdownValue < 0) {
+          beginPlaying();
+        }
+      }
+      if (gameState === STATE.COUNTDOWN) drawCountdown();
+    } else if (gameState === STATE.WIN) {
+      ScoreSystem.updateWinDisplay(dt);
+      drawWinScreen();
+    } else if (gameState === STATE.PLAYING) {
+      let now = performance.now();
+
+      Metronome.scheduleAudio();
+      checkBeatResult(now);
+
+      playerAnimPhase = Math.max(0, playerAnimPhase - dt * 0.004);
+      Metronome.update(dt);
+      AIController.update(dt);
+      ScoreSystem.update(dt);
+
+      let avgAnim = (playerAnimPhase + AIController.leftAnimPhase + AIController.rightAnimPhase) / 3;
+      stickOffset = avgAnim * 10;
+
+      Effects.update(dt);
+
+      ctx.save();
+      if (ScoreSystem.shakeAmount > 0.1) {
+        ctx.translate(
+          (Math.random() - 0.5) * ScoreSystem.shakeAmount,
+          (Math.random() - 0.5) * ScoreSystem.shakeAmount
+        );
+      }
+
+      drawBackground();
+      drawPerson(220, 390, -1, AIController.leftAnimPhase, false);
+      drawBarrel(W / 2, 310);
+      drawPerson(W / 2, 220, 0, playerAnimPhase, true);
+      drawPerson(W - 220, 390, 1, AIController.rightAnimPhase, false);
+      Effects.draw();
+      drawTimingBar(now);
+      drawRhythmCircle(now);
+      drawUI();
+
+      ctx.restore();
+    }
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (gameState === STATE.MENU) {
+        startGame();
+      } else if (gameState === STATE.PLAYING) {
+        handlePlayerHit();
+      } else if (gameState === STATE.WIN) {
+        gameState = STATE.MENU;
+      }
+    }
+  });
+
+  canvas.addEventListener('click', () => {
+    if (gameState === STATE.MENU) {
+      startGame();
+    } else if (gameState === STATE.PLAYING) {
+      handlePlayerHit();
+    } else if (gameState === STATE.WIN) {
+      gameState = STATE.MENU;
+    }
+  });
+
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (gameState === STATE.MENU) {
+      startGame();
+    } else if (gameState === STATE.PLAYING) {
+      handlePlayerHit();
+    } else if (gameState === STATE.WIN) {
+      gameState = STATE.MENU;
+    }
+  });
+
+  requestAnimationFrame(gameLoop);
+
+  return { startGame, handlePlayerHit, resetGame };
+})();
+</script>
+</body>
+</html>

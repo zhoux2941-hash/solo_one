@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>砚台石品分析工具</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🪨 砚台石品分析工具</h1>
+            <p class="subtitle">上传砚台照片，智能识别石品特征，分析发墨性能</p>
+        </header>
+
+        <main>
+            <section class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📷</div>
+                    <p class="upload-text">点击或拖拽砚台照片到此处</p>
+                    <p class="upload-hint">支持 JPG、PNG 格式</p>
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                </div>
+                <div class="image-preview" id="imagePreview" style="display: none;">
+                    <img id="previewImg" alt="预览图片">
+                    <button class="reupload-btn" id="reuploadBtn">重新上传</button>
+                </div>
+                <button class="analyze-btn" id="analyzeBtn" disabled>开始分析</button>
+            </section>
+
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-header">
+                    <h2>石品识别结果</h2>
+                    <button class="export-btn" id="exportBtn">导出PDF报告</button>
+                </div>
+                
+                <div class="result-content">
+                    <div class="stone-info">
+                        <div class="info-item">
+                            <span class="label">石品名称:</span>
+                            <span class="value" id="stoneName">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">砚台类别:</span>
+                            <span class="value" id="stoneCategory">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">识别置信度:</span>
+                            <span class="value confidence" id="confidence">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">发墨性能:</span>
+                            <span class="value" id="inkPerformance">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">质量评级:</span>
+                            <span class="value rating" id="rating">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="features-card">
+                        <h3>检测到的纹理特征</h3>
+                        <div class="features-list" id="featuresList"></div>
+                        <p class="description" id="stoneDescription"></p>
+                    </div>
+                    
+                    <div class="features-card">
+                        <h3>GLCM + Hough 参数</h3>
+                        <div class="analysis-params">
+                            <div class="param-item">
+                                <span class="param-label">线性度:</span>
+                                <span class="param-value" id="paramLinearity">-</span>
+                            </div>
+                            <div class="param-item">
+                                <span class="param-label">线条数量:</span>
+                                <span class="param-value" id="paramLineCount">-</span>
+                            </div>
+                            <div class="param-item">
+                                <span class="param-label">对比度:</span>
+                                <span class="param-value" id="paramContrast">-</span>
+                            </div>
+                            <div class="param-item">
+                                <span class="param-label">同质性:</span>
+                                <span class="param-value" id="paramHomogeneity">-</span>
+                            </div>
+                            <div class="param-item">
+                                <span class="param-label">主角度:</span>
+                                <span class="param-value" id="paramAngle">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="features-card">
+                        <h3>Gabor 滤波器参数</h3>
+                        <div class="analysis-params">
+                            <div class="param-item">
+                                <span class="param-label">方向性:</span>
+                                <span class="param-value" id="paramGaborDir">-</span>
+                            </div>
+                            <div class="param-item">
+                                <span class="param-label">方向选择性:</span>
+                                <span class="param-value" id="paramGaborSel">-</span>
+                            </div>
+                            <div class="param-item">
+                                <span class="param-label">频率带宽:</span>
+                                <span class="param-value" id="paramGaborBW">-</span>
+                            </div>
+                            <div class="param-item">
+                                <span class="param-label">纹理周期性:</span>
+                                <span class="param-value" id="paramGaborPer">-</span>
+                            </div>
+                            <div class="param-item">
+                                <span class="param-label">主方向:</span>
+                                <span class="param-value" id="paramGaborOrient">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="features-card">
+                        <h3>特征融合降维</h3>
+                        <div class="analysis-params">
+                            <div class="param-item">
+                                <span class="param-label">原始维度:</span>
+                                <span class="param-value" id="paramRawDim">-</span>
+                            </div>
+                            <div class="param-item">
+                                <span class="param-label">降维后:</span>
+                                <span class="param-value" id="paramFusedDim">-</span>
+                            </div>
+                            <div class="param-item">
+                                <span class="param-label">PCA解释方差:</span>
+                                <span class="param-value" id="paramExplVar">-</span>
+                            </div>
+                            <div class="param-item">
+                                <span class="param-label">AE重建误差:</span>
+                                <span class="param-value" id="paramAeError">-</span>
+                            </div>
+                            <div class="param-item">
+                                <span class="param-label">融合向量:</span>
+                                <span class="param-value" id="paramFusedVec">-</span>
+                            </div>
+                        </div>
+                        <p class="algorithm-note">算法: GLCM + Gabor + Hough → PCA(0.6) + AE(0.4) 融合降维</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grind-section" id="grindSection" style="display: none;">
+                <h2>🖌️ 研墨模拟器 · 碳粒分子分散</h2>
+                <p class="grind-hint">拖动滑块模拟研墨圈数，观察碳粒在水中分散的分子运动</p>
+                
+                <div class="grind-controls">
+                    <div class="slider-container">
+                        <label>研墨圈数: <span id="grindCount">0</span> 圈</label>
+                        <input type="range" id="grindSlider" min="0" max="100" value="0">
+                        <div class="slider-labels">
+                            <span>0</span>
+                            <span>25</span>
+                            <span>50</span>
+                            <span>75</span>
+                            <span>100</span>
+                        </div>
+                    </div>
+                    <div class="time-estimate">
+                        <span>预估研墨时间:</span>
+                        <span class="time-value" id="estimatedTime">0.0 秒</span>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="inkCanvas" width="500" height="380"></canvas>
+                    <div class="ink-info">
+                        <div class="ink-level">
+                            <span>墨汁浓度:</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="inkProgress"></div>
+                            </div>
+                            <span id="inkPercent">0%</span>
+                        </div>
+                        <div class="particle-stats" id="particleStats">
+                            <span>碳粒数: <b>0</b></span>
+                            <span>平均粒径: <b>0μm</b></span>
+                            <span>分散率: <b>0%</b></span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>砚台石品分析工具 © 2024 | 支持端砚、歙砚、洮河砚、澄泥砚等多种砚台识别</p>
+        </footer>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>正在分析石品特征...</p>
+    </div>
+
+    <script src="image-processor.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

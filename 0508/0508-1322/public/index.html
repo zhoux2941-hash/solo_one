@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蒙古族搏克 - 跤衣系带展示与配对模拟</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+        :root {
+            --gold: #D4A843;
+            --gold-light: #F0D68A;
+            --gold-dark: #9B7B2A;
+            --navy: #1A2744;
+            --navy-light: #2A3F6A;
+            --navy-dark: #0F1A30;
+            --red: #C0392B;
+            --red-light: #E74C3C;
+            --cream: #FFF8E7;
+            --cream-dark: #F5E6C8;
+            --text-dark: #1A1A2E;
+            --text-light: #E8DCC8;
+            --green: #27AE60;
+            --orange: #F39C12;
+            --risk-high: #E74C3C;
+            --risk-medium: #F39C12;
+            --risk-low: #27AE60;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--navy-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-pattern {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(212,168,67,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(192,57,43,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(42,63,106,0.3) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px 30px;
+            border-bottom: 2px solid rgba(212,168,67,0.3);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 2.8em;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 8px;
+            margin-bottom: 8px;
+        }
+
+        header .subtitle {
+            font-size: 1.1em;
+            color: var(--gold-dark);
+            letter-spacing: 4px;
+            font-weight: 300;
+        }
+
+        .ornament {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .ornament-line {
+            width: 80px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gold), transparent);
+        }
+
+        .ornament-diamond {
+            width: 8px;
+            height: 8px;
+            background: var(--gold);
+            transform: rotate(45deg);
+        }
+
+        .section-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.5em;
+            color: var(--gold);
+            text-align: center;
+            margin-bottom: 25px;
+            letter-spacing: 3px;
+            position: relative;
+        }
+
+        .section-title::before,
+        .section-title::after {
+            content: '◆';
+            font-size: 0.5em;
+            vertical-align: middle;
+            margin: 0 12px;
+            opacity: 0.6;
+        }
+
+        .wrestler-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .wrestler-card {
+            background: linear-gradient(145deg, rgba(26,39,68,0.9), rgba(15,26,48,0.95));
+            border: 1px solid rgba(212,168,67,0.2);
+            border-radius: 12px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wrestler-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(to right, var(--gold-dark), var(--gold-light), var(--gold-dark));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .wrestler-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(212,168,67,0.15);
+        }
+
+        .wrestler-card:hover::before { opacity: 1; }
+
+        .wrestler-card.selected-a {
+            border-color: var(--red-light);
+            box-shadow: 0 0 20px rgba(231,76,60,0.3);
+            background: linear-gradient(145deg, rgba(50,20,20,0.9), rgba(30,15,15,0.95));
+        }
+
+        .wrestler-card.selected-a::before {
+            opacity: 1;
+            background: linear-gradient(to right, transparent, var(--red-light), transparent);
+        }
+
+        .wrestler-card.selected-b {
+            border-color: #3498DB;
+            box-shadow: 0 0 20px rgba(52,152,219,0.3);
+            background: linear-gradient(145deg, rgba(20,30,50,0.9), rgba(15,20,40,0.95));
+        }
+
+        .wrestler-card.selected-b::before {
+            opacity: 1;
+            background: linear-gradient(to right, transparent, #3498DB, transparent);
+        }
+
+        .wrestler-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .wrestler-card .name {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--gold-light);
+        }
+
+        .wrestler-card .region-badge {
+            background: rgba(212,168,67,0.15);
+            color: var(--gold);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            border: 1px solid rgba(212,168,67,0.3);
+        }
+
+        .wrestler-card .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .wrestler-card .stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wrestler-card .stat-label {
+            font-size: 0.7em;
+            color: rgba(232,220,200,0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .wrestler-card .stat-value {
+            font-size: 1.05em;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        .wrestler-card .knot-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(212,168,67,0.08);
+            border: 1px solid rgba(212,168,67,0.15);
+            flex-wrap: wrap;
+        }
+
+        .wrestler-card .knot-name {
+            font-weight: 500;
+            color: var(--gold-light);
+            font-size: 0.9em;
+        }
+
+        .wrestler-card .knot-risk {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .risk-high {
+            background: rgba(231,76,60,0.2);
+            color: var(--risk-high);
+            border: 1px solid rgba(231,76,60,0.4);
+        }
+
+        .risk-medium {
+            background: rgba(243,156,18,0.2);
+            color: var(--risk-medium);
+            border: 1px solid rgba(243,156,18,0.4);
+        }
+
+        .risk-low {
+            background: rgba(39,174,96,0.2);
+            color: var(--risk-low);
+            border: 1px solid rgba(39,174,96,0.4);
+        }
+
+        .selection-panel {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            align-items: start;
+        }
+
+        .selected-wrestler {
+            background: linear-gradient(145deg, rgba(26,39,68,0.95), rgba(15,26,48,0.98));
+            border: 1px solid rgba(212,168,67,0.3);
+            border-radius: 16px;
+            padding: 25px;
+            min-height: 300px;
+        }
+
+        .selected-wrestler.side-a { border-top: 3px solid var(--red-light); }
+        .selected-wrestler.side-b { border-top: 3px solid #3498DB; }
+
+        .selected-wrestler .side-label {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.1em;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .side-a .side-label { color: var(--red-light); }
+        .side-b .side-label { color: #3498DB; }
+
+        .empty-slot {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            color: rgba(232,220,200,0.3);
+            font-size: 1.1em;
+            text-align: center;
+            border: 2px dashed rgba(212,168,67,0.15);
+            border-radius: 12px;
+            padding: 30px;
+        }
+
+        .vs-divider {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding-top: 50px;
+        }
+
+        .vs-text {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 2.5em;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(212,168,67,0.4);
+        }
+
+        .detail-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .detail-stat {
+            background: rgba(255,255,255,0.03);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .detail-stat .label {
+            font-size: 0.7em;
+            color: rgba(232,220,200,0.5);
+            letter-spacing: 1px;
+        }
+
+        .detail-stat .value {
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+
+        .knot-display {
+            background: rgba(212,168,67,0.06);
+            border: 1px solid rgba(212,168,67,0.2);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .knot-display .knot-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.1em;
+            color: var(--gold);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .knot-display .knot-desc {
+            font-size: 0.85em;
+            color: rgba(232,220,200,0.7);
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .firmness-bar {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .firmness-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+
+        .firmness-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75em;
+            color: rgba(232,220,200,0.5);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 32px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 2px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
+            color: var(--navy-dark);
+            box-shadow: 0 4px 15px rgba(212,168,67,0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(212,168,67,0.5);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: rgba(212,168,67,0.1);
+            color: var(--gold);
+            border: 1px solid rgba(212,168,67,0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(212,168,67,0.2);
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .result-panel {
+            display: none;
+            background: linear-gradient(145deg, rgba(26,39,68,0.95), rgba(15,26,48,0.98));
+            border: 1px solid rgba(212,168,67,0.3);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-panel.visible { display: block; }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .result-header h2 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.8em;
+            color: var(--gold);
+            letter-spacing: 4px;
+        }
+
+        .win-rate-display {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+            margin: 25px 0;
+        }
+
+        .rate-side {
+            text-align: center;
+        }
+
+        .rate-name {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .rate-value {
+            font-size: 3em;
+            font-weight: 900;
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        .rate-side.side-a .rate-name { color: var(--red-light); }
+        .rate-side.side-a .rate-value { color: var(--red-light); }
+        .rate-side.side-b .rate-name { color: #3498DB; }
+        .rate-side.side-b .rate-value { color: #3498DB; }
+
+        .rate-vs {
+            font-size: 1.5em;
+            color: var(--gold);
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        .rate-bar {
+            height: 12px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            overflow: hidden;
+            margin-top: 10px;
+            display: flex;
+        }
+
+        .rate-bar-a {
+            background: linear-gradient(to right, var(--red), var(--red-light));
+            border-radius: 10px 0 0 10px;
+            transition: width 1s ease;
+        }
+
+        .rate-bar-b {
+            background: linear-gradient(to right, #2980B9, #3498DB);
+            border-radius: 0 10px 10px 0;
+            transition: width 1s ease;
+        }
+
+        .analysis-box {
+            background: rgba(212,168,67,0.05);
+            border: 1px solid rgba(212,168,67,0.15);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .analysis-box h3 {
+            font-family: 'Noto Serif SC', serif;
+            color: var(--gold);
+            margin-bottom: 12px;
+            font-size: 1.1em;
+            letter-spacing: 2px;
+        }
+
+        .analysis-box p {
+            line-height: 1.8;
+            color: rgba(232,220,200,0.8);
+            font-size: 0.95em;
+            white-space: pre-line;
+        }
+
+        .knot-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .knot-compare-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(212,168,67,0.15);
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .knot-compare-card .knot-visual {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .knot-compare-card .knot-style-name {
+            font-family: 'Noto Serif SC', serif;
+            color: var(--gold);
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .robe-display {
+            width: 100%;
+            max-width: 160px;
+            margin: 0 auto 12px;
+            aspect-ratio: 1/1.4;
+            display: block;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+
+        .robe-display-mini {
+            width: 50px;
+            height: 70px;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .robe-display-large {
+            width: 200px;
+            aspect-ratio: 1/1.4;
+            display: block;
+            margin: 0 auto 15px;
+            filter: drop-shadow(0 6px 12px rgba(0,0,0,0.3));
+        }
+
+        .robe-info {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 0.85em;
+        }
+
+        .robe-info .pattern-name {
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 4px;
+        }
+
+        .robe-info .pattern-desc {
+            font-size: 0.85em;
+            color: rgba(232,220,200,0.6);
+            line-height: 1.5;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: rgba(26,39,68,0.9);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(212,168,67,0.2);
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(212,168,67,0.1);
+        }
+
+        .leaderboard-table th {
+            background: linear-gradient(to bottom, rgba(212,168,67,0.15), rgba(212,168,67,0.05));
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .leaderboard-table tr:last-child td { border-bottom: none; }
+
+        .leaderboard-table tr:hover td {
+            background: rgba(212,168,67,0.05);
+        }
+
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-weight: 900;
+            font-size: 0.95em;
+        }
+
+        .rank-1 { background: linear-gradient(135deg, #FFD700, #FFA500); color: var(--navy-dark); }
+        .rank-2 { background: linear-gradient(135deg, #C0C0C0, #A8A8A8); color: var(--navy-dark); }
+        .rank-3 { background: linear-gradient(135deg, #CD7F32, #8B4513); color: var(--text-light); }
+        .rank-other { background: rgba(212,168,67,0.1); color: var(--gold); }
+
+        .player-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .player-cell .player-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-cell .player-name {
+            font-weight: 700;
+            font-size: 1.05em;
+            color: var(--gold-light);
+        }
+
+        .player-cell .player-region {
+            font-size: 0.75em;
+            color: rgba(232,220,200,0.5);
+        }
+
+        .form-badge {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 700;
+            margin-right: 3px;
+        }
+
+        .form-w { background: rgba(39,174,96,0.2); color: var(--risk-low); }
+        .form-l { background: rgba(231,76,60,0.2); color: var(--risk-high); }
+        .form-d { background: rgba(243,156,18,0.2); color: var(--risk-medium); }
+
+        .points-cell {
+            font-size: 1.3em;
+            font-weight: 900;
+            color: var(--gold);
+        }
+
+        .h2h-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            background: rgba(212,168,67,0.1);
+            color: var(--gold);
+            border: 1px solid rgba(212,168,67,0.2);
+            margin-left: 6px;
+        }
+
+        .h2h-has-edge {
+            background: rgba(39,174,96,0.15);
+            color: var(--risk-low);
+            border-color: rgba(39,174,96,0.3);
+        }
+
+        .leaderboard-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 12px 20px;
+            background: rgba(212,168,67,0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(212,168,67,0.15);
+        }
+
+        .leaderboard-meta .meta-label {
+            font-size: 0.85em;
+            color: rgba(232,220,200,0.6);
+        }
+
+        .leaderboard-meta .meta-value {
+            font-weight: 700;
+            color: var(--gold);
+            font-size: 1.1em;
+        }
+
+        .tied-note {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(243,156,18,0.08);
+            border: 1px solid rgba(243,156,18,0.2);
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: rgba(232,220,200,0.7);
+            line-height: 1.6;
+        }
+
+        .tied-note strong {
+            color: var(--gold);
+        }
+
+        .rank-change {
+            display: inline-block;
+            margin-left: 6px;
+            font-size: 0.7em;
+            font-weight: 700;
+        }
+
+        .rank-up { color: var(--risk-low); }
+        .rank-down { color: var(--risk-high); }
+        .rank-same { color: rgba(232,220,200,0.4); }
+
+        @media (max-width: 768px) {
+            .leaderboard-table th:nth-child(4),
+            .leaderboard-table td:nth-child(4),
+            .leaderboard-table th:nth-child(6),
+            .leaderboard-table td:nth-child(6) {
+                display: none;
+            }
+        }
+
+        .history-section {
+            margin-top: 40px;
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(212,168,67,0.1);
+        }
+
+        .history-item:last-child { border-bottom: none; }
+
+        .history-names {
+            flex: 1;
+            font-size: 0.9em;
+        }
+
+        .history-names .winner { color: var(--gold); font-weight: 700; }
+        .history-names .vs { color: rgba(232,220,200,0.4); margin: 0 8px; }
+
+        .history-rates {
+            font-size: 0.8em;
+            color: rgba(232,220,200,0.5);
+        }
+
+        .history-time {
+            font-size: 0.75em;
+            color: rgba(232,220,200,0.3);
+        }
+
+        .winner-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            color: var(--navy-dark);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-top: 8px;
+        }
+
+        .export-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .export-modal.visible {
+            display: flex;
+        }
+
+        .export-content {
+            background: var(--navy);
+            border: 1px solid var(--gold);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 650px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .export-content pre {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            color: var(--gold-light);
+            font-size: 0.85em;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .export-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--navy);
+            border: 1px solid var(--gold);
+            color: var(--gold-light);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            z-index: 2000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.visible { transform: translateX(0); }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(212,168,67,0.3);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .tab-bar {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 25px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 5px;
+        }
+
+        .tab-btn {
+            padding: 10px 25px;
+            border: none;
+            background: transparent;
+            color: rgba(232,220,200,0.5);
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 0.9em;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            letter-spacing: 1px;
+        }
+
+        .tab-btn.active {
+            background: rgba(212,168,67,0.15);
+            color: var(--gold);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: rgba(232,220,200,0.8);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: rgba(232,220,200,0.3);
+            font-size: 0.8em;
+            border-top: 1px solid rgba(212,168,67,0.1);
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8em; letter-spacing: 4px; }
+            .selection-panel { grid-template-columns: 1fr; }
+            .vs-divider { flex-direction: row; padding-top: 0; }
+            .win-rate-display { grid-template-columns: 1fr; }
+            .knot-comparison { grid-template-columns: 1fr; }
+            .wrestler-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    <div class="container">
+        <header>
+            <h1>蒙古族搏克</h1>
+            <div class="ornament">
+                <span class="ornament-line"></span>
+                <span class="ornament-diamond"></span>
+                <span class="ornament-line"></span>
+            </div>
+            <p class="subtitle">跤衣系带展示与配对推演</p>
+        </header>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="select">选手选择</button>
+            <button class="tab-btn" data-tab="match">配对推演</button>
+            <button class="tab-btn" data-tab="leaderboard">积分榜</button>
+            <button class="tab-btn" data-tab="history">历史记录</button>
+        </div>
+
+        <div id="tab-select" class="tab-content active">
+            <h2 class="section-title">选手库</h2>
+            <div class="wrestler-grid" id="wrestlerGrid"></div>
+
+            <h2 class="section-title">已选选手</h2>
+            <div class="selection-panel">
+                <div class="selected-wrestler side-a" id="sideA">
+                    <div class="side-label">红方 选手</div>
+                    <div class="empty-slot" id="emptyA">← 点击上方选手卡片<br>选择红方选手</div>
+                    <div id="detailA" style="display:none"></div>
+                </div>
+                <div class="vs-divider">
+                    <span class="vs-text">VS</span>
+                </div>
+                <div class="selected-wrestler side-b" id="sideB">
+                    <div class="side-label">蓝方 选手</div>
+                    <div class="empty-slot" id="emptyB">← 点击上方选手卡片<br>选择蓝方选手</div>
+                    <div id="detailB" style="display:none"></div>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button class="btn btn-primary" id="btnSimulate" disabled>模拟比赛</button>
+                <button class="btn btn-secondary" id="btnClear">清除选择</button>
+            </div>
+        </div>
+
+        <div id="tab-match" class="tab-content">
+            <div class="result-panel" id="resultPanel">
+                <div class="result-header">
+                    <h2>比赛推演结果</h2>
+                </div>
+                <div class="win-rate-display">
+                    <div class="rate-side side-a">
+                        <div class="rate-name" id="resultNameA"></div>
+                        <div class="rate-value" id="resultRateA"></div>
+                    </div>
+                    <div class="rate-vs">VS</div>
+                    <div class="rate-side side-b">
+                        <div class="rate-name" id="resultNameB"></div>
+                        <div class="rate-value" id="resultRateB"></div>
+                    </div>
+                </div>
+                <div class="rate-bar">
+                    <div class="rate-bar-a" id="rateBarA"></div>
+                    <div class="rate-bar-b" id="rateBarB"></div>
+                </div>
+                <div id="winnerDisplay" style="text-align:center; margin-top:15px;"></div>
+                <div class="knot-comparison" id="knotComparison"></div>
+                <div class="analysis-box">
+                    <h3>综合分析</h3>
+                    <p id="analysisText"></p>
+                </div>
+                <div class="action-bar">
+                    <button class="btn btn-primary" id="btnResimulate">再次模拟</button>
+                    <button class="btn btn-secondary" id="btnExport">导出报告卡</button>
+                </div>
+            </div>
+            <div id="noResult" style="text-align:center; padding:60px; color:rgba(232,220,200,0.3);">
+                <p style="font-size:3em; margin-bottom:15px;">🏇</p>
+                <p>请先选择两名选手并点击"模拟比赛"</p>
+            </div>
+        </div>
+
+        <div id="tab-leaderboard" class="tab-content">
+            <h2 class="section-title">积分榜</h2>
+            <div class="leaderboard-meta">
+                <div><span class="meta-label">总模拟场次</span><span class="meta-value" id="totalMatches">0</span></div>
+                <div><span class="meta-label">积分规则</span><span class="meta-value" style="font-size:0.85em;">胜3分 · 平1分 · 负0分</span></div>
+                <button class="btn btn-secondary" id="btnRefreshLeaderboard" style="padding:8px 16px; font-size:0.85em;">刷新榜单</button>
+            </div>
+            <div id="leaderboardContent">
+                <div style="text-align:center; padding:40px; color:rgba(232,220,200,0.3);">暂无比赛记录</div>
+            </div>
+            <div id="tiedGroupsNote"></div>
+        </div>
+
+        <div id="tab-history" class="tab-content">
+            <h2 class="section-title">模拟历史</h2>
+            <div class="history-list" id="historyList">
+                <div style="text-align:center; padding:40px; color:rgba(232,220,200,0.3);">暂无历史记录</div>
+            </div>
+        </div>
+
+        <footer>
+            蒙古族搏克跤衣系带展示与配对模拟系统 · 基于体重差、跤龄、系带牢固度（含手艺熟练度）综合推演
+        </footer>
+    </div>
+
+    <div class="export-modal" id="exportModal">
+        <div class="export-content">
+            <h2 class="section-title">配对报告卡</h2>
+            <pre id="reportContent"></pre>
+            <div class="export-actions">
+                <button class="btn btn-primary" id="btnDownload">下载报告</button>
+                <button class="btn btn-secondary" id="btnCloseExport">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const state = {
+            wrestlers: [],
+            selectedA: null,
+            selectedB: null,
+            lastResult: null,
+            selectingSide: 'a'
+        };
+
+        const knotVisuals = {
+            '蝴蝶结': '🦋',
+            '方结': '⬜',
+            '双环结': '🔄',
+            '单结': '1️⃣',
+            '活结': '🔓'
+        };
+
+        function generateRobeSVG(robe, size = 'medium') {
+            if (!robe) return '';
+            const { primary_color, secondary_color, accent_color, trim_color, collar_color, pattern, pattern_svg } = robe;
+
+            const dims = size === 'mini' ? { w: 50, h: 70 } :
+                       size === 'large' ? { w: 200, h: 280 } :
+                       { w: 160, h: 224 };
+
+            const w = dims.w, h = dims.h;
+            const neckW = w * 0.5, neckH = h * 0.15;
+            const sideW = w * 0.15, sideH = h * 0.55;
+            const sleeveW = w * 0.35, sleeveH = h * 0.38;
+            const trim = Math.max(2, w * 0.025);
+            const smallTrim = Math.max(1, w * 0.015);
+
+            const patternId = pattern.replace(/[\u4e00-\u9fa5]/g, '_') + '_' + Math.random().toString(36).substr(2, 9);
+            let patternContent = pattern_svg || '';
+            patternContent = patternContent.replace(/id="[^"]+"/g, `id="${patternId}"`);
+            patternContent = patternContent.replace(/url\(#([^)]+)\)/g, `url(#${patternId})`);
+
+            const patternUrl = `url(#${patternId})`;
+
+            return `
+            <svg class="robe-display${size === 'mini' ? '-mini' : size === 'large' ? '-large' : ''}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    ${patternContent}
+                    <linearGradient id="robeGrad_${patternId}" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:${primary_color};stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:${primary_color};stop-opacity:0.85" />
+                    </linearGradient>
+                </defs>
+
+                <g stroke="${trim_color}" stroke-width="${trim}">
+                    <path d="M${w/2 - neckW/2},${neckH}
+                             L${w/2 - neckW/2 - sleeveW/2},${neckH + 10}
+                             L${w*0.05},${h*0.25}
+                             L${w*0.02},${h*0.45}
+                             L${sideW},${h*0.95}
+                             L${w-sideW},${h*0.95}
+                             L${w - w*0.02},${h*0.45}
+                             L${w - w*0.05},${h*0.25}
+                             L${w/2 + neckW/2 + sleeveW/2},${neckH + 10}
+                             L${w/2 + neckW/2},${neckH}
+                             Z"
+                          fill="${primary_color}"/>
+
+                    <path d="M${w/2 - neckW/2 - sleeveW/2},${neckH + 10}
+                             L${w*0.05},${h*0.25}
+                             L${sideW*0.8},${sideH + neckH}
+                             L${w/2 - neckW/2 + sleeveW/2},${neckH + sleeveH}
+                             Z"
+                          fill="${primary_color}"/>
+
+                    <path d="M${w/2 + neckW/2 + sleeveW/2},${neckH + 10}
+                             L${w - w*0.05},${h*0.25}
+                             L${w - sideW*0.8},${sideH + neckH}
+                             L${w/2 + neckW/2 - sleeveW/2},${neckH + sleeveH}
+                             Z"
+                          fill="${primary_color}"/>
+                </g>
+
+                <rect x="${w*0.15}" y="${h*0.28}" width="${w*0.7}" height="${h*0.62}" rx="3"
+                      fill="${patternUrl}" opacity="0.9" stroke="${trim_color}" stroke-width="${smallTrim*0.5}"/>
+
+                <g fill="${collar_color}" stroke="${trim_color}" stroke-width="${smallTrim}">
+                    <path d="M${w/2 - neckW/2},${neckH}
+                             L${w/2 - neckW/3},${neckH + smallTrim}
+                             Q${w/2},${neckH + neckH*0.7} ${w/2 + neckW/3},${neckH + smallTrim}
+                             L${w/2 + neckW/2},${neckH}
+                             Q${w/2 + neckW/3},${neckH*0.6} ${w/2},${neckH*0.7}
+                             Q${w/2 - neckW/3},${neckH*0.6} ${w/2 - neckW/2},${neckH}
+                             Z"/>
+                </g>
+
+                <g stroke="${trim_color}" stroke-width="${smallTrim}" fill="none" opacity="0.7">
+                    <path d="M${w*0.15},${h*0.35} L${w*0.85},${h*0.35}"/>
+                    <path d="M${w*0.15},${h*0.7} L${w*0.85},${h*0.7}"/>
+                </g>
+
+                <g stroke="${accent_color}" stroke-width="${smallTrim}" fill="none" opacity="0.6">
+                    <path d="M${w*0.1},${h*0.3} L${w*0.9},${h*0.3}"/>
+                    <path d="M${w*0.1},${h*0.75} L${w*0.9},${h*0.75}"/>
+                </g>
+
+                <g stroke="${trim_color}" stroke-width="${smallTrim*0.8}" fill="none" opacity="0.5">
+                    <path d="M${w*0.08},${h*0.4} L${w*0.08},${h*0.9}"/>
+                    <path d="M${w*0.92},${h*0.4} L${w*0.92},${h*0.9}"/>
+                    <path d="M${sideW + trim},${h*0.5} L${sideW + trim},${h*0.93}"/>
+                    <path d="M${w - sideW - trim},${h*0.5} L${w - sideW - trim},${h*0.93}"/>
+                </g>
+
+                <g fill="${accent_color}" opacity="0.4">
+                    <circle cx="${w*0.5}" cy="${h*0.52}" r="${w*0.03}"/>
+                    <circle cx="${w*0.3}" cy="${h*0.52}" r="${w*0.015}"/>
+                    <circle cx="${w*0.7}" cy="${h*0.52}" r="${w*0.015}"/>
+                    <circle cx="${w*0.5}" cy="${h*0.85}" r="${w*0.02}"/>
+                </g>
+
+                <g fill="${secondary_color}" opacity="0.4" font-family="'Noto Serif SC', serif" font-size="${w*0.06}" text-anchor="middle" font-weight="bold">
+                    <text x="${w*0.5}" y="${h*0.55}">博克</text>
+                </g>
+            </svg>
+            `;
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('visible');
+            setTimeout(() => t.classList.remove('visible'), 2500);
+        }
+
+        function riskClass(risk) {
+            if (risk === '高') return 'risk-high';
+            if (risk === '中') return 'risk-medium';
+            return 'risk-low';
+        }
+
+        function firmnessColor(firmness) {
+            if (firmness >= 0.8) return 'var(--risk-low)';
+            if (firmness >= 0.5) return 'var(--risk-medium)';
+            return 'var(--risk-high)';
+        }
+
+        async function loadWrestlers() {
+            const resp = await fetch('/api/wrestlers');
+            state.wrestlers = await resp.json();
+            renderWrestlerGrid();
+        }
+
+        function renderWrestlerGrid() {
+            const grid = document.getElementById('wrestlerGrid');
+            grid.innerHTML = state.wrestlers.map(w => {
+                const ki = w.knot_info || {};
+                const ek = w.effective_knot || {};
+                const rs = w.robe_style || null;
+                let cls = '';
+                if (state.selectedA && state.selectedA.id === w.id) cls = 'selected-a';
+                else if (state.selectedB && state.selectedB.id === w.id) cls = 'selected-b';
+
+                return `<div class="wrestler-card ${cls}" onclick="selectWrestler(${w.id})">
+                    <div class="card-header">
+                        <span class="name">${w.name}</span>
+                        <span class="region-badge">${w.region}</span>
+                    </div>
+                    <div style="display:flex; gap:12px; align-items:center; margin-bottom:12px;">
+                        ${generateRobeSVG(rs, 'mini')}
+                        <div style="flex:1;">
+                            <div class="stats" style="grid-template-columns:1fr 1fr; margin-bottom:8px;">
+                                <div class="stat"><span class="stat-label">体重</span><span class="stat-value">${w.weight}kg</span></div>
+                                <div class="stat"><span class="stat-label">跤龄</span><span class="stat-value">${w.experience}年</span></div>
+                                <div class="stat"><span class="stat-label">战绩</span><span class="stat-value">${w.wins}胜${w.losses}负</span></div>
+                                <div class="stat"><span class="stat-label">胜率</span><span class="stat-value">${w.win_rate}%</span></div>
+                            </div>
+                            <div style="font-size:0.75em; color:rgba(232,220,200,0.5);">跤衣：${rs ? rs.pattern : '-'}</div>
+                        </div>
+                    </div>
+                    <div class="knot-badge">
+                        <span class="knot-name">${knotVisuals[w.knot_style] || ''} ${w.knot_style}</span>
+                        <span style="font-size:0.7em;color:rgba(232,220,200,0.4);">手艺${w.knot_skill || 50}</span>
+                        <span class="knot-risk ${riskClass(ek.effectiveRisk || ki.risk)}">有效风险: ${ek.effectiveRisk || ki.risk || '-'}</span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function selectWrestler(id) {
+            const w = state.wrestlers.find(x => x.id === id);
+            if (!w) return;
+
+            if (state.selectedA && state.selectedA.id === id) {
+                state.selectedA = null;
+                state.selectingSide = 'a';
+            } else if (state.selectedB && state.selectedB.id === id) {
+                state.selectedB = null;
+                state.selectingSide = 'b';
+            } else if (!state.selectedA) {
+                state.selectedA = w;
+                state.selectingSide = 'b';
+                showToast(`红方已选择: ${w.name}`);
+            } else if (!state.selectedB) {
+                state.selectedB = w;
+                state.selectingSide = 'a';
+                showToast(`蓝方已选择: ${w.name}`);
+            } else {
+                if (state.selectingSide === 'a') {
+                    state.selectedA = w;
+                    state.selectingSide = 'b';
+                    showToast(`红方已更换: ${w.name}`);
+                } else {
+                    state.selectedB = w;
+                    state.selectingSide = 'a';
+                    showToast(`蓝方已更换: ${w.name}`);
+                }
+            }
+
+            updateSelectionPanel();
+            renderWrestlerGrid();
+            document.getElementById('btnSimulate').disabled = !(state.selectedA && state.selectedB);
+        }
+
+        function renderWrestlerDetail(w, side) {
+            const ki = w.knot_info || {};
+            const ek = w.effective_knot || {};
+            const rs = w.robe_style || null;
+            const baseFirmPct = Math.round((ki.firmness || 0) * 100);
+            const effFirmPct = Math.round((ek.effectiveFirmness || ki.firmness || 0) * 100);
+            const skill = w.knot_skill || 50;
+            const riskUpgraded = ek.effectiveRisk && ek.effectiveRisk !== ki.risk;
+            return `
+                <div style="font-family:'Noto Serif SC',serif; font-size:1.5em; font-weight:700; color:var(--gold-light); margin-bottom:10px;">
+                    ${w.name}
+                </div>
+                <div style="margin-bottom:8px; color:rgba(232,220,200,0.6); font-size:0.85em;">${w.region}</div>
+                ${rs ? `
+                <div style="margin:15px 0;">
+                    ${generateRobeSVG(rs, 'large')}
+                    <div class="robe-info">
+                        <div class="pattern-name">${rs.pattern || ''}跤衣</div>
+                        <div class="pattern-desc">${rs.description || ''}</div>
+                    </div>
+                </div>
+                ` : ''}
+                <div class="detail-stats">
+                    <div class="detail-stat"><span class="label">体重</span><span class="value">${w.weight}kg</span></div>
+                    <div class="detail-stat"><span class="label">跤龄</span><span class="value">${w.experience}年</span></div>
+                    <div class="detail-stat"><span class="label">战绩</span><span class="value">${w.wins}胜${w.losses}负</span></div>
+                    <div class="detail-stat"><span class="label">胜率</span><span class="value">${w.win_rate}%</span></div>
+                </div>
+                <div class="knot-display">
+                    <div class="knot-title">
+                        <span>${knotVisuals[w.knot_style] || ''}</span>
+                        <span>${w.knot_style}</span>
+                        <span class="knot-risk ${riskClass(ek.effectiveRisk || ki.risk)}">有效风险: ${ek.effectiveRisk || ki.risk || '-'}</span>
+                    </div>
+                    <div class="knot-desc">${ki.description || ''}</div>
+                    <div style="margin:10px 0; padding:8px; background:rgba(212,168,67,0.04); border-radius:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <span style="font-size:0.8em;color:rgba(232,220,200,0.6);">系带手艺熟练度</span>
+                            <span style="font-size:0.9em;font-weight:700;color:${skill >= 80 ? 'var(--green)' : skill >= 60 ? 'var(--orange)' : 'var(--red)'};">${skill}${skill >= 80 ? ' 精湛' : skill >= 60 ? ' 熟练' : skill >= 40 ? ' 一般' : ' 生疏'}</span>
+                        </div>
+                        <div class="firmness-bar">
+                            <div class="firmness-fill" style="width:${skill}%;background:${skill >= 80 ? 'var(--green)' : skill >= 60 ? 'var(--orange)' : 'var(--red)'};"></div>
+                        </div>
+                    </div>
+                    <div class="firmness-label"><span>固有牢固度（仅系带类型）</span><span>${baseFirmPct}%</span></div>
+                    <div class="firmness-bar" style="margin-bottom:10px;">
+                        <div class="firmness-fill" style="width:${baseFirmPct}%; background:${firmnessColor(ki.firmness || 0)};"></div>
+                    </div>
+                    <div class="firmness-label"><span>有效牢固度（系带 + 手艺）</span><span>${effFirmPct}%</span></div>
+                    <div class="firmness-bar">
+                        <div class="firmness-fill" style="width:${effFirmPct}%; background:${firmnessColor(ek.effectiveFirmness || ki.firmness || 0)};"></div>
+                    </div>
+                    ${riskUpgraded ? `<div style="margin-top:8px;font-size:0.8em;color:var(--gold);">⚡ 手艺影响：固有风险${ki.risk} → 有效风险${ek.effectiveRisk}</div>` : ''}
+                </div>
+            `;
+        }
+
+        function updateSelectionPanel() {
+            const emptyA = document.getElementById('emptyA');
+            const emptyB = document.getElementById('emptyB');
+            const detailA = document.getElementById('detailA');
+            const detailB = document.getElementById('detailB');
+
+            if (state.selectedA) {
+                emptyA.style.display = 'none';
+                detailA.style.display = 'block';
+                detailA.innerHTML = renderWrestlerDetail(state.selectedA, 'a');
+            } else {
+                emptyA.style.display = 'flex';
+                detailA.style.display = 'none';
+            }
+
+            if (state.selectedB) {
+                emptyB.style.display = 'none';
+                detailB.style.display = 'block';
+                detailB.innerHTML = renderWrestlerDetail(state.selectedB, 'b');
+            } else {
+                emptyB.style.display = 'flex';
+                detailB.style.display = 'none';
+            }
+        }
+
+        async function simulateMatch() {
+            if (!state.selectedA || !state.selectedB) return;
+
+            const btn = document.getElementById('btnSimulate');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> 推演中...';
+
+            try {
+                const resp = await fetch('/api/simulate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        wrestler_a_id: state.selectedA.id,
+                        wrestler_b_id: state.selectedB.id
+                    })
+                });
+
+                const result = await resp.json();
+                if (result.error) {
+                    showToast(result.error);
+                    return;
+                }
+
+                state.lastResult = result;
+                displayResult(result);
+
+                try { loadLeaderboard(); } catch(e) {}
+
+                document.querySelectorAll('.tab-btn')[1].click();
+            } catch (e) {
+                showToast('模拟失败，请重试');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '模拟比赛';
+            }
+        }
+
+        function displayResult(result) {
+            const wa = result.wrestler_a;
+            const wb = result.wrestler_b;
+            const ka = result.knot_a;
+            const kb = result.knot_b;
+            const eka = result.effective_knot_a || {};
+            const ekb = result.effective_knot_b || {};
+            const ra = wa.robe_style || null;
+            const rb = wb.robe_style || null;
+
+            document.getElementById('resultNameA').textContent = wa.name;
+            document.getElementById('resultNameB').textContent = wb.name;
+            document.getElementById('resultRateA').textContent = result.win_rate_a + '%';
+            document.getElementById('resultRateB').textContent = result.win_rate_b + '%';
+
+            document.getElementById('rateBarA').style.width = result.win_rate_a + '%';
+            document.getElementById('rateBarB').style.width = result.win_rate_b + '%';
+
+            const winnerName = result.winner_id === wa.id ? wa.name : wb.name;
+            document.getElementById('winnerDisplay').innerHTML =
+                `<span class="winner-badge">🏆 预测胜者: ${winnerName}</span>`;
+
+            let robeHtml = '';
+            if (ra || rb) {
+                robeHtml = `
+                <h3 style="font-family:'Noto Serif SC',serif; color:var(--gold); text-align:center; margin:25px 0 15px; letter-spacing:2px;">◆ 跤衣样式对比 ◆</h3>
+                <div class="knot-comparison">
+                    <div class="knot-compare-card">
+                        ${ra ? generateRobeSVG(ra, 'medium') : ''}
+                        <div class="knot-style-name">${wa.region}</div>
+                        ${ra ? `<div class="robe-info">
+                            <div class="pattern-name">${ra.pattern || ''}</div>
+                            <div class="pattern-desc">${ra.description || ''}</div>
+                        </div>` : ''}
+                    </div>
+                    <div class="knot-compare-card">
+                        ${rb ? generateRobeSVG(rb, 'medium') : ''}
+                        <div class="knot-style-name">${wb.region}</div>
+                        ${rb ? `<div class="robe-info">
+                            <div class="pattern-name">${rb.pattern || ''}</div>
+                            <div class="pattern-desc">${rb.description || ''}</div>
+                        </div>` : ''}
+                    </div>
+                </div>
+                `;
+            }
+
+            const skillA = wa.knot_skill || 50;
+            const skillB = wb.knot_skill || 50;
+            const baseFirmA = Math.round((ka.firmness || 0) * 100);
+            const baseFirmB = Math.round((kb.firmness || 0) * 100);
+            const effFirmA = Math.round((eka.effectiveFirmness || ka.firmness || 0) * 100);
+            const effFirmB = Math.round((ekb.effectiveFirmness || kb.firmness || 0) * 100);
+            const riskUpA = eka.effectiveRisk && eka.effectiveRisk !== ka.risk;
+            const riskUpB = ekb.effectiveRisk && ekb.effectiveRisk !== kb.risk;
+
+            document.getElementById('knotComparison').innerHTML = robeHtml + `
+                <h3 style="font-family:'Noto Serif SC',serif; color:var(--gold); text-align:center; margin:25px 0 15px; letter-spacing:2px;">◆ 系带方式对比 ◆</h3>
+                <div class="knot-comparison">
+                    <div class="knot-compare-card">
+                        <div class="knot-visual">${knotVisuals[wa.knot_style] || ''}</div>
+                        <div class="knot-style-name">${wa.knot_style}</div>
+                        <div style="margin:8px 0;">
+                            <span class="knot-risk ${riskClass(eka.effectiveRisk || ka.risk)}">有效松脱风险: ${eka.effectiveRisk || ka.risk}</span>
+                        </div>
+                        <div style="margin:10px 0; padding:6px; background:rgba(255,255,255,0.02); border-radius:6px;">
+                            <div style="display:flex;justify-content:space-between;font-size:0.75em;color:rgba(232,220,200,0.5);margin-bottom:4px;">
+                                <span>系带手艺</span><span style="color:${skillA >= 80 ? 'var(--green)' : skillA >= 60 ? 'var(--orange)' : 'var(--red)'};font-weight:700;">${skillA}</span>
+                            </div>
+                            <div class="firmness-bar" style="margin-bottom:8px;">
+                                <div class="firmness-fill" style="width:${skillA}%;background:${skillA >= 80 ? 'var(--green)' : skillA >= 60 ? 'var(--orange)' : 'var(--red)'};"></div>
+                            </div>
+                            <div class="firmness-label"><span>固有牢固度</span><span>${baseFirmA}%</span></div>
+                            <div class="firmness-bar" style="margin-bottom:8px;"><div class="firmness-fill" style="width:${baseFirmA}%;background:${firmnessColor(ka.firmness||0)};"></div></div>
+                            <div class="firmness-label"><span>有效牢固度</span><span style="font-weight:700;">${effFirmA}%</span></div>
+                            <div class="firmness-bar"><div class="firmness-fill" style="width:${effFirmA}%;background:${firmnessColor(eka.effectiveFirmness||ka.firmness||0)};"></div></div>
+                        </div>
+                        ${riskUpA ? `<div style="font-size:0.75em;color:var(--gold);margin-top:6px;">⚡ 手艺使风险从${ka.risk}降至${eka.effectiveRisk}</div>` : ''}
+                        <p style="margin-top:10px; font-size:0.8em; color:rgba(232,220,200,0.6);">${ka.description || ''}</p>
+                    </div>
+                    <div class="knot-compare-card">
+                        <div class="knot-visual">${knotVisuals[wb.knot_style] || ''}</div>
+                        <div class="knot-style-name">${wb.knot_style}</div>
+                        <div style="margin:8px 0;">
+                            <span class="knot-risk ${riskClass(ekb.effectiveRisk || kb.risk)}">有效松脱风险: ${ekb.effectiveRisk || kb.risk}</span>
+                        </div>
+                        <div style="margin:10px 0; padding:6px; background:rgba(255,255,255,0.02); border-radius:6px;">
+                            <div style="display:flex;justify-content:space-between;font-size:0.75em;color:rgba(232,220,200,0.5);margin-bottom:4px;">
+                                <span>系带手艺</span><span style="color:${skillB >= 80 ? 'var(--green)' : skillB >= 60 ? 'var(--orange)' : 'var(--red)'};font-weight:700;">${skillB}</span>
+                            </div>
+                            <div class="firmness-bar" style="margin-bottom:8px;">
+                                <div class="firmness-fill" style="width:${skillB}%;background:${skillB >= 80 ? 'var(--green)' : skillB >= 60 ? 'var(--orange)' : 'var(--red)'};"></div>
+                            </div>
+                            <div class="firmness-label"><span>固有牢固度</span><span>${baseFirmB}%</span></div>
+                            <div class="firmness-bar" style="margin-bottom:8px;"><div class="firmness-fill" style="width:${baseFirmB}%;background:${firmnessColor(kb.firmness||0)};"></div></div>
+                            <div class="firmness-label"><span>有效牢固度</span><span style="font-weight:700;">${effFirmB}%</span></div>
+                            <div class="firmness-bar"><div class="firmness-fill" style="width:${effFirmB}%;background:${firmnessColor(ekb.effectiveFirmness||kb.firmness||0)};"></div></div>
+                        </div>
+                        ${riskUpB ? `<div style="font-size:0.75em;color:var(--gold);margin-top:6px;">⚡ 手艺使风险从${kb.risk}降至${ekb.effectiveRisk}</div>` : ''}
+                        <p style="margin-top:10px; font-size:0.8em; color:rgba(232,220,200,0.6);">${kb.description || ''}</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('analysisText').textContent = result.analysis;
+            document.getElementById('resultPanel').classList.add('visible');
+            document.getElementById('noResult').style.display = 'none';
+        }
+
+        async function loadLeaderboard() {
+            try {
+                const resp = await fetch('/api/leaderboard');
+                const data = await resp.json();
+                renderLeaderboard(data);
+            } catch (e) {
+                console.error(e);
+                showToast('加载积分榜失败');
+            }
+        }
+
+        function renderLeaderboard(data) {
+            const { leaderboard, tiedGroups, totalMatches } = data;
+            document.getElementById('totalMatches').textContent = totalMatches;
+
+            const content = document.getElementById('leaderboardContent');
+            if (!leaderboard || leaderboard.length === 0 || totalMatches === 0) {
+                content.innerHTML = '<div style="text-align:center; padding:60px; color:rgba(232,220,200,0.3);"><p style="font-size:3em; margin-bottom:15px;">🏆</p><p>暂无比赛记录，先去模拟比赛吧！</p></div>';
+                document.getElementById('tiedGroupsNote').innerHTML = '';
+                return;
+            }
+
+            const rankClass = (r) => r === 1 ? 'rank-1' : r === 2 ? 'rank-2' : r === 3 ? 'rank-3' : 'rank-other';
+
+            content.innerHTML = `
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th style="width:80px;">排名</th>
+                            <th>选手</th>
+                            <th style="width:100px;">场次</th>
+                            <th style="width:100px;">胜-负</th>
+                            <th style="width:100px;">胜率</th>
+                            <th style="width:120px;">近5场</th>
+                            <th style="width:100px;">积分</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${leaderboard.map((p, idx) => {
+                            const isInTiedGroup = tiedGroups.some(g => g.some(x => x.id === p.id) && g.length > 1);
+                            const h2hNote = isInTiedGroup ? `<span class="h2h-badge h2h-has-edge">胜负关系优先</span>` : '';
+                            const formDisplay = p.form && p.form.length > 0
+                                ? p.form.map(f => `<span class="form-badge form-${f.toLowerCase()}">${f}</span>`).join('')
+                                : '<span style="color:rgba(232,220,200,0.3);">—</span>';
+                            const winLossDisplay = `${p.wins}-${p.losses}`;
+                            const winRateDisplay = p.matches > 0 ? p.win_rate + '%' : '—';
+
+                            return `
+                                <tr>
+                                    <td>
+                                        <span class="rank-badge ${rankClass(p.rank)}">${p.rank}</span>
+                                    </td>
+                                    <td>
+                                        <div class="player-cell">
+                                            ${generateRobeSVG(p.robe_style, 'mini')}
+                                            <div class="player-info">
+                                                <div class="player-name">
+                                                    ${p.name}
+                                                    ${h2hNote}
+                                                </div>
+                                                <div class="player-region">${p.region} · ${p.weight}kg · ${p.experience}年跤龄</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>${p.matches}</td>
+                                    <td>${winLossDisplay}</td>
+                                    <td>${winRateDisplay}</td>
+                                    <td>${formDisplay}</td>
+                                    <td><span class="points-cell">${p.points}</span></td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            const noteEl = document.getElementById('tiedGroupsNote');
+            if (tiedGroups && tiedGroups.length > 0) {
+                const notes = tiedGroups.map((g, gi) => {
+                    const names = g.map(p => p.name).join('、');
+                    return `• <strong>第${gi + 1}组同分选手</strong>：${names} — 已根据直接交手胜负关系确定位次。若胜负关系持平，则按比赛场次和ID排序。`;
+                }).join('<br><br>');
+
+                noteEl.innerHTML = `
+                    <div class="tied-note">
+                        <strong>📊 同分排名说明：</strong><br><br>
+                        ${notes}
+                        <br><br>
+                        <strong>排名优先级：</strong>积分 → 胜场 → 胜率 → <span style="color:var(--risk-low);">直接交手胜负关系</span> → 比赛场次 → 选手ID
+                    </div>
+                `;
+            } else {
+                noteEl.innerHTML = '';
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                const resp = await fetch('/api/history');
+                const history = await resp.json();
+                renderHistory(history);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderHistory(history) {
+            const list = document.getElementById('historyList');
+            if (!history.length) {
+                list.innerHTML = '<div style="text-align:center; padding:40px; color:rgba(232,220,200,0.3);">暂无历史记录</div>';
+                return;
+            }
+            list.innerHTML = history.map(h => {
+                const winnerSide = h.winner_id === h.wrestler_a_id ? 'a' : 'b';
+                return `<div class="history-item">
+                    <div class="history-names">
+                        <span class="${winnerSide === 'a' ? 'winner' : ''}">${h.wrestler_a_name}</span>
+                        <span class="vs">VS</span>
+                        <span class="${winnerSide === 'b' ? 'winner' : ''}">${h.wrestler_b_name}</span>
+                    </div>
+                    <div class="history-rates">${h.win_rate_a}% vs ${h.win_rate_b}%</div>
+                    <div class="history-time">${h.simulated_at || ''}</div>
+                </div>`;
+            }).join('');
+        }
+
+        async function exportReport() {
+            if (!state.selectedA || !state.selectedB) return;
+
+            try {
+                const resp = await fetch('/api/export', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        wrestler_a_id: state.selectedA.id,
+                        wrestler_b_id: state.selectedB.id
+                    })
+                });
+                const data = await resp.json();
+                if (data.report) {
+                    document.getElementById('reportContent').textContent = data.report;
+                    document.getElementById('exportModal').classList.add('visible');
+                }
+            } catch (e) {
+                showToast('导出失败');
+            }
+        }
+
+        function downloadReport() {
+            const content = document.getElementById('reportContent').textContent;
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `搏克配对报告_${state.selectedA.name}vs${state.selectedB.name}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('报告已下载');
+        }
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+
+                if (btn.dataset.tab === 'history') loadHistory();
+                if (btn.dataset.tab === 'leaderboard') loadLeaderboard();
+            });
+        });
+
+        document.getElementById('btnSimulate').addEventListener('click', simulateMatch);
+        document.getElementById('btnResimulate').addEventListener('click', simulateMatch);
+
+        document.getElementById('btnClear').addEventListener('click', () => {
+            state.selectedA = null;
+            state.selectedB = null;
+            state.selectingSide = 'a';
+            state.lastResult = null;
+            updateSelectionPanel();
+            renderWrestlerGrid();
+            document.getElementById('btnSimulate').disabled = true;
+            showToast('已清除选择');
+        });
+
+        document.getElementById('btnExport').addEventListener('click', exportReport);
+        document.getElementById('btnDownload').addEventListener('click', downloadReport);
+        document.getElementById('btnCloseExport').addEventListener('click', () => {
+            document.getElementById('exportModal').classList.remove('visible');
+        });
+
+        document.getElementById('btnRefreshLeaderboard').addEventListener('click', () => {
+            loadLeaderboard();
+            showToast('积分榜已刷新');
+        });
+
+        document.getElementById('exportModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('exportModal')) {
+                document.getElementById('exportModal').classList.remove('visible');
+            }
+        });
+
+        loadWrestlers();
+    </script>
+</body>
+</html>
