@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP 接口测试工具</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-tabs">
+                <button class="tab-btn active" data-tab="collections">集合</button>
+                <button class="tab-btn" data-tab="history">历史</button>
+            </div>
+            
+            <div class="tab-content" id="collections-tab">
+                <div class="sidebar-header">
+                    <input type="text" id="collection-search" placeholder="搜索集合..." class="search-input">
+                    <button class="btn btn-primary btn-sm" id="new-collection-btn">+ 新建</button>
+                </div>
+                <div class="collections-list" id="collections-list"></div>
+            </div>
+            
+            <div class="tab-content hidden" id="history-tab">
+                <div class="sidebar-header">
+                    <span class="sidebar-title">最近请求 (最多10条)</span>
+                    <button class="btn btn-danger btn-sm" id="clear-history-btn">清空</button>
+                </div>
+                <div class="history-list" id="history-list"></div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="request-builder">
+                <div class="request-header">
+                    <select id="method-select" class="method-select">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                    <input type="text" id="url-input" class="url-input" placeholder="输入请求 URL, 例如: https://api.example.com/data">
+                    <button class="btn btn-send" id="send-btn">发送</button>
+                    <button class="btn btn-secondary" id="save-btn">保存到集合</button>
+                </div>
+
+                <div class="request-tabs">
+                    <button class="request-tab-btn active" data-request-tab="headers">请求头</button>
+                    <button class="request-tab-btn" data-request-tab="body">请求体</button>
+                    <button class="request-tab-btn" data-request-tab="env">环境变量</button>
+                </div>
+
+                <div class="request-tab-content" id="headers-tab">
+                    <div class="headers-container">
+                        <div class="headers-list" id="headers-list"></div>
+                        <button class="btn btn-outline btn-sm" id="add-header-btn">+ 添加请求头</button>
+                    </div>
+                </div>
+
+                <div class="request-tab-content hidden" id="body-tab">
+                    <textarea id="body-input" class="body-input" placeholder="输入请求体内容, 例如: JSON、XML 或纯文本..."></textarea>
+                </div>
+
+                <div class="request-tab-content hidden" id="env-tab">
+                    <div class="env-container">
+                        <div class="env-list" id="env-list"></div>
+                        <button class="btn btn-outline btn-sm" id="add-env-btn">+ 添加环境变量</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="response-section">
+                <div class="response-tabs">
+                    <button class="response-tab-btn active" data-response-tab="body">响应体</button>
+                    <button class="response-tab-btn" data-response-tab="headers">响应头</button>
+                </div>
+
+                <div class="response-status" id="response-status">
+                    <span class="status-label">状态:</span>
+                    <span class="status-code" id="status-code">-</span>
+                    <span class="status-text" id="status-text"></span>
+                    <span class="response-time" id="response-time"></span>
+                </div>
+
+                <div class="response-tab-content" id="response-body-tab">
+                    <pre class="response-body" id="response-body">发送请求后将显示响应内容...</pre>
+                </div>
+
+                <div class="response-tab-content hidden" id="response-headers-tab">
+                    <div class="response-headers" id="response-headers">发送请求后将显示响应头...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal hidden" id="save-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>保存到集合</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label>请求名称:</label>
+                <input type="text" id="request-name-input" placeholder="输入请求名称" class="modal-input">
+                <label>选择集合:</label>
+                <select id="collection-select" class="modal-input"></select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-save-btn">取消</button>
+                <button class="btn btn-primary" id="confirm-save-btn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal hidden" id="new-collection-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新建集合</h3>
+                <button class="modal-close" id="new-collection-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label>集合名称:</label>
+                <input type="text" id="new-collection-name" placeholder="输入集合名称" class="modal-input">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-new-collection-btn">取消</button>
+                <button class="btn btn-primary" id="confirm-new-collection-btn">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

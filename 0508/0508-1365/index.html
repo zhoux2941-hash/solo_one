@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邮件头分析器 - Email Header Analyzer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📧 邮件头分析器</h1>
+            <p class="subtitle">解析电子邮件头，追踪邮件路径，检测伪造特征</p>
+        </header>
+
+        <div class="main-content">
+            <section class="input-section">
+                <div class="section-header">
+                    <h2>📥 输入邮件原始内容</h2>
+                    <div class="action-buttons">
+                        <button id="sampleBtn" class="btn btn-secondary">📋 加载示例</button>
+                        <button id="clearBtn" class="btn btn-secondary">🗑️ 清空</button>
+                        <button id="analyzeBtn" class="btn btn-primary">🔍 开始分析</button>
+                    </div>
+                </div>
+                <textarea id="emailInput" placeholder="在此粘贴完整的电子邮件原始内容（.eml格式或纯文本邮件头）..."></textarea>
+            </section>
+
+            <section id="resultsSection" class="results-section hidden">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="overview">📊 概览</button>
+                    <button class="tab-btn" data-tab="received">📨 Received记录</button>
+                    <button class="tab-btn" data-tab="topology">🌐 路径拓扑</button>
+                    <button class="tab-btn" data-tab="security">🛡️ 安全检测</button>
+                    <button class="tab-btn" data-tab="timeline">⏱️ 时间线</button>
+                </div>
+
+                <div class="tab-content">
+                    <div id="overview" class="tab-pane active">
+                        <div class="basic-info">
+                            <h3>📋 基本信息</h3>
+                            <div id="basicInfoGrid" class="info-grid"></div>
+                        </div>
+                    </div>
+
+                    <div id="received" class="tab-pane">
+                        <div class="received-section">
+                            <h3>📨 Received 记录详情</h3>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>时间</th>
+                                            <th>来源IP</th>
+                                            <th>HELO域名</th>
+                                            <th>中继服务器</th>
+                                            <th>延迟</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="receivedTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="topology" class="tab-pane">
+                        <div class="topology-section">
+                            <h3>🌐 邮件路径拓扑图</h3>
+                            <div id="topologyContainer" class="topology-container"></div>
+                        </div>
+                    </div>
+
+                    <div id="security" class="tab-pane">
+                        <div class="security-section">
+                            <h3>🛡️ 安全检测结果</h3>
+                            <div id="securityCards" class="security-cards"></div>
+                            <div id="forgeryAlerts" class="forgery-alerts"></div>
+                        </div>
+                    </div>
+
+                    <div id="timeline" class="tab-pane">
+                        <div class="timeline-section">
+                            <h3>⏱️ 时间线分析</h3>
+                            <div id="timelineChart" class="timeline-chart"></div>
+                            <div id="timeDiffInfo" class="time-diff-info"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer class="footer">
+            <p>邮件头分析器 | Email Header Analyzer v1.0</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

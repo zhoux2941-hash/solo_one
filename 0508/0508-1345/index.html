@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字笔画顺序演示与跟写练习</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>汉字笔画顺序演示</h1>
+        
+        <div class="input-section">
+            <input type="text" id="characterInput" maxlength="1" placeholder="请输入一个汉字" value="永">
+            <button id="startBtn">开始演示</button>
+        </div>
+
+        <div class="main-content">
+            <div class="tian-grid-container">
+                <div class="tian-grid">
+                    <div class="diagonal-1"></div>
+                    <div class="diagonal-2"></div>
+                    <svg id="strokeCanvas" viewBox="0 0 100 100">
+                        <g id="writtenStrokes"></g>
+                        <g id="currentStroke"></g>
+                        <g id="userTrace"></g>
+                        <g id="guideStroke"></g>
+                    </svg>
+                    <canvas id="traceCanvas"></canvas>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-item">
+                    <span class="label">汉字：</span>
+                    <span id="currentChar" class="value">永</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">总笔画数：</span>
+                    <span id="totalStrokes" class="value">5</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">当前笔画：</span>
+                    <span id="currentStrokeNum" class="value">0 / 5</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">笔顺口诀：</span>
+                    <span id="strokeRule" class="value rule-text">先横后竖，先撇后捺</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="prevBtn" class="control-btn">上一步</button>
+            <button id="playBtn" class="control-btn play-btn">播放</button>
+            <button id="nextBtn" class="control-btn">下一步</button>
+            <button id="resetBtn" class="control-btn">重置</button>
+            <button id="traceModeBtn" class="control-btn trace-btn">跟写模式</button>
+        </div>
+
+        <div id="traceFeedback" class="trace-feedback hidden">
+            <span id="feedbackIcon"></span>
+            <span id="feedbackText"></span>
+        </div>
+
+        <div class="character-list">
+            <h3>常用汉字（点击选择）</h3>
+            <div id="charList"></div>
+        </div>
+    </div>
+
+    <script src="stroke-data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

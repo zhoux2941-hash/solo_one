@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: #0a0f1a;
+  color: #c8d6e5;
+  overflow-x: hidden;
+}
+
+.font-display {
+  font-family: 'Outfit', sans-serif;
+}
+
+@layer components {
+  .cache-input {
+    @apply w-full rounded-lg border border-[#1e2a3a] bg-[#080d16] px-3 py-2.5 font-mono text-sm text-[#c8d6e5] outline-none transition-all duration-200 placeholder:text-[#2a3a4a];
+  }
+
+  .cache-input:focus {
+    @apply border-[#00ffc8]/40 shadow-[0_0_12px_rgba(0,255,200,0.08)];
+  }
+
+  .cache-btn {
+    @apply flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-semibold transition-all duration-200;
+  }
+
+  .cache-btn-put {
+    @apply bg-gradient-to-r from-[#00ffc8] to-[#00b89c] text-[#0a0f1a] hover:shadow-[0_0_20px_rgba(0,255,200,0.3)] hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .cache-btn-get {
+    @apply bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6] text-white hover:shadow-[0_0_20px_rgba(167,139,250,0.3)] hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .cache-btn-reset {
+    @apply border border-[#2a3a4a] bg-[#0d1520] text-[#5a6a7a] hover:border-[#ff6b35]/40 hover:text-[#ff6b35] hover:shadow-[0_0_12px_rgba(255,107,53,0.1)];
+  }
+
+  .ttl-input {
+    -moz-appearance: textfield;
+  }
+
+  .ttl-input::-webkit-inner-spin-button,
+  .ttl-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .ttl-input:focus {
+    @apply border-[#38bdf8]/40 shadow-[0_0_12px_rgba(56,189,248,0.08)];
+  }
+}
+
+.cache-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, #00ffc8, #1e2a3a);
+  outline: none;
+  cursor: pointer;
+}
+
+.cache-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #00ffc8;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0, 255, 200, 0.4);
+  transition: box-shadow 0.2s;
+}
+
+.cache-slider::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 200, 0.6);
+}
+
+.cache-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #00ffc8;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 10px rgba(0, 255, 200, 0.4);
+}
+
+.cache-card {
+  animation: cardSlideIn 0.4s ease-out both;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  view-transition-name: var(--card-key);
+}
+
+@starting-style {
+  .cache-card {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.96);
+  }
+}
+
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e2a3a;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a3a4a;
+}
