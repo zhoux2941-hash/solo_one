@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>泊松过程模拟与排队论</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>泊松过程模拟与排队论</h1>
+            <p class="subtitle">单服务台排队系统 (M/M/1) 模拟器</p>
+        </header>
+
+        <div class="main-content">
+            <div class="control-panel">
+                <h2>参数设置</h2>
+                
+                <div class="input-group">
+                    <label for="lambda">到达率 λ (人/分钟)</label>
+                    <input type="number" id="lambda" min="0.1" max="10" step="0.1" value="3">
+                    <div class="slider-container">
+                        <input type="range" id="lambdaSlider" min="0.1" max="10" step="0.1" value="3">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="mu">服务率 μ (人/分钟)</label>
+                    <input type="number" id="mu" min="0.1" max="20" step="0.1" value="5">
+                    <div class="slider-container">
+                        <input type="range" id="muSlider" min="0.1" max="20" step="0.1" value="5">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="duration">模拟时长 (分钟)</label>
+                    <input type="number" id="duration" min="1" max="1000" step="1" value="100">
+                    <div class="slider-container">
+                        <input type="range" id="durationSlider" min="1" max="1000" step="1" value="100">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="batchCount">批量运行次数</label>
+                    <input type="number" id="batchCount" min="1" max="100" step="1" value="1">
+                    <div class="slider-container">
+                        <input type="range" id="batchCountSlider" min="1" max="100" step="1" value="1">
+                    </div>
+                </div>
+
+                <div class="input-group seed-group">
+                    <div class="seed-header">
+                        <label for="seed">随机种子</label>
+                        <label class="seed-toggle">
+                            <input type="checkbox" id="seedAuto" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">自动</span>
+                        </label>
+                    </div>
+                    <input type="number" id="seed" min="0" step="1" value="" disabled placeholder="自动使用时间戳">
+                    <div class="seed-hint" id="seedHint">当前种子: 自动生成</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="warmupCount">稳态预热期 (丢弃前N个顾客)</label>
+                    <input type="number" id="warmupCount" min="0" max="1000" step="1" value="0">
+                    <div class="slider-container">
+                        <input type="range" id="warmupCountSlider" min="0" max="500" step="1" value="0">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button id="runBtn" class="btn btn-primary">运行模拟</button>
+                    <button id="resetBtn" class="btn btn-secondary">重置</button>
+                </div>
+
+                <div id="status" class="status"></div>
+            </div>
+
+            <div class="results-panel">
+                <div id="warningBanner" class="warning-banner" style="display:none;">
+                    <span class="warning-icon">⚠️</span>
+                    <span id="warningText"></span>
+                </div>
+
+                <h2>模拟结果</h2>
+                
+                <div class="results-grid">
+                    <div class="result-card">
+                        <div class="result-label">系统利用率 ρ</div>
+                        <div class="result-value" id="utilization">-</div>
+                        <div class="result-compare" id="utilizationCompare"></div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">平均等待时间</div>
+                        <div class="result-value" id="avgWaitTime">-</div>
+                        <div class="result-unit">分钟</div>
+                        <div class="result-compare" id="waitTimeCompare"></div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">平均队列长度</div>
+                        <div class="result-value" id="avgQueueLength">-</div>
+                        <div class="result-unit">人</div>
+                        <div class="result-compare" id="queueLengthCompare"></div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">平均系统时间</div>
+                        <div class="result-value" id="avgSystemTime">-</div>
+                        <div class="result-unit">分钟</div>
+                        <div class="result-compare" id="systemTimeCompare"></div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">平均系统人数</div>
+                        <div class="result-value" id="avgSystemCount">-</div>
+                        <div class="result-unit">人</div>
+                        <div class="result-compare" id="systemCountCompare"></div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">总顾客数</div>
+                        <div class="result-value" id="totalCustomers">-</div>
+                        <div class="result-unit">人</div>
+                    </div>
+                </div>
+
+                <div class="theoretical-comparison">
+                    <h3>理论值 vs 模拟值</h3>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>指标</th>
+                                <th>理论值</th>
+                                <th>模拟值</th>
+                                <th>误差</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonBody">
+                            <tr><td colspan="4">请先运行模拟</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization-panel">
+            <h2>可视化</h2>
+            
+            <div class="charts-container">
+                <div class="chart-wrapper">
+                    <h3>时间轴 - 顾客到达与服务</h3>
+                    <canvas id="timelineChart"></canvas>
+                </div>
+                
+                <div class="chart-wrapper">
+                    <h3>队列长度变化</h3>
+                    <canvas id="queueChart"></canvas>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-wrapper">
+                    <h3>等待时间分布</h3>
+                    <canvas id="waitTimeHist"></canvas>
+                </div>
+                
+                <div class="chart-wrapper">
+                    <h3>服务时间分布</h3>
+                    <canvas id="serviceTimeHist"></canvas>
+                </div>
+            </div>
+
+            <div class="event-log">
+                <h3>事件日志 (前100条)</h3>
+                <div id="eventLog" class="log-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

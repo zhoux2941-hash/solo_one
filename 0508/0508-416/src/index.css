@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #0f172a;
+  background-image: 
+    linear-gradient(rgba(30, 41, 59, 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30, 41, 59, 0.5) 1px, transparent 1px);
+  background-size: 20px 20px;
+  color: #e2e8f0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 bg-emerald-500 text-white font-semibold rounded-full 
+           shadow-lg shadow-emerald-500/25 
+           hover:bg-emerald-400 hover:shadow-emerald-500/40 hover:-translate-y-0.5
+           active:translate-y-0 active:shadow-md
+           transition-all duration-200 ease-out
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 bg-surface-light text-white font-semibold rounded-full 
+           shadow-md hover:bg-surface hover:-translate-y-0.5
+           active:translate-y-0
+           transition-all duration-200 ease-out
+           border border-slate-600
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0;
+  }
+
+  .btn-ghost {
+    @apply px-4 py-2 text-slate-300 font-medium rounded-full
+           hover:bg-surface-light hover:text-white
+           transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-surface rounded-2xl p-6 
+           border border-slate-700/50 
+           shadow-xl shadow-black/20;
+  }
+
+  .number-cell {
+    @apply relative flex items-center justify-center 
+           font-mono font-semibold text-center
+           transition-all duration-300 ease-out
+           rounded-lg border border-slate-700/30;
+  }
+
+  .number-cell.unprocessed {
+    @apply bg-surface/50 text-unprocessed;
+  }
+
+  .number-cell.prime {
+    @apply bg-prime/20 text-prime font-bold
+           border-prime/50
+           shadow-[0_0_15px_rgba(16,185,129,0.3)];
+  }
+
+  .number-cell.composite {
+    @apply bg-surface/30 text-composite;
+  }
+
+  .number-cell.current {
+    @apply bg-current/25 text-current font-bold
+           border-current/60
+           shadow-[0_0_20px_rgba(245,158,11,0.5)]
+           animate-pulse;
+  }
+
+  .number-cell.being-marked {
+    @apply bg-being-marked/30 text-being-marked
+           border-being-marked/60
+           scale-105;
+  }
+
+  .strike-line {
+    @apply absolute left-0 top-1/2 h-0.5 bg-composite-line
+           origin-left;
+    transform: translateY(-50%);
+  }
+
+  .speed-btn {
+    @apply px-4 py-2 rounded-full font-medium text-sm
+           transition-all duration-200
+           border border-transparent;
+  }
+
+  .speed-btn.active {
+    @apply bg-emerald-500/20 text-emerald-400 
+           border-emerald-500/50;
+  }
+
+  .speed-btn:not(.active) {
+    @apply text-slate-400 hover:text-slate-200 hover:bg-surface-light;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-surface border border-slate-600 rounded-xl
+           text-white font-mono text-lg text-center
+           focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500
+           transition-all duration-200;
+  }
+}
