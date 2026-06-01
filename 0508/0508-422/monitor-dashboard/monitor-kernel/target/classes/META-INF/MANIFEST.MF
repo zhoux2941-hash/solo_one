@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1780324179709
+Build-Jdk-Spec: 21
+Bundle-Activator: com.monitor.kernel.KernelActivator
+Bundle-ManifestVersion: 2
+Bundle-Name: monitor-kernel
+Bundle-SymbolicName: com.monitor.kernel
+Bundle-Version: 1.0.0
+Created-By: Apache Maven Bundle Plugin 5.1.9
+Embed-Dependency: h2;inline=true
+Embed-Transitive: true
+Export-Package: com.monitor.kernel;version="1.0.0";uses:="com.monitor.ap
+ i,org.osgi.framework"
+Import-Package: org.osgi.framework;version="[1.9,2)",org.osgi.service.ev
+ ent;version="[1.4,2)",com.monitor.api;version="[1.0,2)",org.osgi.servic
+ e.log;version="[1.5,2)"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=11))"
+Tool: Bnd-6.3.1.202206071316

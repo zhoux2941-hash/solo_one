@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-config-schema/schema.json",
+  "productName": "USB Analyzer",
+  "version": "0.1.0",
+  "identifier": "com.usb-analyzer.dev",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "USB Analyzer",
+        "width": 1400,
+        "height": 900,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

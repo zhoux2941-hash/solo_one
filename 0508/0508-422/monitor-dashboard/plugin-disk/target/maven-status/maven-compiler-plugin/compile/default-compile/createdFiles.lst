@@ -1,0 +1,3 @@
+com\monitor\plugin\disk\DiskMonitorActivator.class
+com\monitor\plugin\disk\DiskDataCollector.class
+com\monitor\plugin\disk\DiskMonitorPlugin.class

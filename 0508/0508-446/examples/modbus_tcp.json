@@ -1,0 +1,134 @@
+{
+    "name": "modbus_tcp",
+    "display_name": "Modbus TCP Protocol",
+    "short_name": "modbus_tcp",
+    "default_port_tcp": 502,
+    "default_port_udp": 0,
+    "requires_reassembly": false,
+    "reassembly_timeout_ms": 5000,
+    "handshake_fields": [],
+    "fields": [
+        {
+            "name": "transaction_id",
+            "display_name": "Transaction Identifier",
+            "type": "uint16",
+            "byte_order": "big_endian",
+            "offset": 0,
+            "length": 2,
+            "description": "For synchronization between messages of server and client"
+        },
+        {
+            "name": "protocol_id",
+            "display_name": "Protocol Identifier",
+            "type": "uint16",
+            "byte_order": "big_endian",
+            "offset": 2,
+            "length": 2,
+            "description": "0 for Modbus TCP",
+            "fixed_value": [0, 0]
+        },
+        {
+            "name": "length",
+            "display_name": "Length",
+            "type": "uint16",
+            "byte_order": "big_endian",
+            "offset": 4,
+            "length": 2,
+            "description": "Number of following bytes"
+        },
+        {
+            "name": "unit_id",
+            "display_name": "Unit Identifier",
+            "type": "uint8",
+            "byte_order": "big_endian",
+            "offset": 6,
+            "length": 1,
+            "description": "Slave address (255 for broadcast)"
+        },
+        {
+            "name": "function_code",
+            "display_name": "Function Code",
+            "type": "uint8",
+            "byte_order": "big_endian",
+            "offset": 7,
+            "length": 1,
+            "description": "Modbus function code",
+            "valid_values": [1, 2, 3, 4, 5, 6, 15, 16, 123, 124, 125, 126, 127]
+        },
+        {
+            "name": "start_address",
+            "display_name": "Starting Address",
+            "type": "uint16",
+            "byte_order": "big_endian",
+            "offset": 8,
+            "length": 2,
+            "depends_on_field": "function_code",
+            "depends_on_condition": ">= 1 and <= 4"
+        },
+        {
+            "name": "quantity",
+            "display_name": "Quantity of Coils/Registers",
+            "type": "uint16",
+            "byte_order": "big_endian",
+            "offset": 10,
+            "length": 2,
+            "depends_on_field": "function_code",
+            "depends_on_condition": ">= 1 and <= 4"
+        },
+        {
+            "name": "output_address",
+            "display_name": "Output Address",
+            "type": "uint16",
+            "byte_order": "big_endian",
+            "offset": 8,
+            "length": 2,
+            "depends_on_field": "function_code",
+            "depends_on_condition": "== 5 or == 6"
+        },
+        {
+            "name": "output_value",
+            "display_name": "Output Value",
+            "type": "uint16",
+            "byte_order": "big_endian",
+            "offset": 10,
+            "length": 2,
+            "depends_on_field": "function_code",
+            "depends_on_condition": "== 5 or == 6"
+        },
+        {
+            "name": "data",
+            "display_name": "Data",
+            "type": "variable",
+            "is_variable_length": true,
+            "length_field": "length",
+            "offset": 7,
+            "description": "Variable length data field"
+        }
+    ],
+    "heuristic_rules": [
+        {
+            "type": "fixed_bytes",
+            "name": "Modbus Protocol ID",
+            "offset": 2,
+            "expected_bytes": [0, 0],
+            "weight": 3.0
+        },
+        {
+            "type": "port_range",
+            "name": "Modbus Port",
+            "port_min": 502,
+            "port_max": 502,
+            "weight": 2.0,
+            "use_tcp": true,
+            "use_udp": false
+        },
+        {
+            "type": "field_value",
+            "name": "Valid Function Code",
+            "offset": 7,
+            "expected_bytes": [1],
+            "mask": [127],
+            "weight": 1.5
+        }
+    ]
+}

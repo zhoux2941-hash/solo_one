@@ -1,0 +1,21 @@
+interface: eth0
+db_path: net_audit.db
+batch_size: 1000
+api_port: 8080
+api_host: 127.0.0.1
+
+sampling:
+  enabled: true
+  sample_rate: 1000
+  exclude_ports:
+    - 80
+    - 443
+
+rules:
+  - type: process_ip_block
+    action: deny
+    comm: curl
+    cidr: 10.0.0.0/8
+  - type: domain_block
+    action: deny
+    domain: example.com

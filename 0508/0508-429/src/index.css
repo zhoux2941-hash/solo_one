@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --cyber-bg: #0f172a;
+  --cyber-panel: #1e293b;
+  --cyber-border: #334155;
+  --cyber-cyan: #22d3ee;
+  --cyber-danger: #ef4444;
+  --cyber-warning: #f59e0b;
+  --cyber-success: #22c55e;
+  --cyber-muted: #94a3b8;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+body {
+  margin: 0;
+  background-color: var(--cyber-bg);
+  color: #e2e8f0;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slide-in-left {
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(34, 211, 238, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.6); }
+}
+
+.glow-cyan {
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.5);
+}
+
+.glow-danger {
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+}
+
+.glow-warning {
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+}
+
+.glow-success {
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s ease-out;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

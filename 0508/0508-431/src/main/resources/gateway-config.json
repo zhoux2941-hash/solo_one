@@ -1,0 +1,86 @@
+{
+  "gateway": {
+    "port": 6379,
+    "managementPort": 8080,
+    "bossThreads": 2,
+    "workerThreads": 16,
+    "localRegion": "beijing",
+    "instanceId": "gw-bj-01"
+  },
+  "clusters": [
+    {
+      "id": "beijing",
+      "name": "北京集群",
+      "region": "beijing",
+      "nodes": ["localhost:6379"],
+      "password": "",
+      "database": 0,
+      "timeoutMs": 2000,
+      "maxPoolSize": 100,
+      "minIdle": 10
+    },
+    {
+      "id": "shanghai",
+      "name": "上海集群",
+      "region": "shanghai",
+      "nodes": ["localhost:6380"],
+      "password": "",
+      "database": 0,
+      "timeoutMs": 2000,
+      "maxPoolSize": 100,
+      "minIdle": 10
+    },
+    {
+      "id": "shenzhen",
+      "name": "深圳集群",
+      "region": "shenzhen",
+      "nodes": ["localhost:6381"],
+      "password": "",
+      "database": 0,
+      "timeoutMs": 2000,
+      "maxPoolSize": 100,
+      "minIdle": 10
+    }
+  ],
+  "businessGroups": [
+    {
+      "name": "default",
+      "prefixes": ["*"],
+      "clusters": ["beijing", "shanghai", "shenzhen"],
+      "readPreference": "LOCAL_FIRST",
+      "writeConsistency": "ALL"
+    },
+    {
+      "name": "user",
+      "prefixes": ["user:*"],
+      "clusters": ["beijing", "shanghai"],
+      "readPreference": "LOCAL_FIRST",
+      "writeConsistency": "ALL"
+    },
+    {
+      "name": "order",
+      "prefixes": ["order:*"],
+      "clusters": ["beijing", "shanghai", "shenzhen"],
+      "readPreference": "LOCAL_FIRST",
+      "writeConsistency": "ALL"
+    }
+  ],
+  "replication": {
+    "walEnabled": true,
+    "walPath": "./data/wal",
+    "walMaxSize": 1073741824,
+    "retryIntervalMs": 1000,
+    "maxRetryAttempts": 3,
+    "recoveryBatchSize": 100
+  },
+  "healthCheck": {
+    "intervalMs": 5000,
+    "timeoutMs": 3000,
+    "failureThreshold": 3,
+    "successThreshold": 2
+  },
+  "hotReload": {
+    "enabled": true,
+    "intervalMs": 30000
+  }
+}

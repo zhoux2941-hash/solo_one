@@ -1,0 +1,8 @@
+com\plc\PlcApplication.class
+com\plc\websocket\PlcWebSocketConfig.class
+com\plc\model\PlcMessage.class
+com\plc\repository\ProjectRepository.class
+com\plc\model\Project.class
+com\plc\controller\ProjectController.class
+com\plc\model\IoState.class
+com\plc\websocket\PlcWebSocketHandler.class

@@ -1,0 +1,155 @@
+{
+    "name": "custom_protocol",
+    "display_name": "Custom Industrial Protocol",
+    "short_name": "custproto",
+    "default_port_tcp": 8888,
+    "default_port_udp": 8888,
+    "requires_reassembly": true,
+    "reassembly_timeout_ms": 5000,
+    "handshake_fields": ["msg_type", "device_id"],
+    "fields": [
+        {
+            "name": "magic",
+            "display_name": "Magic Number",
+            "type": "uint16",
+            "byte_order": "big_endian",
+            "offset": 0,
+            "length": 2,
+            "description": "Protocol magic number for identification",
+            "fixed_value": [171, 205]
+        },
+        {
+            "name": "version",
+            "display_name": "Protocol Version",
+            "type": "uint8",
+            "byte_order": "big_endian",
+            "offset": 2,
+            "length": 1,
+            "valid_values": [1, 2, 3]
+        },
+        {
+            "name": "msg_type",
+            "display_name": "Message Type",
+            "type": "uint8",
+            "byte_order": "big_endian",
+            "offset": 3,
+            "length": 1,
+            "valid_values": [0, 1, 2, 3, 4, 5],
+            "description": "0=HANDSHAKE, 1=DATA, 2=ACK, 3=HEARTBEAT, 4=ERROR, 5=CLOSE"
+        },
+        {
+            "name": "seq_num",
+            "display_name": "Sequence Number",
+            "type": "uint32",
+            "byte_order": "big_endian",
+            "offset": 4,
+            "length": 4
+        },
+        {
+            "name": "device_id",
+            "display_name": "Device ID",
+            "type": "uint64",
+            "byte_order": "big_endian",
+            "offset": 8,
+            "length": 8
+        },
+        {
+            "name": "timestamp",
+            "display_name": "Timestamp",
+            "type": "uint64",
+            "byte_order": "big_endian",
+            "offset": 16,
+            "length": 8,
+            "description": "Unix timestamp in milliseconds"
+        },
+        {
+            "name": "payload_length",
+            "display_name": "Payload Length",
+            "type": "uint16",
+            "byte_order": "big_endian",
+            "offset": 24,
+            "length": 2,
+            "depends_on_field": "msg_type",
+            "depends_on_condition": "== 1"
+        },
+        {
+            "name": "payload",
+            "display_name": "Payload Data",
+            "type": "variable",
+            "is_variable_length": true,
+            "length_field": "payload_length",
+            "offset": 26,
+            "depends_on_field": "msg_type",
+            "depends_on_condition": "== 1"
+        },
+        {
+            "name": "error_code",
+            "display_name": "Error Code",
+            "type": "uint32",
+            "byte_order": "big_endian",
+            "offset": 24,
+            "length": 4,
+            "depends_on_field": "msg_type",
+            "depends_on_condition": "== 4"
+        },
+        {
+            "name": "src_ip",
+            "display_name": "Source IP Address",
+            "type": "ipv4",
+            "offset": 24,
+            "length": 4,
+            "depends_on_field": "msg_type",
+            "depends_on_condition": "== 0"
+        },
+        {
+            "name": "src_mac",
+            "display_name": "Source MAC Address",
+            "type": "mac",
+            "offset": 28,
+            "length": 6,
+            "depends_on_field": "msg_type",
+            "depends_on_condition": "== 0"
+        },
+        {
+            "name": "checksum",
+            "display_name": "CRC32 Checksum",
+            "type": "uint32",
+            "byte_order": "big_endian",
+            "offset": -1,
+            "length": 4
+        }
+    ],
+    "heuristic_rules": [
+        {
+            "type": "fixed_bytes",
+            "name": "Magic Number",
+            "offset": 0,
+            "expected_bytes": [171, 205],
+            "weight": 4.0
+        },
+        {
+            "type": "port_range",
+            "name": "Default Port",
+            "port_min": 8888,
+            "port_max": 8888,
+            "weight": 2.0
+        },
+        {
+            "type": "field_value",
+            "name": "Valid Version",
+            "offset": 2,
+            "expected_bytes": [1, 2, 3],
+            "weight": 1.5
+        },
+        {
+            "type": "entropy_range",
+            "name": "Encrypted Payload",
+            "offset": 26,
+            "entropy_min": 7.0,
+            "entropy_max": 8.0,
+            "weight": 0.5,
+            "use_tcp": true,
+            "use_udp": false
+        }
+    ]
+}

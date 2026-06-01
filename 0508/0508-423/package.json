@@ -1,0 +1,34 @@
+{
+  "name": "webusb-fingerprint-pay-terminal",
+  "version": "1.0.0",
+  "description": "WebUSB指纹支付终端模拟器 - Electron桌面应用",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac"
+  },
+  "author": "Fingerprint Pay Terminal",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0"
+  },
+  "dependencies": {
+    "sql.js": "^1.10.3",
+    "ws": "^8.16.0",
+    "pdfkit": "^0.14.0",
+    "node-fetch": "^2.7.0"
+  },
+  "build": {
+    "appId": "com.fingerprintpay.terminal",
+    "productName": "指纹支付终端",
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    }
+  }
+}

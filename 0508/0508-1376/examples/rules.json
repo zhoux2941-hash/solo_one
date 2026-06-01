@@ -1,0 +1,58 @@
+{
+  "description": "Example rules for eBPF Network Audit Engine",
+  "rules": [
+    {
+      "name": "Block curl from accessing internal network",
+      "type": "process-ip-block",
+      "endpoint": "/api/v1/rules/process-ip-block",
+      "payload": {
+        "comm": "curl",
+        "cidr": "10.0.0.0/8"
+      }
+    },
+    {
+      "name": "Block access to malicious domain",
+      "type": "domain-block",
+      "endpoint": "/api/v1/rules/domain-block",
+      "payload": {
+        "domain": "malicious.example.com"
+      }
+    },
+    {
+      "name": "Allow nginx only on ports 80 and 443",
+      "type": "process-port-allow",
+      "endpoint": "/api/v1/rules/process-port-allow",
+      "payload": {
+        "comm": "nginx",
+        "protocol": 6,
+        "ports": [80, 443]
+      }
+    },
+    {
+      "name": "Block access to specific IP range",
+      "type": "ip-block",
+      "endpoint": "/api/v1/rules/ip-block",
+      "payload": {
+        "cidr": "192.168.1.0/24"
+      }
+    }
+  ],
+  "queries": [
+    {
+      "name": "Get all connections from curl process",
+      "endpoint": "/api/v1/connections?comm=curl&limit=100"
+    },
+    {
+      "name": "Get connections to specific IP",
+      "endpoint": "/api/v1/connections?dest_ip=8.8.8.8"
+    },
+    {
+      "name": "Get blocked connections",
+      "endpoint": "/api/v1/blocked"
+    },
+    {
+      "name": "Get DNS queries",
+      "endpoint": "/api/v1/dns?limit=50"
+    }
+  ]
+}

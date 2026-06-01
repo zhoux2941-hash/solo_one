@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC 超分辨率网关 - 监控仪表盘</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e4e4e4;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-indicator {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.warning {
+            background: #fbbf24;
+        }
+
+        .status-dot.error {
+            background: #ef4444;
+        }
+
+        .status-dot.switching {
+            background: #8b5cf6;
+            animation: pulse-fast 0.5s infinite;
+        }
+
+        @keyframes pulse-fast {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        .switch-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            background: rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .switch-status.idle {
+            background: rgba(74, 222, 128, 0.1);
+            color: #4ade80;
+            border-color: rgba(74, 222, 128, 0.2);
+        }
+
+        .switch-status.warming,
+        .switch-status.pending,
+        .switch-status.switching,
+        .switch-status.draining {
+            background: rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .notification.success {
+            background: rgba(74, 222, 128, 0.95);
+            color: #064e3b;
+            border: 1px solid #4ade80;
+        }
+
+        .notification.error {
+            background: rgba(239, 68, 68, 0.95);
+            color: #450a0a;
+            border: 1px solid #ef4444;
+        }
+
+        .notification.info {
+            background: rgba(59, 130, 246, 0.95);
+            color: #1e3a8a;
+            border: 1px solid #3b82f6;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification-fade-out {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .container {
+            padding: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 1rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #00d4ff;
+            border-bottom-color: #00d4ff;
+        }
+
+        .tab:hover {
+            color: #e4e4e4;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h3 {
+            margin-bottom: 1rem;
+            color: #00d4ff;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .metric-value.good { color: #4ade80; }
+        .metric-value.warning { color: #fbbf24; }
+        .metric-value.danger { color: #ef4444; }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        .stream-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .stream-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            border-left: 4px solid #00d4ff;
+        }
+
+        .stream-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: margin-bottom: 0.75rem;
+        }
+
+        .stream-id {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #00d4ff;
+        }
+
+        .stream-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 0.75rem 0;
+        }
+
+        .stream-metric {
+            text-align: center;
+        }
+
+        .stream-metric .value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .stream-metric .label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .stream-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #fbbf24;
+            color: #1a1a2e;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e4e4e4;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.recording {
+            animation: recordingPulse 1s infinite;
+        }
+
+        @keyframes recordingPulse {
+            0%, 100% { background: #ef4444; }
+            50% { background: #dc2626; }
+        }
+
+        select {
+            padding: 0.5rem;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e4e4e4;
+            font-size: 0.85rem;
+        }
+
+        select option {
+            background: #1a1a2e;
+        }
+
+        .video-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .video-player {
+            background: #000;
+            border-radius: 8px;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .video-player img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .video-label {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        .recording-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .recording-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .recording-info {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 0.75rem 0;
+        }
+
+        .recording-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .compare-view {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .compare-video {
+            background: #000;
+            border-radius: 8px;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+        }
+
+        .compare-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            transition: width 0.3s;
+        }
+
+        .system-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>WebRTC 超分辨率网关</h1>
+        <div class="status-indicator">
+            <div class="status-item">
+                <div class="status-dot" id="node-status"></div>
+                <span>Node.js</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot" id="python-status"></div>
+                <span>Python</span>
+            </div>
+            <div class="status-item">
+                <span id="active-streams">0 路流</span>
+            </div>
+            <div class="status-item">
+                <span id="connected-clients">0 客户端</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" data-tab="dashboard">监控面板</button>
+            <button class="tab" data-tab="streams">视频流管理</button>
+            <button class="tab" data-tab="recordings">录制管理</button>
+            <button class="tab" data-tab="system">系统状态</button>
+            <button class="tab" data-tab="publish">推流测试</button>
+        </div>
+
+        <div id="dashboard" class="tab-content active">
+            <div class="system-stats">
+                <div class="card">
+                    <h3>活跃流数</h3>
+                    <div class="metric-value good" id="stat-active-streams">0</div>
+                    <div class="metric-label">当前活跃视频流</div>
+                </div>
+                <div class="card">
+                    <h3>平均延迟</h3>
+                    <div class="metric-value" id="stat-avg-delay">0 ms</div>
+                    <div class="metric-label">端到端延迟</div>
+                </div>
+                <div class="card">
+                    <h3>平均帧率</h3>
+                    <div class="metric-value good" id="stat-avg-fps">0 FPS</div>
+                    <div class="metric-label">处理帧率</div>
+                </div>
+                <div class="card">
+                    <h3>GPU 占用</h3>
+                    <div class="metric-value" id="stat-gpu">0%</div>
+                    <div class="metric-label">GPU 利用率</div>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <h3>延迟趋势</h3>
+                    <div class="chart-container">
+                        <canvas id="delayChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>帧率趋势</h3>
+                    <div class="chart-container">
+                        <canvas id="fpsChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>PSNR 趋势</h3>
+                    <div class="chart-container">
+                        <canvas id="psnrChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>SSIM 趋势</h3>
+                    <div class="chart-container">
+                        <canvas id="ssimChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 1.5rem;">
+                <h3>实时流监控</h3>
+                <div id="active-streams-list" class="stream-list">
+                    <div class="no-data">暂无活跃流</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="streams" class="tab-content">
+            <div class="card">
+                <h3>视频流列表</h3>
+                <div id="streams-management" class="stream-list">
+                    <div class="no-data">暂无视频流</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="recordings" class="tab-content">
+            <div class="card">
+                <h3>录制列表</h3>
+                <div id="recordings-list">
+                    <div class="no-data">暂无录制文件</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="system" class="tab-content">
+            <div class="grid">
+                <div class="card">
+                    <h3>系统状态</h3>
+                    <div id="system-status-info" style="line-height: 2;">
+                        <p>加载中...</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>GPU 状态</h3>
+                    <div id="gpu-status-info" style="line-height: 2;">
+                        <p>加载中...</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>GPU 内存</h3>
+                    <div class="chart-container">
+                        <canvas id="gpuMemoryChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>CPU 占用</h3>
+                    <div class="chart-container">
+                        <canvas id="cpuChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="publish" class="tab-content">
+            <div class="grid">
+                <div class="card">
+                    <h3>视频推流 (客户端 A)</h3>
+                    <div style="margin-bottom: 1rem;">
+                        <button class="btn btn-primary" id="start-publish-btn">开始推流</button>
+                        <button class="btn btn-danger" id="stop-publish-btn" disabled>停止推流</button>
+                    </div>
+                    <div class="video-player" id="local-video">
+                        <span style="color: #64748b;">等待摄像头</span>
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem;">分辨率: 
+                            <select id="publish-resolution">
+                                <option value="640x360">360p (640x360)</option>
+                                <option value="854x480">480p (854x480)</option>
+                                <option value="1280x720">720p (1280x720)</option>
+                            </select>
+                        </label>
+                    </div>
+                    <p style="margin-top: 1rem; color: #94a3b8; font-size: 0.85rem;">
+                        流ID: <span id="publish-stream-id">-</span>
+                    </p>
+                </div>
+                <div class="card">
+                    <h3>观看超分视频 (客户端 B)</h3>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem;">选择流:
+                            <select id="subscribe-stream-select">
+                                <option value="">请选择流</option>
+                            </select>
+                        </label>
+                        <button class="btn btn-primary" id="start-subscribe-btn" disabled>开始观看</button>
+                        <button class="btn btn-danger" id="stop-subscribe-btn" disabled>停止观看</button>
+                    </div>
+                    <div class="video-player" id="remote-video-original">
+                        <span style="color: #64748b;">等待连接</span>
+                    </div>
+                    <div class="video-label">原始视频 (360p)</div>
+                </div>
+                <div class="card">
+                    <h3>超分后视频</h3>
+                    <div class="video-player" id="remote-video-sr">
+                        <span style="color: #64748b;">等待超分处理</span>
+                    </div>
+                    <div class="video-label">超分后视频 (1080p)</div>
+                    <div style="margin-top: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem;">超分倍率:
+                            <select id="scale-select">
+                                <option value="2">2x</option>
+                                <option value="3">3x</option>
+                                <option value="4">4x</option>
+                            </select>
+                        </label>
+                        <button class="btn btn-primary" id="apply-scale-btn">应用</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="compare-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">画质对比</h2>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="compare-view">
+                <div>
+                    <div class="compare-video">
+                        <video id="compare-original" controls></video>
+                    </div>
+                    <div class="video-label">原始视频 (低分辨率)</div>
+                </div>
+                <div>
+                    <div class="compare-video">
+                        <video id="compare-superres" controls></video>
+                    </div>
+                    <div class="video-label">超分后视频 (高分辨率)</div>
+                </div>
+            </div>
+            <div id="compare-metrics" style="margin-top: 1rem;"></div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        
+        let charts = {};
+        let streamData = {};
+        let systemData = {
+            delay: [],
+            fps: [],
+            psnr: [],
+            ssim: [],
+            gpuMemory: [],
+            cpu: [],
+            timestamps: []
+        };
+
+        function showNotification(message, type = 'info', duration = 5000) {
+            const existing = document.querySelector('.notification');
+            if (existing) {
+                existing.remove();
+            }
+
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.add('notification-fade-out');
+                setTimeout(() => notification.remove(), 300);
+            }, duration);
+        }
+
+        function getSwitchStateText(state) {
+            const stateMap = {
+                'idle': '正常',
+                'pending': '等待切换',
+                'warming': '模型预热',
+                'switching': '切换中',
+                'draining': '缓冲处理'
+            };
+            return stateMap[state] || state;
+        }
+
+        function initCharts() {
+            const chartOptions = {
+                type: 'line',
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                displayFormats: {
+                                    second: 'HH:mm:ss'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255,255,255,0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255,255,255,0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e4e4e4'
+                            }
+                        }
+                    },
+                    elements: {
+                        point: {
+                            radius: 0
+                        },
+                        line: {
+                            tension: 0.4
+                        }
+                    }
+                }
+            };
+
+            charts.delay = new Chart(document.getElementById('delayChart'), {
+                ...chartOptions,
+                data: {
+                    datasets: [{
+                    label: '延迟 (ms)',
+                    data: [],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    fill: true
+                }]
+                }
+            });
+
+            charts.fps = new Chart(document.getElementById('fpsChart'), {
+                ...chartOptions,
+                data: {
+                    datasets: [{
+                    label: '帧率 (FPS)',
+                    data: [],
+                    borderColor: '#4ade80',
+                    backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                    fill: true
+                }]
+                }
+            });
+
+            charts.psnr = new Chart(document.getElementById('psnrChart'), {
+                ...chartOptions,
+                data: {
+                    datasets: [{
+                    label: 'PSNR (dB)',
+                    data: [],
+                    borderColor: '#00d4ff',
+                    backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                    fill: true
+                }]
+                }
+            });
+
+            charts.ssim = new Chart(document.getElementById('ssimChart'), {
+                ...chartOptions,
+                data: {
+                    datasets: [{
+                        label: 'SSIM',
+                        data: [],
+                    borderColor: '#fbbf24',
+                    backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                    fill: true
+                }]
+            }
+            });
+
+            charts.gpuMemory = new Chart(document.getElementById('gpuMemoryChart'), {
+                ...chartOptions,
+                data: {
+                    datasets: [{
+                        label: 'GPU 内存 (GB)',
+                        data: [],
+                        borderColor: '#7b2cbf',
+                        backgroundColor: 'rgba(123, 44, 191, 0.1)',
+                        fill: true
+                    }]
+                }
+            });
+
+            charts.cpu = new Chart(document.getElementById('cpuChart'), {
+                ...chartOptions,
+                data: {
+                    datasets: [{
+                        label: 'CPU 占用 (%)',
+                        data: [],
+                        borderColor: '#f472b6',
+                        backgroundColor: 'rgba(244, 114, 182, 0.1)',
+                        fill: true
+                    }]
+                }
+            });
+        }
+
+        function updateCharts() {
+            const now = Date.now();
+            const maxPoints = 60;
+
+            Object.keys(charts).forEach(key => {
+                const chart = charts[key];
+                if (!chart) return;
+                
+                const dataKey = key === 'gpuMemory' ? 'gpuMemory' : key;
+                chart.data.datasets[0].data.push({
+                    x: now,
+                    y: systemData[dataKey][systemData[dataKey].length - 1] || 0
+                });
+
+                if (chart.data.datasets[0].data.length > maxPoints) {
+                    chart.data.datasets[0].data.shift();
+                }
+                
+                chart.update('none');
+            });
+        }
+
+        function updateStatus(data) {
+            const activeStreams = Object.keys(data.streamStats || {}).length;
+            document.getElementById('active-streams').textContent = `${activeStreams} 路流`;
+            document.getElementById('stat-active-streams').textContent = activeStreams;
+
+            let totalDelay = 0;
+            let totalFps = 0;
+            let count = 0;
+
+            Object.values(data.streamStats || {}).forEach(stream => {
+                totalDelay += parseFloat(stream.avgDelayMs) || 0;
+                totalFps += parseFloat(stream.outputFps) || 0;
+                count++;
+            });
+
+            const avgDelay = count > 0 ? (totalDelay / count).toFixed(1) : 0;
+            const avgFps = count > 0 ? (totalFps / count).toFixed(1) : 0;
+
+            document.getElementById('stat-avg-delay').textContent = `${avgDelay} ms`;
+            document.getElementById('stat-avg-delay').className = `metric-value ${parseFloat(avgDelay) < 500 ? 'good' : parseFloat(avgDelay) < 800 ? 'warning' : 'danger'}`;
+            
+            document.getElementById('stat-avg-fps').textContent = `${avgFps} FPS`;
+            document.getElementById('stat-avg-fps').className = `metric-value ${parseFloat(avgFps) >= 15 ? 'good' : parseFloat(avgFps) >= 10 ? 'warning' : 'danger'}`;
+
+            const gpuUtil = data.serverStats?.gpu_utilization || 0;
+            document.getElementById('stat-gpu').textContent = `${gpuUtil}%`;
+            document.getElementById('stat-gpu').className = `metric-value ${gpuUtil < 70 ? 'good' : gpuUtil < 90 ? 'warning' : 'danger'}`;
+
+            const pythonStatus = data.serverStats ? 'running' : 'disconnected';
+            document.getElementById('python-status').className = `status-dot ${pythonStatus === 'running' ? '' : 'error'}`;
+
+            systemData.delay.push(parseFloat(avgDelay));
+            systemData.fps.push(parseFloat(avgFps));
+            systemData.gpuMemory.push(data.serverStats?.gpu_memory?.allocated_gb || 0);
+            systemData.cpu.push(data.serverStats?.cpu_usage || 0);
+
+            const streams = Object.values(data.streamStats || {});
+            if (streams.length > 0) {
+                systemData.psnr.push(parseFloat(streams[0].psnr) || 0);
+                systemData.ssim.push(parseFloat(streams[0].ssim) || 0);
+            }
+
+            if (systemData.delay.length > 60) {
+                systemData.delay.shift();
+                systemData.fps.shift();
+                systemData.psnr.shift();
+                systemData.ssim.shift();
+                systemData.gpuMemory.shift();
+                systemData.cpu.shift();
+            }
+
+            updateCharts();
+            updateStreamsList(data.streamStats || {});
+            updateSystemInfo(data);
+        }
+
+        function updateStreamsList(streams) {
+            const container = document.getElementById('active-streams-list');
+            const managementContainer = document.getElementById('streams-management');
+            
+            if (Object.keys(streams).length === 0) {
+                container.innerHTML = '<div class="no-data">暂无活跃流</div>';
+                managementContainer.innerHTML = '<div class="no-data">暂无视频流</div>';
+                return;
+            }
+
+            let html = '';
+            let managementHtml = '';
+
+            Object.entries(streams).forEach(([streamId, stream]) => {
+                const delayClass = parseFloat(stream.avgDelayMs) < 500 ? 'good' : parseFloat(stream.avgDelayMs) < 800 ? 'warning' : 'danger';
+                const fpsClass = parseFloat(stream.outputFps) >= 15 ? 'good' : parseFloat(stream.outputFps) >= 10 ? 'warning' : 'danger';
+
+                html += `
+                    <div class="stream-card">
+                        <div class="stream-header">
+                        <span class="stream-id">${streamId}</span>
+                        <span style="color: #94a3b8;">${stream.resolution} → ${stream.outputResolution}</span>
+                    </div>
+                    <div class="stream-metrics">
+                        <div class="stream-metric">
+                            <div class="value ${fpsClass}">${stream.outputFps}</div>
+                            <div class="label">FPS</div>
+                        </div>
+                        <div class="stream-metric">
+                            <div class="value ${delayClass}">${stream.avgDelayMs} ms</div>
+                            <div class="label">延迟</div>
+                        </div>
+                        <div class="stream-metric">
+                            <div class="value">${stream.psnr} dB</div>
+                            <div class="label">PSNR</div>
+                        </div>
+                        <div class="stream-metric">
+                            <div class="value">${stream.ssim}</div>
+                            <div class="label">SSIM</div>
+                        </div>
+                    </div>
+                    <div class="stream-actions">
+                        <button class="btn btn-secondary" onclick="viewStream('${streamId}')">查看</button>
+                        <button class="btn btn-warning" onclick="startRecording('${streamId}')">录制</button>
+                    </div>
+                </div>
+                `;
+
+                const isSwitching = stream.switchState && stream.switchState !== 'idle';
+                const switchStateText = getSwitchStateText(stream.switchState || 'idle');
+                
+                managementHtml += `
+                    <div class="stream-card" ${isSwitching ? 'style="border-color: rgba(139, 92, 246, 0.5);"' : ''}>
+                        <div class="stream-header">
+                            <span class="stream-id">${streamId}</span>
+                            <span style="color: #94a3b8;">${stream.resolution} → ${stream.outputResolution} (${stream.scale}x)</span>
+                        </div>
+                        <div style="margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+                            <span class="switch-status ${stream.switchState || 'idle'}">
+                                <span class="status-dot ${isSwitching ? 'switching' : ''}"></span>
+                                ${isSwitching ? `切换到 ${stream.targetScale}x: ${switchStateText}` : switchStateText}
+                            </span>
+                            ${stream.switchStats ? `
+                            <span style="font-size: 0.8rem; color: #64748b;">
+                                已切换 ${stream.switchStats.successfulSwitches || 0} 次
+                                ${stream.switchStats.lastSwitchTimeMs ? `| 上次耗时 ${stream.switchStats.lastSwitchTimeMs.toFixed(0)}ms` : ''}
+                            </span>
+                            ` : ''}
+                        </div>
+                        <div class="stream-metrics">
+                            <div class="stream-metric">
+                                <div class="value ${fpsClass}">${stream.outputFps}</div>
+                                <div class="label">FPS</div>
+                            </div>
+                            <div class="stream-metric">
+                                <div class="value ${delayClass}">${stream.avgDelayMs} ms</div>
+                                <div class="label">延迟</div>
+                            </div>
+                            <div class="stream-metric">
+                                <div class="value">${stream.psnr} dB</div>
+                                <div class="label">PSNR</div>
+                            </div>
+                            <div class="stream-metric">
+                                <div class="value">${stream.ssim}</div>
+                                <div class="label">SSIM</div>
+                            </div>
+                        </div>
+                        <div class="stream-actions">
+                            <select onchange="changeScale('${streamId}', this.value)" ${isSwitching ? 'disabled' : ''}>
+                                <option value="2" ${stream.scale == 2 ? 'selected' : ''}>2x</option>
+                                <option value="3" ${stream.scale == 3 ? 'selected' : ''}>3x</option>
+                                <option value="4" ${stream.scale == 4 ? 'selected' : ''}>4x</option>
+                            </select>
+                            <button class="btn btn-warning" onclick="toggleRecording('${streamId}')" ${isSwitching ? 'disabled' : ''}>录制</button>
+                            <button class="btn btn-danger" onclick="terminateStream('${streamId}')" ${isSwitching ? 'disabled' : ''}>终止</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            managementContainer.innerHTML = managementHtml;
+
+            const select = document.getElementById('subscribe-stream-select');
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">请选择流</option>';
+            Object.keys(streams).forEach(streamId => {
+                const option = document.createElement('option');
+                option.value = streamId;
+                option.textContent = streamId;
+                if (streamId === currentValue) option.selected = true;
+                select.appendChild(option);
+            });
+            document.getElementById('start-subscribe-btn').disabled = !select.value;
+        }
+
+        function updateSystemInfo(data) {
+            const sysInfo = document.getElementById('system-status-info');
+            const gpuInfo = document.getElementById('gpu-status-info');
+
+            sysInfo.innerHTML = `
+                <p><strong>Node.js 服务:</strong> <span style="color: #4ade80;">运行中</span></p>
+                <p><strong>Python 服务:</strong> <span style="color: ${data.serverStats ? '#4ade80' : '#ef4444'};">${data.serverStats ? '运行中' : '未连接'}</span></p>
+                <p><strong>活跃流数:</strong> ${data.serverStats?.active_streams || 0}</p>
+                <p><strong>连接客户端:</strong> ${data.connectedClients || 0}</p>
+                <p><strong>CPU 占用:</strong> ${(data.serverStats?.cpu_usage || 0).toFixed(1)}%</p>
+                <p><strong>内存使用:</strong> ${(data.serverStats?.system_memory?.percent_used || 0).toFixed(1)}%</p>
+            `;
+
+            gpuInfo.innerHTML = `
+                <p><strong>GPU 利用率:</strong> ${(data.serverStats?.gpu_utilization || 0).toFixed(1)}%</p>
+                <p><strong>GPU 已分配:</strong> ${(data.serverStats?.gpu_memory?.allocated_gb || 0).toFixed(2)} GB</p>
+                <p><strong>GPU 已预留:</strong> ${(data.serverStats?.gpu_memory?.reserved_gb || 0).toFixed(2)} GB</p>
+                <p><strong>总内存:</strong> ${(data.serverStats?.system_memory?.total_gb || 0).toFixed(2)} GB</p>
+                <p><strong>可用内存:</strong> ${(data.serverStats?.system_memory?.available_gb || 0).toFixed(2)} GB</p>
+            `;
+        }
+
+        async function loadRecordings() {
+            try {
+                const response = await fetch('/api/recordings');
+                const data = await response.json();
+                
+                const container = document.getElementById('recordings-list');
+                
+                if (!data.success || data.recordings.length === 0) {
+                    container.innerHTML = '<div class="no-data">暂无录制文件</div>';
+                    return;
+                }
+
+                let html = '';
+                data.recordings.forEach(rec => {
+                    html += `
+                        <div class="recording-item">
+                            <div class="recording-header">
+                                <span class="stream-id">${rec.recording_id}</span>
+                                <span style="color: #94a3b8;">${rec.status}</span>
+                            </div>
+                            <div class="recording-info">
+                                <div class="stream-metric">
+                                    <div class="value">${rec.stream_id}</div>
+                                    <div class="label">流ID</div>
+                                </div>
+                                <div class="stream-metric">
+                                    <div class="value">${rec.scale_factor}x</div>
+                                    <div class="label">超分倍率</div>
+                                </div>
+                                <div class="stream-metric">
+                                    <div class="value">${rec.duration_sec ? rec.duration_sec.toFixed(1) : '-'} s</div>
+                                    <div class="label">时长</div>
+                                </div>
+                                <div class="stream-metric">
+                                    <div class="value">${new Date(rec.start_time).toLocaleString()}</div>
+                                    <div class="label">开始时间</div>
+                                </div>
+                            </div>
+                            <div class="recording-actions">
+                                <button class="btn btn-primary" onclick="compareRecording('${rec.recording_id}')">对比</button>
+                                <a class="btn btn-secondary" href="${rec.input_path}" download>下载原始</a>
+                                <a class="btn btn-secondary" href="${rec.output_path}" download>下载超分</a>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Failed to load recordings:', error);
+            }
+        }
+
+        async function changeScale(streamId, scale) {
+            const applyBtn = document.getElementById('apply-scale-btn');
+            const originalText = applyBtn.textContent;
+            
+            try {
+                applyBtn.disabled = true;
+                applyBtn.textContent = '切换中...';
+                
+                showNotification(`正在切换超分倍率到 ${scale}x...`, 'info');
+                
+                const response = await fetch(`/api/streams/${streamId}/scale`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scale: parseInt(scale), async: true })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(
+                        `超分倍率切换成功！${data.oldScale}x → ${data.scale}x，耗时 ${data.switchTimeMs?.toFixed(0) || 0}ms，处理了 ${data.bufferedFrames || 0} 个缓冲帧`, 
+                        'success'
+                    );
+                } else {
+                    showNotification('切换失败: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Failed to change scale:', error);
+                showNotification('切换失败: ' + error.message, 'error');
+            } finally {
+                applyBtn.disabled = false;
+                applyBtn.textContent = originalText;
+            }
+        }
+
+        async function toggleRecording(streamId) {
+            try {
+                const response = await fetch('/api/recordings/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ streamId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('开始录制');
+                    loadRecordings();
+                } else {
+                    alert('录制失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Failed to start recording:', error);
+            }
+        }
+
+        async function startRecording(streamId) {
+            toggleRecording(streamId);
+        }
+
+        async function terminateStream(streamId) {
+            if (!confirm('确定要终止这条流吗？')) return;
+            
+            try {
+                const response = await fetch(`/api/admin/streams/${streamId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('流已终止');
+                }
+            } catch (error) {
+                console.error('Failed to terminate stream:', error);
+            }
+        }
+
+        function viewStream(streamId) {
+            alert('查看流: ' + streamId);
+        }
+
+        async function compareRecording(recordingId) {
+            try {
+                const response = await fetch(`/api/recordings/${recordingId}/compare`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('modal-title').textContent = '画质对比 - ' + recordingId;
+                    document.getElementById('compare-original').src = data.input.downloadUrl;
+                    document.getElementById('compare-superres').src = data.output.downloadUrl;
+                    document.getElementById('compare-metrics').innerHTML = `
+                        <div class="stream-metrics">
+                            <div class="stream-metric">
+                                <div class="value">${data.scaleFactor}x</div>
+                                <div class="label">超分倍率</div>
+                            </div>
+                            <div class="stream-metric">
+                                <div class="value">${data.durationSec.toFixed(1)} s</div>
+                                <div class="label">时长</div>
+                            </div>
+                            <div class="stream-metric">
+                                <div class="value">${(data.input.size / 1024 / 1024).toFixed(2)} MB</div>
+                                <div class="label">原始大小</div>
+                            </div>
+                            <div class="stream-metric">
+                                <div class="value">${(data.output.size / 1024 / 1024).toFixed(2)} MB</div>
+                                <div class="label">超分大小</div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('compare-modal').classList.add('active');
+                }
+            } catch (error) {
+                console.error('Failed to compare recording:', error);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('compare-modal').classList.remove('active');
+            document.getElementById('compare-original').pause();
+            document.getElementById('compare-superres').pause();
+        }
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+                
+                if (tab.dataset.tab === 'recordings') {
+                    loadRecordings();
+                }
+            });
+        });
+
+        document.getElementById('subscribe-stream-select').addEventListener('change', (e) => {
+            document.getElementById('start-subscribe-btn').disabled = !e.target.value;
+        });
+
+        document.getElementById('apply-scale-btn').addEventListener('click', async () => {
+            const streamId = document.getElementById('subscribe-stream-select').value;
+            const scale = document.getElementById('scale-select').value;
+            if (streamId) {
+                await changeScale(streamId, scale);
+            }
+        });
+
+        let publishPeerConnection = null;
+        let subscribePeerConnection = null;
+        let publishStreamId = null;
+
+        document.getElementById('start-publish-btn').addEventListener('click', async () => {
+            try {
+                const resolution = document.getElementById('publish-resolution').value;
+                const [width, height] = resolution.split('x').map(Number);
+                
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width, height },
+                    audio: false
+                });
+
+                document.getElementById('local-video').innerHTML = '<video autoplay muted playsinline style="width:100%;height:100%;object-fit:contain;"></video>';
+                document.getElementById('local-video').querySelector('video').srcObject = stream;
+
+                const configuration = {
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }
+                };
+
+                publishPeerConnection = new RTCPeerConnection(configuration);
+                stream.getTracks().forEach(track => publishPeerConnection.addTrack(track, stream));
+
+                const offer = await publishPeerConnection.createOffer();
+                await publishPeerConnection.setLocalDescription(offer);
+
+                const response = await fetch('/api/signaling/publish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sdp: offer.sdp, type: offer.type
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    publishStreamId = data.streamId;
+                    document.getElementById('publish-stream-id').textContent = publishStreamId;
+                    
+                    await publishPeerConnection.setRemoteDescription(
+                        new RTCSessionDescription({ sdp: data.sdp, type: data.type
+                    });
+
+                    data.iceCandidates.forEach(candidate => {
+                        publishPeerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    });
+
+                    publishPeerConnection.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            fetch('/api/signaling/ice', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    peerId: data.peerId,
+                                    candidate: event.candidate
+                                })
+                            });
+                        }
+                    };
+
+                    document.getElementById('start-publish-btn').disabled = true;
+                    document.getElementById('stop-publish-btn').disabled = false;
+                } else {
+                    alert('推流失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Publish error:', error);
+                alert('推流失败: ' + error.message);
+            }
+        });
+
+        document.getElementById('stop-publish-btn').addEventListener('click', async () => {
+            if (publishPeerConnection) {
+                publishPeerConnection.close();
+                publishPeerConnection = null;
+            }
+            document.getElementById('local-video').innerHTML = '<span style="color: #64748b;">等待摄像头</span>';
+            document.getElementById('publish-stream-id').textContent = '-';
+            document.getElementById('start-publish-btn').disabled = false;
+            document.getElementById('stop-publish-btn').disabled = true;
+            publishStreamId = null;
+        });
+
+        document.getElementById('start-subscribe-btn').addEventListener('click', async () => {
+            const streamId = document.getElementById('subscribe-stream-select').value;
+            if (!streamId) return;
+
+            try {
+                const configuration = {
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }
+                };
+
+                subscribePeerConnection = new RTCPeerConnection(configuration);
+
+                subscribePeerConnection.ontrack = (event) => {
+                    const stream = event.streams[0];
+                    document.getElementById('remote-video-sr').innerHTML = '<video autoplay playsinline style="width:100%;height:100%;object-fit:contain;"></video>';
+                    document.getElementById('remote-video-sr').querySelector('video').srcObject = stream;
+                };
+
+                const offer = await subscribePeerConnection.createOffer();
+                await subscribePeerConnection.setLocalDescription(offer);
+
+                const response = await fetch('/api/signaling/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        streamId,
+                        sdp: offer.sdp,
+                        type: offer.type
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    await subscribePeerConnection.setRemoteDescription(
+                        new RTCSessionDescription({ sdp: data.sdp, type: data.type })
+                    );
+
+                    data.iceCandidates.forEach(candidate => {
+                        subscribePeerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    });
+
+                    subscribePeerConnection.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            fetch('/api/signaling/ice', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    peerId: data.peerId,
+                                    candidate: event.candidate
+                                })
+                            });
+                        }
+                    };
+
+                    socket.emit('stream:subscribe', streamId);
+
+                    document.getElementById('start-subscribe-btn').disabled = true;
+                    document.getElementById('stop-subscribe-btn').disabled = false;
+                } else {
+                    alert('订阅失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Subscribe error:', error);
+                alert('订阅失败: ' + error.message);
+            }
+        });
+
+        document.getElementById('stop-subscribe-btn').addEventListener('click', async () => {
+            if (subscribePeerConnection) {
+                subscribePeerConnection.close();
+                subscribePeerConnection = null;
+            }
+            document.getElementById('remote-video-sr').innerHTML = '<span style="color: #64748b;">等待超分处理</span>';
+            document.getElementById('start-subscribe-btn').disabled = false;
+            document.getElementById('stop-subscribe-btn').disabled = true;
+            
+            const streamId = document.getElementById('subscribe-stream-select').value;
+            if (streamId) {
+                socket.emit('stream:unsubscribe', streamId);
+            }
+        });
+
+        socket.on('system:stats', (data) => {
+            document.getElementById('connected-clients').textContent = `${data.connectedClients || 0} 客户端';
+            updateStatus(data);
+        });
+
+        socket.on('frame:data', (data) => {
+        });
+
+        socket.on('stream:list', (data) => {
+            updateStreamsList(data.streams || {});
+        });
+
+        initCharts();
+        loadRecordings();
+
+        setInterval(() => {
+            socket.emit('stream:list');
+        }, 5000);
+    </script>
+</body>
+</html>

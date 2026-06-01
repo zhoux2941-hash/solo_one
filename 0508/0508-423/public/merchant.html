@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商家端 - 指纹支付收款</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .merchant-card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .merchant-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 30px;
+      color: #fff;
+      text-align: center;
+    }
+
+    .merchant-logo {
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      margin: 0 auto 15px;
+    }
+
+    .merchant-name {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .merchant-id {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .connection-status {
+      display: inline-flex;
+      align-items: gap;
+      gap: 8px;
+      margin-top: 15px;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      font-size: 13px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ff4757;
+    }
+
+    .status-dot.connected {
+      background: #00ff88;
+      box-shadow: 0 0 10px #00ff88;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .merchant-body {
+      padding: 30px;
+    }
+
+    .amount-section {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .amount-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .amount-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .currency-symbol {
+      font-size: 36px;
+      font-weight: 300;
+      color: #333;
+      margin-right: 10px;
+    }
+
+    .amount-input {
+      font-size: 48px;
+      font-weight: 300;
+      border: none;
+      outline: none;
+      width: 200px;
+      text-align: center;
+      color: #333;
+      border-bottom: 2px solid #e0e0e0;
+      transition: border-color 0.3s;
+    }
+
+    .amount-input:focus {
+      border-bottom-color: #667eea;
+    }
+
+    .amount-input::-webkit-outer-spin-button,
+    .amount-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .quick-amounts {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .quick-btn {
+      padding: 8px 16px;
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .quick-btn:hover {
+      background: #667eea;
+      color: #fff;
+      border-color: #667eea;
+    }
+
+    .merchant-info {
+      background: #f9f9f9;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 10px;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .cancel-btn {
+      width: 100%;
+      padding: 14px;
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      color: #666;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .cancel-btn:hover {
+      background: #ff4757;
+      color: #fff;
+      border-color: #ff4757;
+    }
+
+    .payment-status {
+      text-align: center;
+      padding: 30px;
+      display: none;
+    }
+
+    .payment-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+
+    .payment-icon.processing {
+      background: rgba(102, 126, 234, 0.2);
+      color: #667eea;
+      animation: spin 1s linear infinite;
+    }
+
+    .payment-icon.success {
+      background: rgba(0, 255, 136, 0.2);
+      color: #00cc6a;
+    }
+
+    .payment-icon.failed {
+      background: rgba(255, 71, 87, 0.2);
+      color: #ff4757;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .payment-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .payment-amount {
+      font-size: 48px;
+      font-weight: 300;
+      color: #333;
+      margin: 15px 0;
+    }
+
+    .payment-message {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .payment-details {
+      background: #f9f9f9;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: left;
+      margin-top: 20px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 14px;
+    }
+
+    .detail-label {
+      color: #999;
+    }
+
+    .detail-value {
+      color: #333;
+      font-weight: 500;
+    }
+
+    .recent-payments {
+      margin-top: 30px;
+    }
+
+    .recent-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .recent-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .recent-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .recent-item:last-child {
+      border-bottom: none;
+    }
+
+    .recent-info {
+      flex: 1;
+    }
+
+    .recent-amount {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .recent-time {
+      font-size: 12px;
+      color: #999;
+      margin-top: 3px;
+    }
+
+    .recent-status {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .recent-status.completed {
+      background: rgba(0, 255, 136, 0.2);
+      color: #00cc6a;
+    }
+
+    .recent-status.pending {
+      background: rgba(255, 165, 2, 0.2);
+      color: #ffa502;
+    }
+
+    .recent-status.failed {
+      background: rgba(255, 71, 87, 0.2);
+      color: #ff4757;
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      background: #333;
+      border-radius: 8px;
+      border-left: 4px solid #00cc6a;
+      color: #fff;
+      font-size: 14px;
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast.error {
+      border-left-color: #ff4757;
+    }
+
+    .toast.info {
+      border-left-color: #667eea;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .ws-config {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+      font-size: 12px;
+    }
+
+    .ws-config input {
+      width: 150px;
+      padding: 6px 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      margin-right: 8px;
+      font-size: 12px;
+    }
+
+    .ws-config button {
+      padding: 6px 12px;
+      background: #667eea;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .device-info {
+      background: #f9f9f9;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+
+    .device-info.has-device {
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+
+    .device-info.no-device {
+      background: rgba(255, 71, 87, 0.1);
+      border: 1px solid rgba(255, 71, 87, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="merchant-card">
+      <div class="merchant-header">
+        <div class="merchant-logo">🏪</div>
+        <div class="merchant-name" id="merchant-name">示例商家</div>
+        <div class="merchant-id">商家编号: <span id="merchant-id">MERCHANT_001</span></div>
+        <div class="connection-status">
+          <span class="status-dot" id="ws-status-dot"></span>
+          <span id="ws-status-text">未连接</span>
+        </div>
+      </div>
+
+      <div class="merchant-body">
+        <div id="payment-form">
+          <div class="device-info no-device" id="device-info">
+            <div style="font-weight: 500; margin-bottom: 8px;">🔌 终端设备状态</div>
+            <div id="device-status-text">未检测到指纹支付终端</div>
+          </div>
+
+          <div class="amount-section">
+            <div class="amount-label">收款金额</div>
+            <div class="amount-input-wrapper">
+              <span class="currency-symbol">¥</span>
+              <input type="number" class="amount-input" id="amount-input" placeholder="0.00" step="0.01" min="0.01">
+            </div>
+            <div class="quick-amounts">
+              <button class="quick-btn" data-amount="1.00">¥1</button>
+              <button class="quick-btn" data-amount="5.00">¥5</button>
+              <button class="quick-btn" data-amount="10.00">¥10</button>
+              <button class="quick-btn" data-amount="20.00">¥20</button>
+              <button class="quick-btn" data-amount="50.00">¥50</button>
+              <button class="quick-btn" data-amount="100.00">¥100</button>
+            </div>
+          </div>
+
+          <div class="merchant-info">
+            <div class="form-group">
+              <label>商品名称 (可选)</label>
+              <input type="text" id="goods-name" placeholder="例如：商品消费">
+            </div>
+          </div>
+
+          <button class="submit-btn" id="submit-btn" disabled>
+            确认收款
+          </button>
+          <button class="cancel-btn" id="cancel-btn">取消收款</button>
+        </div>
+
+        <div id="payment-status" class="payment-status">
+          <div class="payment-icon processing" id="payment-icon">
+            <span id="payment-icon-content">⏳</span>
+          </div>
+          <div class="payment-title" id="payment-title">正在请求支付</div>
+          <div class="payment-amount" id="payment-amount">¥0.00</div>
+          <div class="payment-message" id="payment-message">请用户在终端上按指纹验证...</div>
+          <div class="payment-details" id="payment-details" style="display: none;">
+            <div class="detail-row">
+              <span class="detail-label">订单号</span>
+              <span class="detail-value" id="detail-transaction-id">-</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">付款用户</span>
+              <span class="detail-value" id="detail-user">-</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">支付方式</span>
+              <span class="detail-value">指纹支付</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">交易时间</span>
+              <span class="detail-value" id="detail-time">-</span>
+            </div>
+          </div>
+          <button class="submit-btn" id="new-payment-btn" style="display: none;">
+            新收款
+          </button>
+        </div>
+
+        <div class="recent-payments">
+          <div class="recent-title">最近收款</div>
+          <div class="recent-list" id="recent-list">
+            <div style="text-align: center; color: #999; padding: 20px;">
+              暂无收款记录
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ws-config">
+    <input type="text" id="ws-url" value="ws://localhost:8080" placeholder="WebSocket地址">
+    <button id="ws-connect">连接</button>
+  </div>
+
+  <script>
+    class MerchantClient {
+      constructor() {
+      this.ws = null;
+      this.requestId = 0;
+      this.pendingRequests = new Map();
+      this.currentPaymentId = null;
+      this.isConnected = false;
+      this.hasDevice = false;
+      this.recentPayments = [];
+      this.init();
+    }
+
+    init() {
+      this.setupEventListeners();
+      this.autoConnect();
+    }
+
+    setupEventListeners() {
+      document.querySelectorAll('.quick-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const amount = btn.dataset.amount;
+          document.getElementById('amount-input').value = amount;
+        });
+      });
+
+      document.getElementById('submit-btn').addEventListener('click', () => this.requestPayment());
+      document.getElementById('cancel-btn').addEventListener('click', () => this.cancelPayment());
+      document.getElementById('new-payment-btn').addEventListener('click', () => this.showPaymentForm());
+      document.getElementById('ws-connect').addEventListener('click', () => this.connect());
+    }
+
+    autoConnect() {
+      setTimeout(() => this.connect(), 500);
+    }
+
+    connect() {
+      const url = document.getElementById('ws-url').value;
+      this.updateConnectionStatus(false, '连接中...');
+
+      try {
+        this.ws = new WebSocket(url);
+
+        this.ws.onopen = () => {
+          console.log('WebSocket已连接');
+          this.isConnected = true;
+          this.updateConnectionStatus(true, '已连接');
+          this.getTerminalStatus();
+          this.getPaymentHistory();
+        };
+
+        this.ws.onmessage = (event) => {
+          this.handleMessage(event.data);
+        };
+
+        this.ws.onclose = () => {
+          console.log('WebSocket已断开');
+          this.isConnected = false;
+          this.hasDevice = false;
+          this.updateConnectionStatus(false, '已断开');
+          this.updateDeviceStatus(false);
+          setTimeout(() => this.connect(), 3000);
+        };
+
+        this.ws.onerror = (error) => {
+          console.error('WebSocket错误:', error);
+          this.updateConnectionStatus(false, '连接失败');
+        };
+
+      } catch (error) {
+          console.error('连接失败:', error);
+          this.updateConnectionStatus(false, '连接失败');
+        }
+      }
+
+    updateConnectionStatus(connected, text) {
+      const dot = document.getElementById('ws-status-dot');
+      const statusText = document.getElementById('ws-status-text');
+
+      dot.classList.toggle('connected', connected);
+      statusText.textContent = text;
+
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = !connected || !this.hasDevice;
+    }
+
+    updateDeviceStatus(hasDevice, deviceInfo = null) {
+      this.hasDevice = hasDevice;
+      const infoDiv = document.getElementById('device-info');
+      const statusText = document.getElementById('device-status-text');
+      const submitBtn = document.getElementById('submit-btn');
+
+      infoDiv.classList.toggle('has-device', hasDevice);
+      infoDiv.classList.toggle('no-device', !hasDevice);
+
+      if (hasDevice && deviceInfo) {
+        statusText.textContent = `已连接: ${deviceInfo.product || '指纹采集终端'}`;
+      } else {
+        statusText.textContent = '未检测到指纹支付终端';
+      }
+
+      submitBtn.disabled = !this.isConnected || !hasDevice;
+    }
+
+    sendRequest(method, params, timeout = 30000) {
+      return new Promise((resolve, reject) => {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+          reject(new Error('WebSocket未连接'));
+          return;
+        }
+
+        const id = ++this.requestId;
+        const request = {
+          jsonrpc: '2.0',
+          method,
+          params,
+          id
+        };
+
+        const timeoutId = setTimeout(() => {
+          if (this.pendingRequests.has(id)) {
+            const pending = this.pendingRequests.get(id);
+            this.pendingRequests.delete(id);
+            
+            console.log(`请求超时，发送取消指令: requestId=${id}, method=${method}`);
+            this.sendCancelRequest(id, method);
+            
+            reject(new Error('请求超时'));
+          }
+        }, timeout);
+
+        this.pendingRequests.set(id, { resolve, reject, method, params, timeoutId });
+        this.ws.send(JSON.stringify(request));
+      });
+    }
+
+    sendCancelRequest(originalRequestId, originalMethod) {
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      const cancelId = ++this.requestId;
+      const cancelRequest = {
+        jsonrpc: '2.0',
+        method: 'request.cancel',
+        params: {
+          originalRequestId,
+          originalMethod,
+          reason: 'client_timeout'
+        },
+        id: cancelId
+      };
+
+      this.ws.send(JSON.stringify(cancelRequest));
+      console.log('取消指令已发送:', cancelRequest);
+    }
+
+    handleMessage(data) {
+      try {
+        const message = JSON.parse(data);
+
+        if (message.id !== undefined && this.pendingRequests.has(message.id)) {
+          const pending = this.pendingRequests.get(message.id);
+          this.pendingRequests.delete(message.id);
+
+          if (pending.timeoutId) {
+            clearTimeout(pending.timeoutId);
+          }
+
+          if (message.error) {
+            pending.reject(new Error(message.error.message || '请求失败'));
+          } else {
+            pending.resolve(message.result);
+          }
+        } else if (message.method) {
+          this.handleNotification(message);
+        }
+      } catch (error) {
+        console.error('解析消息失败:', error);
+      }
+    }
+
+    handleNotification(message) {
+      switch (message.method) {
+        case 'device_connected':
+          this.showToast('指纹终端已连接', 'success');
+          this.updateDeviceStatus(true, message.params.device);
+          break;
+
+        case 'device_disconnected':
+          this.showToast('指纹终端已断开', 'error');
+          this.updateDeviceStatus(false);
+          break;
+
+        case 'network_status':
+          if (!message.params.online) {
+            this.showToast('终端网络异常', 'info');
+          }
+          break;
+      }
+    }
+
+    async getTerminalStatus() {
+      try {
+        const result = await this.sendRequest('terminal.status', {});
+        this.updateDeviceStatus(result.hasDevice, result.device);
+      } catch (error) {
+        console.error('获取终端状态失败:', error);
+      }
+    }
+
+    async getPaymentHistory() {
+      try {
+        const result = await this.sendRequest('payment.history', { limit: 10 });
+        this.recentPayments = result.payments || [];
+        this.updateRecentPayments();
+      } catch (error) {
+        console.error('获取支付历史失败:', error);
+      }
+    }
+
+    async requestPayment() {
+      const amountInput = document.getElementById('amount-input');
+      const amount = parseFloat(amountInput.value);
+      const goodsName = document.getElementById('goods-name').value || '商品消费';
+
+      if (!amount || amount <= 0) {
+        this.showToast('请输入有效的金额', 'error');
+        return;
+      }
+
+      this.currentPaymentId = null;
+
+      this.showPaymentStatus('processing', amount, '正在请求支付终端...');
+
+      try {
+        const result = await this.sendRequest('payment.request', {
+          amount,
+          merchantId: 'MERCHANT_001',
+          merchantName: '示例商家',
+          currency: 'CNY'
+        });
+
+        if (result.success) {
+          this.currentPaymentId = result.paymentId;
+          this.showPaymentStatus('processing', amount, '请用户在终端上按指纹验证...');
+          document.getElementById('cancel-btn').style.display = 'block';
+          document.getElementById('cancel-btn').style.marginTop = '10px';
+
+          this.pollPaymentStatus(result.paymentId, amount);
+        } else {
+          this.showPaymentStatus('failed', amount, result.error || '支付请求失败');
+        }
+      } catch (error) {
+        this.showPaymentStatus('failed', amount, error.message);
+        this.showToast(error.message, 'error');
+      }
+    }
+
+    async pollPaymentStatus(paymentId, amount) {
+      let attempts = 0;
+      const maxAttempts = 60;
+
+      const poll = async () => {
+        attempts++;
+        if (attempts > maxAttempts || !this.currentPaymentId) {
+          if (this.currentPaymentId) {
+            this.showPaymentStatus('failed', amount, '支付超时');
+          }
+          return;
+        }
+
+        try {
+          const result = await this.sendRequest('payment.status', { paymentId });
+
+          if (result.status === 'completed') {
+            this.showPaymentStatus('success', amount, '支付成功！', result);
+            this.getPaymentHistory();
+            return;
+          } else if (result.status === 'failed' || result.status === 'cancelled') {
+            this.showPaymentStatus('failed', amount, result.errorMessage || '支付失败');
+            return;
+          } else if (result.status === 'pending_offline') {
+            this.showPaymentStatus('success', amount, '离线支付已暂存，网络恢复后将自动处理', result);
+            this.getPaymentHistory();
+            return;
+          } else {
+            setTimeout(poll, 1000);
+          }
+        } catch (error) {
+          setTimeout(poll, 1000);
+        }
+      };
+
+      setTimeout(poll, 1000);
+    }
+
+    async cancelPayment() {
+      if (this.currentPaymentId) {
+        try {
+          await this.sendRequest('payment.cancel', { paymentId: this.currentPaymentId });
+          this.currentPaymentId = null;
+          this.showPaymentForm();
+          this.showToast('已取消收款', 'info');
+        } catch (error) {
+          console.error('取消支付失败:', error);
+        }
+      }
+    }
+
+    showPaymentStatus(status, amount, message, details = null) {
+      document.getElementById('payment-form').style.display = 'none';
+      document.getElementById('payment-status').style.display = 'block';
+
+      const iconDiv = document.getElementById('payment-icon');
+      const iconContent = document.getElementById('payment-icon-content');
+      const titleEl = document.getElementById('payment-title');
+      const amountEl = document.getElementById('payment-amount');
+      const messageEl = document.getElementById('payment-message');
+      const detailsDiv = document.getElementById('payment-details');
+      const newBtn = document.getElementById('new-payment-btn');
+      const cancelBtn = document.getElementById('cancel-btn');
+
+      iconDiv.className = 'payment-icon ' + status;
+
+      if (status === 'processing') {
+        iconContent.textContent = '⏳';
+        titleEl.textContent = '正在请求支付';
+      } else if (status === 'success') {
+        iconContent.textContent = '✓';
+        titleEl.textContent = '支付成功';
+        detailsDiv.style.display = 'block';
+        newBtn.style.display = 'block';
+        cancelBtn.style.display = 'none';
+
+        if (details) {
+          document.getElementById('detail-transaction-id').textContent = details.transactionId;
+          document.getElementById('detail-user').textContent = details.user?.fullName || '指纹用户';
+          document.getElementById('detail-time').textContent = new Date().toLocaleString('zh-CN');
+        }
+      } else if (status === 'failed') {
+        iconContent.textContent = '✗';
+        titleEl.textContent = '支付失败';
+        detailsDiv.style.display = 'none';
+        newBtn.style.display = 'block';
+        cancelBtn.style.display = 'none';
+      }
+
+      amountEl.textContent = `¥${amount.toFixed(2)}`;
+      messageEl.textContent = message;
+
+      this.currentPaymentStatus = status;
+    }
+
+    showPaymentForm() {
+      document.getElementById('payment-form').style.display = 'block';
+      document.getElementById('payment-status').style.display = 'none';
+      document.getElementById('cancel-btn').style.display = 'none';
+      document.getElementById('amount-input').value = '';
+      document.getElementById('goods-name').value = '';
+      this.currentPaymentId = null;
+    }
+
+    updateRecentPayments() {
+      const list = document.getElementById('recent-list');
+
+      if (this.recentPayments.length === 0) {
+        list.innerHTML = `
+          <div style="text-align: center; color: #999; padding: 20px;">
+            暂无收款记录
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = this.recentPayments
+        .filter(p => p.status !== 'awaiting_fingerprint' && p.status !== 'processing')
+        .slice(0, 5)
+        .map(p => `
+          <div class="recent-item">
+            <div class="recent-info">
+              <div class="recent-amount">¥${p.amount.toFixed(2)}</div>
+              <div class="recent-time">${new Date(p.created_at).toLocaleString('zh-CN')}</div>
+            </div>
+            <div class="recent-status ${p.status}">
+              ${this.getStatusText(p.status)}
+            </div>
+          </div>
+        `).join('');
+    }
+
+    getStatusText(status) {
+      const map = {
+        'completed': '成功',
+        'pending': '处理中',
+        'failed': '失败',
+        'cancelled': '已取消',
+        'pending_offline': '离线'
+      };
+      return map[status] || status;
+    }
+
+    showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  }
+
+  const client = new MerchantClient();
+  </script>
+</body>
+</html>

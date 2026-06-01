@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1780324182800
+Build-Jdk-Spec: 21
+Bundle-Activator: com.monitor.plugin.memory.MemoryMonitorActivator
+Bundle-ManifestVersion: 2
+Bundle-Name: plugin-memory
+Bundle-SymbolicName: com.monitor.plugin.memory
+Bundle-Version: 1.0.0
+Created-By: Apache Maven Bundle Plugin 5.1.9
+Embed-Dependency: oshi-core;inline=true
+Embed-Transitive: true
+Export-Package: com.monitor.plugin.memory;version="1.0.0";uses:="com.mon
+ itor.api,org.osgi.framework,org.osgi.service.log"
+Import-Package: org.osgi.framework;version="[1.9,2)",org.osgi.service.lo
+ g;version="[1.5,2)",com.monitor.api;version="[1.0,2)",org.osgi.service.
+ event;version="[1.4,2)"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=11))"
+Tool: Bnd-6.3.1.202206071316

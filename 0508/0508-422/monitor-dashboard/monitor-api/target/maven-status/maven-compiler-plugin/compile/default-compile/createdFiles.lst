@@ -1,0 +1,6 @@
+com\monitor\api\MonitorData.class
+com\monitor\api\MonitorPlugin.class
+com\monitor\api\AlertService.class
+com\monitor\api\ConfigService.class
+com\monitor\api\EventPublisher.class
+com\monitor\api\PluginMonitorData.class

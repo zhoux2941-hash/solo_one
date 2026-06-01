@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Space Mono', 'JetBrains Mono', monospace;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: #0a192f;
+  color: #ccd6f6;
+  overflow-x: hidden;
+}
+
+@layer utilities {
+  .glass-card {
+    background: rgba(17, 34, 64, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(100, 255, 218, 0.1);
+    border-radius: 12px;
+  }
+
+  .glass-card-hover:hover {
+    border-color: rgba(100, 255, 218, 0.3);
+    box-shadow: 0 0 20px rgba(100, 255, 218, 0.05);
+  }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(100, 255, 218, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(100, 255, 218, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .noise-bg {
+    position: relative;
+  }
+
+  .noise-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.015;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow-text {
+    text-shadow: 0 0 10px rgba(100, 255, 218, 0.5);
+  }
+
+  .glow-cyan {
+    box-shadow: 0 0 15px rgba(100, 255, 218, 0.3), 0 0 30px rgba(100, 255, 218, 0.1);
+  }
+
+  .glow-charge {
+    box-shadow: 0 0 15px rgba(255, 159, 67, 0.3), 0 0 30px rgba(255, 159, 67, 0.1);
+  }
+
+  .glow-discharge {
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.3), 0 0 30px rgba(168, 85, 247, 0.1);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(17, 34, 64, 0.5);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(100, 255, 218, 0.2);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 255, 218, 0.4);
+  }
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(to right, #1a2f4e, #233554);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #64ffda;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(100, 255, 218, 0.5), 0 0 20px rgba(100, 255, 218, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 15px rgba(100, 255, 218, 0.7), 0 0 30px rgba(100, 255, 218, 0.3);
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.3);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #64ffda;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 10px rgba(100, 255, 218, 0.5), 0 0 20px rgba(100, 255, 218, 0.2);
+}
+
+@keyframes circuit-flow {
+  0% { stroke-dashoffset: 20; }
+  100% { stroke-dashoffset: 0; }
+}

@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>指纹支付终端模拟器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #ffffff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #00d4ff, #00ff88);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .logo-text h1 {
+      font-size: 18px;
+      font-weight: 600;
+      background: linear-gradient(90deg, #00d4ff, #00ff88);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .logo-text p {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .status-section {
+      margin-bottom: 25px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .status-label {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .status-value {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #666;
+    }
+
+    .status-dot.online {
+      background: #00ff88;
+      box-shadow: 0 0 10px #00ff88;
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.offline {
+      background: #ff4757;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .nav-section h3 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 12px;
+      margin-top: 20px;
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 12px 15px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 4px;
+      text-align: left;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(0, 212, 255, 0.3);
+    }
+
+    .nav-btn.active {
+      background: linear-gradient(90deg, rgba(0, 212, 255, 0.2), transparent);
+      border-color: rgba(0, 212, 255, 0.5);
+    }
+
+    .nav-icon {
+      width: 20px;
+      text-align: center;
+    }
+
+    .main-content {
+      padding: 30px;
+      overflow-y: auto;
+    }
+
+    .page {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-header {
+      margin-bottom: 30px;
+    }
+
+    .page-header h2 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .page-header p {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .terminal-display {
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px solid rgba(0, 212, 255, 0.3);
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 400px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .fingerprint-sensor {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+
+    .sensor-ring {
+      position: absolute;
+      inset: 0;
+      border: 3px solid rgba(0, 212, 255, 0.3);
+      border-radius: 50%;
+      animation: ringRotate 3s linear infinite;
+    }
+
+    .sensor-ring.active {
+      border-color: #00ff88;
+      box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+    }
+
+    .sensor-ring.waiting {
+      border-color: #ffa502;
+      animation: ringPulse 1s ease-in-out infinite;
+    }
+
+    @keyframes ringRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes ringPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.7; }
+    }
+
+    .sensor-inner {
+      position: absolute;
+      inset: 15px;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 255, 136, 0.2));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+    }
+
+    .sensor-inner.active {
+      background: linear-gradient(135deg, rgba(0, 255, 136, 0.3), rgba(0, 255, 136, 0.5));
+    }
+
+    .sensor-inner.error {
+      background: linear-gradient(135deg, rgba(255, 71, 87, 0.3), rgba(255, 71, 87, 0.5));
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00d4ff, #00ff88);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .status-message {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.8);
+      min-height: 24px;
+    }
+
+    .status-message.success {
+      color: #00ff88;
+    }
+
+    .status-message.error {
+      color: #ff4757;
+    }
+
+    .status-message.info {
+      color: #00d4ff;
+    }
+
+    .amount-display {
+      font-size: 48px;
+      font-weight: 700;
+      margin: 20px 0;
+      background: linear-gradient(90deg, #00d4ff, #00ff88);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .merchant-info {
+      font-size: 18px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 10px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin: 5px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, #00d4ff, #0099cc);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0, 212, 255, 0.3);
+    }
+
+    .btn-success {
+      background: linear-gradient(90deg, #00ff88, #00cc6a);
+      color: #000;
+    }
+
+    .btn-danger {
+      background: linear-gradient(90deg, #ff4757, #cc0000);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .devices-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 15px;
+    }
+
+    .device-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.3s;
+    }
+
+    .device-card:hover {
+      border-color: rgba(0, 212, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .device-card.connected {
+      border-color: rgba(0, 255, 136, 0.5);
+      background: rgba(0, 255, 136, 0.05);
+    }
+
+    .device-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+
+    .device-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(0, 212, 255, 0.2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .device-status {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .device-status.connected {
+      background: rgba(0, 255, 136, 0.2);
+      color: #00ff88;
+    }
+
+    .device-status.disconnected {
+      background: rgba(255, 71, 87, 0.2);
+      color: #ff4757;
+    }
+
+    .device-info h4 {
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .device-info p {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .device-details {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .device-details div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .history-table th,
+    .history-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .history-table th {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 500;
+    }
+
+    .history-table tr:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-badge.completed {
+      background: rgba(0, 255, 136, 0.2);
+      color: #00ff88;
+    }
+
+    .status-badge.pending {
+      background: rgba(255, 165, 2, 0.2);
+      color: #ffa502;
+    }
+
+    .status-badge.failed {
+      background: rgba(255, 71, 87, 0.2);
+      color: #ff4757;
+    }
+
+    .status-badge.pending_offline {
+      background: rgba(156, 89, 182, 0.2);
+      color: #9c59b6;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 12px 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: #00d4ff;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .card-header h3 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(90deg, #00d4ff, #00ff88);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 5px;
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      background: rgba(0, 0, 0, 0.9);
+      border-radius: 8px;
+      border-left: 4px solid #00ff88;
+      color: #fff;
+      font-size: 14px;
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast.error {
+      border-left-color: #ff4757;
+    }
+
+    .toast.info {
+      border-left-color: #00d4ff;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .pending-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .pending-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border-left: 3px solid #9c59b6;
+    }
+
+    .pending-amount {
+      font-size: 20px;
+      font-weight: 600;
+      color: #9c59b6;
+    }
+
+    .templates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .template-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .template-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .template-avatar {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #00d4ff, #00ff88);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #000;
+    }
+
+    .template-info h4 {
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+
+    .template-info p {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .template-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 10px;
+    }
+
+    .quality-score {
+      color: #00ff88;
+      font-weight: 500;
+    }
+
+    .ws-info {
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+
+    .ws-info code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #00d4ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">🔐</div>
+        <div class="logo-text">
+          <h1>指纹支付终端</h1>
+          <p>Fingerprint Pay Terminal</p>
+        </div>
+      </div>
+
+      <div class="status-section">
+        <div class="status-item">
+          <span class="status-label">网络状态</span>
+          <span class="status-value">
+            <span id="network-dot" class="status-dot online"></span>
+            <span id="network-text">在线</span>
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">USB设备</span>
+          <span class="status-value">
+            <span id="usb-dot" class="status-dot offline"></span>
+            <span id="usb-text">未连接</span>
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">离线队列</span>
+          <span id="pending-count" class="status-value">0</span>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <h3>功能导航</h3>
+        <button class="nav-btn active" data-page="dashboard">
+          <span class="nav-icon">🏠</span>
+          <span>控制面板</span>
+        </button>
+        <button class="nav-btn" data-page="devices">
+          <span class="nav-icon">🔌</span>
+          <span>设备管理</span>
+        </button>
+        <button class="nav-btn" data-page="fingerprint">
+          <span class="nav-icon">👆</span>
+          <span>指纹管理</span>
+        </button>
+        <button class="nav-btn" data-page="history">
+          <span class="nav-icon">📋</span>
+          <span>支付记录</span>
+        </button>
+        <button class="nav-btn" data-page="offline">
+          <span class="nav-icon">📴</span>
+          <span>离线支付</span>
+        </button>
+        <button class="nav-btn" data-page="printer">
+          <span class="nav-icon">🖨️</span>
+          <span>打印管理</span>
+        </button>
+      </div>
+
+      <div class="ws-info">
+        <div style="font-size: 13px; margin-bottom: 5px; color: rgba(255,255,255,0.7);">WebSocket 服务</div>
+        <div style="font-size: 12px; color: rgba(255,255,255,0.5);">端口: <code id="ws-port">8080</code></div>
+        <div style="font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 5px;">JSON-RPC 2.0</div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div id="page-dashboard" class="page active">
+        <div class="page-header">
+          <h2>控制面板</h2>
+          <p>监控终端运行状态，发起模拟支付</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-today">¥0.00</div>
+            <div class="stat-label">今日交易金额</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-count">0</div>
+            <div class="stat-label">今日交易笔数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-fingerprints">0</div>
+            <div class="stat-label">指纹模板数量</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-pending">0</div>
+            <div class="stat-label">待处理离线支付</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 30px;">
+          <div class="card-header">
+            <h3>模拟支付</h3>
+          </div>
+          <div class="terminal-display">
+            <div class="merchant-info" id="sim-merchant">模拟商家</div>
+            <div class="amount-display" id="sim-amount">¥0.00</div>
+            
+            <div class="fingerprint-sensor" id="fingerprint-sensor">
+              <div class="sensor-ring" id="sensor-ring"></div>
+              <div class="sensor-inner" id="sensor-inner">👆</div>
+            </div>
+
+            <div class="progress-bar" style="display: none;" id="progress-bar">
+              <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+
+            <div class="status-message" id="status-message">等待支付请求...</div>
+
+            <div style="margin-top: 20px;">
+              <div class="input-group" style="text-align: left;">
+                <label>选择支付用户</label>
+                <select id="user-select" style="width: 100%; padding: 12px 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; font-size: 14px;">
+                  <option value="">随机选择已注册用户</option>
+                </select>
+              </div>
+              <div class="input-group" style="text-align: left;">
+                <label>支付金额 (元)</label>
+                <input type="number" id="amount-input" placeholder="请输入金额" step="0.01" min="0.01">
+              </div>
+              <button class="btn btn-primary" id="btn-simulate">发起模拟支付</button>
+              <button class="btn btn-danger" id="btn-cancel" style="display: none;">取消支付</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-devices" class="page">
+        <div class="page-header">
+          <h2>设备管理</h2>
+          <p>管理USB指纹采集设备</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>已发现设备</h3>
+            <div>
+              <button class="btn btn-secondary" id="btn-refresh-devices">刷新设备</button>
+              <button class="btn btn-success" id="btn-sim-connect">模拟连接设备</button>
+              <button class="btn btn-danger" id="btn-sim-disconnect">模拟断开设备</button>
+            </div>
+          </div>
+          <div class="devices-grid" id="devices-grid">
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">
+              暂无设备
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>WebUSB 支持设备</h3>
+          </div>
+          <div style="font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.8;">
+            <p>✅ 支持的指纹设备 VID/PID：</p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+              <li>YubiKey Bio: 1050:0407</li>
+              <li>YubiKey 系列: 1050:0406</li>
+              <li>Windows Hello 设备: 0483:5740</li>
+              <li>Microsoft 指纹识别器: 045E:00BB</li>
+              <li>STM32 指纹模块: 0483:2016</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-fingerprint" class="page">
+        <div class="page-header">
+          <h2>指纹管理</h2>
+          <p>管理用户指纹模板</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>采集新指纹</h3>
+            <button class="btn btn-primary" id="btn-capture-finger">采集指纹</button>
+          </div>
+          <div style="font-size: 13px; color: rgba(255,255,255,0.7);">
+            支持 Windows Hello 和 macOS Touch ID 进行指纹采集
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>已注册指纹</h3>
+          </div>
+          <div class="templates-grid" id="templates-grid">
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">
+              暂无指纹模板
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-history" class="page">
+        <div class="page-header">
+          <h2>支付记录</h2>
+          <p>查看历史支付记录</p>
+        </div>
+
+        <div class="card">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>订单号</th>
+                <th>商家</th>
+                <th>金额</th>
+                <th>用户</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="history-body">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">
+                  暂无支付记录
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="page-offline" class="page">
+        <div class="page-header">
+          <h2>离线支付</h2>
+          <p>管理待同步的离线支付记录</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>待同步支付</h3>
+            <button class="btn btn-primary" id="btn-retry-all">重试全部重试</button>
+          </div>
+          <div class="pending-list" id="pending-list">
+            <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">
+              暂无待同步的离线支付
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-printer" class="page">
+        <div class="page-header">
+          <h2>打印管理</h2>
+          <p>管理小票打印和PDF生成</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>可用打印机</h3>
+            <button class="btn btn-secondary" id="btn-refresh-printers">刷新打印机</button>
+          </div>
+          <div id="printers-list">
+            <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.5);">
+              正在加载打印机列表...
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>打印测试</h3>
+          </div>
+          <div style="font-size: 13px; color: rgba(255,255,255,0.7);">
+            <p>打印功能支持：</p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+              <li>直接发送到系统打印机</li>
+              <li>生成PDF文件保存到本地</li>
+              <li>58mm POS小票打印机支持</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

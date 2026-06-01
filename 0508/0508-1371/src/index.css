@@ -1,0 +1,350 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+
+:root {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: #e2e8f0;
+  background-color: #0f172a;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+  background-attachment: fixed;
+}
+
+/* 赛博朋克网格背景 */
+.cyber-grid {
+  background-image: 
+    linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* 扫描线效果 */
+.scanlines {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanlines::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1),
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* 霓虹发光效果 */
+.neon-glow-green {
+  box-shadow: 0 0 5px #10b981, 0 0 20px rgba(16, 185, 129, 0.3), 0 0 40px rgba(16, 185, 129, 0.1);
+}
+
+.neon-glow-red {
+  box-shadow: 0 0 5px #ef4444, 0 0 20px rgba(239, 68, 68, 0.3), 0 0 40px rgba(239, 68, 68, 0.1);
+}
+
+.neon-glow-purple {
+  box-shadow: 0 0 5px #8b5cf6, 0 0 20px rgba(139, 92, 246, 0.3), 0 0 40px rgba(139, 92, 246, 0.1);
+}
+
+.neon-glow-cyan {
+  box-shadow: 0 0 5px #06b6d4, 0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
+}
+
+.neon-glow-yellow {
+  box-shadow: 0 0 5px #f59e0b, 0 0 20px rgba(245, 158, 11, 0.3), 0 0 40px rgba(245, 158, 11, 0.1);
+}
+
+.neon-text-green {
+  text-shadow: 0 0 5px #10b981, 0 0 10px #10b981;
+}
+
+.neon-text-red {
+  text-shadow: 0 0 5px #ef4444, 0 0 10px #ef4444;
+}
+
+.neon-text-purple {
+  text-shadow: 0 0 5px #8b5cf6, 0 0 10px #8b5cf6;
+}
+
+.neon-text-cyan {
+  text-shadow: 0 0 5px #06b6d4, 0 0 10px #06b6d4;
+}
+
+.neon-text-yellow {
+  text-shadow: 0 0 5px #f59e0b, 0 0 10px #f59e0b;
+}
+
+/* 玻璃态效果 */
+.glass-panel {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* 数据流动画 */
+@keyframes data-flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.data-flow-border {
+  position: relative;
+  overflow: hidden;
+}
+
+.data-flow-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #8b5cf6, #06b6d4, #10b981, transparent);
+  background-size: 200% 100%;
+  animation: data-flow 3s linear infinite;
+}
+
+/* 终端风格输入框 */
+.terminal-input {
+  font-family: 'Fira Code', monospace;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid #334155;
+  caret-color: #10b981;
+}
+
+.terminal-input:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* 代码编辑器样式 */
+.monaco-editor .margin {
+  background: rgba(15, 23, 42, 0.8) !important;
+}
+
+.monaco-editor .editor-background {
+  background: rgba(15, 23, 42, 0.9) !important;
+}
+
+/* 脉冲动画 */
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.pulse-ring {
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+
+/* 故障艺术效果 */
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(2px, -2px); }
+  60% { transform: translate(-2px, -2px); }
+  80% { transform: translate(2px, 2px); }
+}
+
+.glitch-effect {
+  animation: glitch 0.3s ease-in-out infinite;
+}
+
+/* 仪表盘样式 */
+.gauge-container {
+  position: relative;
+  width: 200px;
+  height: 120px;
+  overflow: hidden;
+}
+
+.gauge-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  border-radius: 100px 100px 0 0;
+  background: conic-gradient(from 180deg, #10b981 0deg, #f59e0b 90deg, #ef4444 180deg, transparent 180deg);
+}
+
+.gauge-cover {
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  right: 20px;
+  height: 80px;
+  border-radius: 80px 80px 0 0;
+  background: #1e293b;
+}
+
+/* 状态指示器 */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-running { background: #10b981; box-shadow: 0 0 8px #10b981; }
+.status-stopped { background: #64748b; }
+.status-warning { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+.status-error { background: #ef4444; box-shadow: 0 0 8px #ef4444; animation: pulse 0.5s ease-in-out infinite; }
+
+/* 终端输出 */
+.terminal-output {
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #94a3b8;
+}
+
+.terminal-output .log-info { color: #3b82f6; }
+.terminal-output .log-warn { color: #f59e0b; }
+.terminal-output .log-error { color: #ef4444; }
+.terminal-output .log-success { color: #10b981; }
+
+/* 进度条动画 */
+.progress-bar {
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: progress-shine 2s ease-in-out infinite;
+}
+
+@keyframes progress-shine {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* 按钮悬停效果 */
+.btn-cyber {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-cyber::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-cyber:hover::before {
+  left: 100%;
+}
+
+/* 标签页样式 */
+.tab-active {
+  position: relative;
+}
+
+.tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+}
+
+/* 卡片悬浮效果 */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+}
+
+/* 角标徽章 */
+.badge-corner {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

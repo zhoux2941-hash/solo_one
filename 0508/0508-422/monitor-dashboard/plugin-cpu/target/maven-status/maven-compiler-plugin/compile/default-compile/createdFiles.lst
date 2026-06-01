@@ -1,0 +1,3 @@
+com\monitor\plugin\cpu\CpuMonitorActivator.class
+com\monitor\plugin\cpu\CpuDataCollector.class
+com\monitor\plugin\cpu\CpuMonitorPlugin.class

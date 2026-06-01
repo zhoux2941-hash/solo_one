@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1780324176884
+Build-Jdk-Spec: 21
+Bundle-ManifestVersion: 2
+Bundle-Name: monitor-api
+Bundle-SymbolicName: com.monitor.api
+Bundle-Version: 1.0.0
+Created-By: Apache Maven Bundle Plugin 5.1.9
+Export-Package: com.monitor.api;version="1.0.0"
+Import-Package: java.lang,java.lang.invoke,java.time,java.util,java.util
+ .function
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=11))"
+Tool: Bnd-6.3.1.202206071316

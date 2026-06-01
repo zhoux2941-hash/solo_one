@@ -1,0 +1,3 @@
+com\monitor\plugin\memory\MemoryMonitorActivator.class
+com\monitor\plugin\memory\MemoryDataCollector.class
+com\monitor\plugin\memory\MemoryMonitorPlugin.class

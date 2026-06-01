@@ -1,0 +1,37 @@
+target_host: "localhost"
+target_port: 1883
+mqtt_version: "3.1.1"
+client_id_prefix: "mqtt-fuzzer"
+username: ""
+password: ""
+
+concurrent_connections: 200
+timeout: 5
+short_timeout: 2
+long_timeout: 30
+test_iterations: 10
+connection_reuse_count: 100
+
+enabled_packet_types:
+  - "CONNECT"
+  - "PUBLISH"
+  - "SUBSCRIBE"
+  - "UNSUBSCRIBE"
+  - "DISCONNECT"
+  - "PINGREQ"
+
+enabled_mutation_types:
+  - "invalid_remaining_length"
+  - "wrong_protocol_name"
+  - "duplicate_packet_id"
+  - "payload_empty_bytes"
+  - "payload_long_string"
+  - "invalid_flags_combination"
+  - "variable_header_mismatch"
+  - "truncated_packet"
+  - "garbage_bytes"
+  - "invalid_qos_value"
+  - "empty_topic_list"
+  - "wildcard_violation"
+  - "zero_packet_id"
+  - "remaining_length_mismatch"

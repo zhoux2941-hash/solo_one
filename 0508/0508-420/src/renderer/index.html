@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>局域网P2P文件分发工具</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-left">
+        <h1>📁 P2P 文件分发</h1>
+        <div class="local-info">
+          <span class="info-item">💻 <span id="hostname">加载中...</span></span>
+          <span class="info-item">🌐 IP: <span id="local-ip">加载中...</span></span>
+          <span class="info-item" id="server-status">🔴 服务器未连接</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <button id="refresh-btn" class="btn btn-secondary">🔄 刷新节点</button>
+        <button id="send-btn" class="btn btn-primary" disabled>📤 发送文件</button>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="panel nodes-panel">
+        <div class="panel-header">
+          <h2>🔌 在线节点</h2>
+          <span class="badge" id="node-count">0</span>
+        </div>
+        <div class="panel-content">
+          <div id="nodes-list" class="nodes-list"></div>
+        </div>
+      </div>
+
+      <div class="panel transfers-panel">
+        <div class="panel-header">
+          <h2>📊 传输记录</h2>
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="all">全部</button>
+            <button class="tab-btn" data-tab="sending">发送</button>
+            <button class="tab-btn" data-tab="receiving">接收</button>
+          </div>
+        </div>
+        <div class="panel-content">
+          <div id="transfers-list" class="transfers-list"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="receive-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>📥 接收文件</h3>
+      <div class="modal-body">
+        <p><strong>发送方:</strong> <span id="receive-sender"></span></p>
+        <p><strong>文件名:</strong> <span id="receive-filename"></span></p>
+        <p><strong>文件大小:</strong> <span id="receive-size"></span></p>
+      </div>
+      <div class="modal-actions">
+        <button id="reject-btn" class="btn btn-secondary">拒绝</button>
+        <button id="accept-btn" class="btn btn-primary">接受并保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+server:
+  host: "0.0.0.0"
+  port: 8080
+  websocket_port: 8081
+
+kafka:
+  brokers:
+    - "localhost:9092"
+  topic: "llm-request-logs"
+  group_id: "llm-load-test-group"
+  consumer_timeout: "10s"
+
+worker:
+  default_count: 5
+  min_count: 1
+  max_count: 100
+  health_check_interval: "30s"
+  request_timeout: "120s"
+  max_retries: 3
+
+metrics:
+  push_interval: "5s"
+  percentiles: [50, 90, 95, 99]
+  retention_hours: 24
+
+report:
+  output_dir: "./reports"
+  template_dir: "./templates"
+  retention_days: 30
+
+orchestrator:
+  max_concurrent_tests: 5
+  default_test_timeout: "2h"

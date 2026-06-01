@@ -1,0 +1,30 @@
+[package]
+name = "usb-analyzer"
+version = "0.1.0"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+rusb = "0.9"
+rusqlite = { version = "0.31", features = ["bundled"] }
+mlua = { version = "0.9", features = ["lua54", "serialize", "send", "vendored"] }
+pcap-file = "2.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+thiserror = "1"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+libc = "0.2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.54", features = [
+    "Win32_Devices_Usb",
+    "Win32_Foundation",
+    "Win32_System_IO",
+] }

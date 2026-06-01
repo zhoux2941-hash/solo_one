@@ -1,0 +1,153 @@
+signatures:
+  - id: STAT-001
+    name: 异常输入速度检测
+    description: 检测人类不可能达到的超高打字速度，通常表明自动化攻击工具正在注入按键
+    severity: high
+    pattern:
+      type: statistical
+      metric: typing_speed
+      threshold: 800
+      window: 5000
+
+  - id: STAT-002
+    name: 快速快捷键攻击
+    description: 短时间内密集的快捷键组合，常见于BadUSB和自动化攻击脚本
+    severity: medium
+    pattern:
+      type: statistical
+      metric: shortcut_density
+      threshold: 5
+      window: 2000
+
+  - id: SEQ-001
+    name: Win+R+cmd序列检测
+    description: 检测Windows运行对话框打开命令提示符的经典攻击序列
+    severity: high
+    pattern:
+      type: sequence
+      events:
+        - type: shortcut
+          keys: [MetaLeft, r]
+          window: 1000
+        - type: string
+          contains: cmd
+          window: 2000
+        - type: key
+          value: Enter
+          window: 1000
+
+  - id: SEQ-002
+    name: PowerShell反向Shell模式
+    description: 检测PowerShell反向Shell命令执行模式，常见于渗透测试和恶意软件
+    severity: critical
+    pattern:
+      type: sequence
+      events:
+        - type: shortcut
+          keys: [MetaLeft, r]
+          window: 1000
+        - type: string
+          contains: powershell
+          window: 2000
+        - type: string
+          contains: -c
+          window: 3000
+        - type: regex
+          regex: (Invoke-Expression|IEX|Net\.Sockets\.TCPClient)
+          window: 5000
+
+  - id: REG-001
+    name: 注册表命令检测
+    description: 检测注册表操作命令，可能用于持久化或禁用安全功能
+    severity: high
+    pattern:
+      type: regex
+      regex: (reg\s+(add|delete|query)|Set-ItemProperty.*HKLM|New-Item.*registry)
+      threshold: 1
+      window: 10000
+
+  - id: REG-002
+    name: 系统命令执行检测
+    description: 检测常见的系统命令执行模式，可能用于信息收集或横向移动
+    severity: medium
+    pattern:
+      type: regex
+      regex: (whoami|ipconfig|net\s+user|net\s+localgroup|schtasks|sc\s+config)
+      threshold: 1
+      window: 10000
+
+  - id: MOUSE-001
+    name: 鼠标边缘移动检测
+    description: 检测鼠标在屏幕边缘的快速连续移动，常见于鼠标模拟攻击工具
+    severity: medium
+    pattern:
+      type: mouse
+      movement: edge_movement
+      duration: 2000
+      min_speed: 8
+      edge_threshold: 50
+
+  - id: SEQ-003
+    name: WIN+X+A PowerShell管理员启动
+    description: 检测通过WIN+X打开Power User菜单后按A键启动PowerShell(管理员)的攻击序列，这是BadUSB绕过UAC的常见手法
+    severity: critical
+    pattern:
+      type: sequence
+      events:
+        - type: shortcut
+          keys: [MetaLeft, x]
+          window: 1000
+        - type: key
+          value: a
+          window: 1500
+
+  - id: SEQ-004
+    name: WIN+X+I 设置打开
+    description: 检测通过WIN+X打开Power User菜单后按I键打开Windows设置的攻击序列
+    severity: medium
+    pattern:
+      type: sequence
+      events:
+        - type: shortcut
+          keys: [MetaLeft, x]
+          window: 1000
+        - type: key
+          value: i
+          window: 1500
+
+  - id: SEQ-005
+    name: WIN+X+U+U 快速关机
+    description: 检测通过WIN+X打开Power User菜单后按U两次快速关机的攻击序列，可能用于中断安全软件
+    severity: high
+    pattern:
+      type: sequence
+      events:
+        - type: shortcut
+          keys: [MetaLeft, x]
+          window: 1000
+        - type: key
+          value: u
+          window: 1000
+        - type: key
+          value: u
+          window: 1000
+
+  - id: SEQ-006
+    name: WIN+X+A 后执行恶意命令
+    description: 检测WIN+X+A以管理员权限启动PowerShell后紧接执行恶意命令的完整攻击链
+    severity: critical
+    pattern:
+      type: sequence
+      events:
+        - type: shortcut
+          keys: [MetaLeft, x]
+          window: 1000
+        - type: key
+          value: a
+          window: 1500
+        - type: string
+          contains: powershell
+          window: 5000
+        - type: regex
+          regex: (Invoke-Expression|IEX|Net\.Sockets|DownloadString|\.exe|\.ps1)
+          window: 8000

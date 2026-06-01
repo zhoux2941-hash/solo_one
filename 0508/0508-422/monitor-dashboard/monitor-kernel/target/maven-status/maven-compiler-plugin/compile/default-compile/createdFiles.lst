@@ -1,0 +1,5 @@
+com\monitor\kernel\KernelActivator.class
+com\monitor\kernel\ConfigCenter.class
+com\monitor\kernel\KernelEventPublisher.class
+com\monitor\kernel\DropinsWatcher.class
+com\monitor\kernel\KernelAlertService.class

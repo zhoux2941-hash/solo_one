@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFC门禁卡模拟与审计系统</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo">
+          <span class="logo-icon">🔐</span>
+          <h1>NFC门禁卡系统</h1>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-indicator" id="readerStatus">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">读卡器未连接</span>
+        </div>
+        <div class="active-card" id="activeCardDisplay">
+          <span>当前模拟: </span>
+          <span class="active-card-name" id="activeCardName">无</span>
+        </div>
+      </div>
+    </header>
+
+    <nav class="sidebar">
+      <div class="nav-item active" data-tab="monitor">
+        <span class="nav-icon">📡</span>
+        <span>实时监控</span>
+      </div>
+      <div class="nav-item" data-tab="analyze">
+        <span class="nav-icon">🔍</span>
+        <span>卡片分析</span>
+      </div>
+      <div class="nav-item" data-tab="cards">
+        <span class="nav-icon">💳</span>
+        <span>卡片管理</span>
+      </div>
+      <div class="nav-item" data-tab="emulate">
+        <span class="nav-icon">📱</span>
+        <span>卡片模拟</span>
+      </div>
+      <div class="nav-item" data-tab="crack">
+        <span class="nav-icon">🔓</span>
+        <span>密钥破解</span>
+      </div>
+      <div class="nav-item" data-tab="audit">
+        <span class="nav-icon">📊</span>
+        <span>审计报表</span>
+      </div>
+      <div class="nav-item" data-tab="logs">
+        <span class="nav-icon">📝</span>
+        <span>操作日志</span>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <section class="tab-content active" id="tab-monitor">
+        <div class="page-header">
+          <h2>实时监控</h2>
+          <div class="page-actions">
+            <button class="btn btn-primary" id="startMonitorBtn">开始监控</button>
+            <button class="btn btn-secondary" id="stopMonitorBtn" disabled>停止监控</button>
+          </div>
+        </div>
+
+        <div class="monitor-grid">
+          <div class="card monitor-card">
+            <h3>读卡器状态</h3>
+            <div class="monitor-info" id="readerInfo">
+              <div class="info-row">
+                <span class="info-label">读卡器名称:</span>
+                <span class="info-value" id="readerName">-</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">状态:</span>
+                <span class="info-value" id="readerStatusInfo">-</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card monitor-card">
+            <h3>当前检测卡片</h3>
+            <div class="monitor-info" id="cardInfo">
+              <div class="info-row">
+                <span class="info-label">UID:</span>
+                <span class="info-value highlight" id="detectedUid">-</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">SAK:</span>
+                <span class="info-value" id="detectedSak">-</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">ATQA:</span>
+                <span class="info-value" id="detectedAtqa">-</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">类型:</span>
+                <span class="info-value" id="detectedType">-</span>
+              </div>
+            </div>
+            <div class="emulate-prompt" id="emulatePrompt" style="display: none;">
+              <div class="prompt-content">
+                <span class="prompt-icon">✨</span>
+                <span class="prompt-text">此卡可模拟！数据库中已有记录</span>
+              </div>
+              <button class="btn btn-success" id="quickEmulateBtn">立即模拟</button>
+            </div>
+          </div>
+
+          <div class="card monitor-card full-width">
+            <h3>最近检测记录</h3>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>时间</th>
+                    <th>UID</th>
+                    <th>SAK</th>
+                    <th>ATQA</th>
+                    <th>是否可模拟</th>
+                  </tr>
+                </thead>
+                <tbody id="detectionHistory">
+                  <tr>
+                    <td colspan="5" class="empty-state">暂无检测记录</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-content" id="tab-analyze">
+        <div class="page-header">
+          <h2>卡片分析</h2>
+          <div class="page-actions">
+            <button class="btn btn-primary" id="analyzeBtn">开始分析</button>
+            <button class="btn btn-secondary" id="dumpJsonBtn">导出JSON</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>分析进度</h3>
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress-fill" id="analyzeProgress" style="width: 0%"></div>
+            </div>
+            <span class="progress-text" id="analyzeProgressText">0%</span>
+          </div>
+          <div class="analyze-status" id="analyzeStatus">
+            请将卡片放在读卡器上，然后点击"开始分析"
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>扇区数据</h3>
+          <div class="sectors-grid" id="sectorsGrid">
+            <div class="empty-state">暂无数据</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>密钥信息</h3>
+          <div class="table-container">
+            <table class="data-table" id="keysTable">
+              <thead>
+                <tr>
+                  <th>扇区</th>
+                  <th>密钥类型</th>
+                  <th>密钥值</th>
+                  <th>来源</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="5" class="empty-state">暂无密钥数据</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-content" id="tab-cards">
+        <div class="page-header">
+          <h2>卡片管理</h2>
+          <div class="page-actions">
+            <button class="btn btn-primary" id="importCardBtn">导入卡片</button>
+            <button class="btn btn-secondary" id="refreshCardsBtn">刷新列表</button>
+          </div>
+        </div>
+
+        <div class="cards-list" id="cardsList">
+          <div class="empty-state">暂无卡片数据，请先读取或导入卡片</div>
+        </div>
+      </section>
+
+      <section class="tab-content" id="tab-emulate">
+        <div class="page-header">
+          <h2>卡片模拟</h2>
+          <div class="page-actions">
+            <button class="btn btn-danger" id="stopEmulateBtn" disabled>停止模拟</button>
+          </div>
+        </div>
+
+        <div class="card emulate-status-card" id="emulateStatusCard">
+          <div class="emulate-status-indicator">
+            <span class="status-icon" id="emulateStatusIcon">⏸️</span>
+          </div>
+          <div class="emulate-status-info">
+            <h3 id="emulateStatusTitle">未开始模拟</h3>
+            <p id="emulateStatusDesc">请从下方选择要模拟的卡片</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>选择模拟卡片</h3>
+          <div class="form-group">
+            <label for="emulateLocation">模拟位置</label>
+            <input type="text" id="emulateLocation" placeholder="请输入位置标识，如：公司大门" class="form-control">
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>选择</th>
+                  <th>卡片名称</th>
+                  <th>UID</th>
+                  <th>SAK</th>
+                  <th>ATQA</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="emulateCardsList">
+                <tr>
+                  <td colspan="6" class="empty-state">暂无可用卡片</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>门禁访问记录</h3>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>操作</th>
+                  <th>读头ID</th>
+                  <th>位置</th>
+                </tr>
+              </thead>
+              <tbody id="accessRecords">
+                <tr>
+                  <td colspan="4" class="empty-state">暂无访问记录</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-content" id="tab-crack">
+        <div class="page-header">
+          <h2>密钥破解</h2>
+          <div class="page-actions">
+            <button class="btn btn-danger" id="stopCrackBtn" disabled>停止破解</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>破解设置</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="crackUid">卡片UID</label>
+              <select id="crackUid" class="form-control">
+                <option value="">请选择卡片</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="crackSector">目标扇区</label>
+              <select id="crackSector" class="form-control">
+                <option value="">请选择扇区</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="crackKeyType">目标密钥类型</label>
+              <select id="crackKeyType" class="form-control">
+                <option value="A">A类密钥</option>
+                <option value="B">B类密钥</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="knownKey">已知密钥（可选）</label>
+              <input type="text" id="knownKey" placeholder="已知密钥，用于嵌套攻击" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="knownKeyType">已知密钥类型</label>
+              <select id="knownKeyType" class="form-control">
+                <option value="A">A类密钥</option>
+                <option value="B">B类密钥</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" id="startNestedCrackBtn">嵌套认证攻击</button>
+            <button class="btn btn-warning" id="startBruteForceBtn">暴力破解</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>破解进度</h3>
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress-fill" id="crackProgress" style="width: 0%"></div>
+            </div>
+            <span class="progress-text" id="crackProgressText">0%</span>
+          </div>
+          <div class="crack-status" id="crackStatus">
+            准备就绪
+          </div>
+          <div class="crack-result" id="crackResult" style="display: none;">
+            <h4>破解成功！</h4>
+            <div class="key-display">
+              <span class="key-label">密钥:</span>
+              <span class="key-value" id="crackedKeyValue"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>破解历史</h3>
+          <div class="table-container">
+            <table class="data-table" id="crackHistory">
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>UID</th>
+                  <th>扇区</th>
+                  <th>密钥类型</th>
+                  <th>密钥值</th>
+                  <th>来源</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="6" class="empty-state">暂无破解记录</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-content" id="tab-audit">
+        <div class="page-header">
+          <h2>审计报表</h2>
+          <div class="page-actions">
+            <button class="btn btn-primary" id="generateReportBtn">生成PDF报告</button>
+            <button class="btn btn-secondary" id="generateSummaryBtn">生成汇总报告</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>查询条件</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="auditCard">选择卡片</label>
+              <select id="auditCard" class="form-control">
+                <option value="">请选择卡片</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="auditStartDate">开始日期</label>
+              <input type="date" id="auditStartDate" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="auditEndDate">结束日期</label>
+              <input type="date" id="auditEndDate" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>&nbsp;</label>
+              <button class="btn btn-primary" id="queryStatsBtn">查询统计</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statTotalEmulates">0</div>
+              <div class="stat-label">总模拟次数</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📍</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statLocations">0</div>
+              <div class="stat-label">涉及门禁数量</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🔑</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statReaders">0</div>
+              <div class="stat-label">涉及读头数量</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statRecords">0</div>
+              <div class="stat-label">总记录条数</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>使用频率热力图</h3>
+          <div class="chart-container">
+            <canvas id="heatmapChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>24小时时间分布</h3>
+          <div class="chart-container">
+            <canvas id="timeChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>地点分布</h3>
+          <div class="chart-container">
+            <canvas id="locationChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-content" id="tab-logs">
+        <div class="page-header">
+          <h2>操作日志</h2>
+          <div class="page-actions">
+            <select id="logTypeFilter" class="form-control form-control-sm">
+              <option value="">全部类型</option>
+              <option value="card_detected">卡片检测</option>
+              <option value="analyze_start">分析开始</option>
+              <option value="analyze_complete">分析完成</option>
+              <option value="emulation_start">模拟开始</option>
+              <option value="emulation_stop">模拟停止</option>
+              <option value="crack_start">破解开始</option>
+              <option value="crack_success">破解成功</option>
+              <option value="card_added">卡片添加</option>
+              <option value="card_deleted">卡片删除</option>
+              <option value="report_generated">报告生成</option>
+            </select>
+            <button class="btn btn-secondary" id="refreshLogsBtn">刷新</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-container">
+            <table class="data-table" id="logsTable">
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>操作类型</th>
+                  <th>UID</th>
+                  <th>详情</th>
+                  <th>操作者</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="5" class="empty-state">暂无日志记录</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="modal" style="display: none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">标题</h3>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #2a2d3a #1a1d27;
+  }
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  *::-webkit-scrollbar-track {
+    background: #1a1d27;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: #2a2d3a;
+    border-radius: 3px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: #3a3d4a;
+  }
+}
+
+@layer components {
+  .hex-dump-container {
+    @apply font-mono text-hex leading-4;
+  }
+
+  .hex-dump-offset {
+    @apply text-analyzer-text-dim select-none;
+  }
+
+  .hex-dump-byte {
+    @apply text-analyzer-text;
+  }
+
+  .hex-dump-byte-zero {
+    @apply text-analyzer-text-dim;
+  }
+
+  .hex-dump-byte-non-ascii {
+    @apply text-analyzer-text-dim;
+  }
+
+  .hex-dump-ascii {
+    @apply text-analyzer-accent;
+  }
+
+  .packet-row-bulk {
+    border-left: 3px solid #60a5fa;
+  }
+
+  .packet-row-iso {
+    border-left: 3px solid #4ade80;
+  }
+
+  .packet-row-interrupt {
+    border-left: 3px solid #fbbf24;
+  }
+
+  .packet-row-uas {
+    border-left: 3px solid #a78bfa;
+  }
+
+  .packet-row-injected {
+    @apply bg-red-900/20;
+    border-left: 3px solid #f87171;
+  }
+
+  .badge-bulk {
+    @apply bg-blue-900/40 text-blue-300 border border-blue-700/50;
+  }
+
+  .badge-iso {
+    @apply bg-green-900/40 text-green-300 border border-green-700/50;
+  }
+
+  .badge-interrupt {
+    @apply bg-yellow-900/40 text-yellow-300 border border-yellow-700/50;
+  }
+
+  .badge-uas {
+    @apply bg-purple-900/40 text-purple-300 border border-purple-700/50;
+  }
+
+  .panel-section {
+    @apply bg-analyzer-surface border border-analyzer-border rounded-lg p-3;
+  }
+
+  .tab-active {
+    @apply text-analyzer-accent border-b-2 border-analyzer-accent;
+  }
+
+  .tab-inactive {
+    @apply text-analyzer-text-dim hover:text-analyzer-text border-b-2 border-transparent;
+  }
+
+  .btn-primary {
+    @apply bg-analyzer-accent hover:bg-analyzer-accent-hover text-white px-3 py-1.5 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-analyzer-border hover:bg-analyzer-border-light text-analyzer-text px-3 py-1.5 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-danger {
+    @apply bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .input-field {
+    @apply bg-analyzer-bg border border-analyzer-border rounded px-2 py-1 text-sm text-analyzer-text placeholder-analyzer-text-dim focus:border-analyzer-accent focus:outline-none;
+  }
+
+  .select-field {
+    @apply bg-analyzer-bg border border-analyzer-border rounded px-2 py-1 text-sm text-analyzer-text focus:border-analyzer-accent focus:outline-none;
+  }
+
+  .label-text {
+    @apply text-xs text-analyzer-text-dim font-medium uppercase tracking-wider;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

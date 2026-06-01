@@ -1,0 +1,37 @@
+{
+  "name": "webrtc-superres-gateway",
+  "version": "1.0.0",
+  "description": "WebRTC Real-time Video Super-Resolution Gateway",
+  "main": "src/node/server.js",
+  "scripts": {
+    "start": "node src/node/server.js",
+    "dev": "nodemon src/node/server.js",
+    "start:python": "python src/python/superres_service.py",
+    "start:all": "concurrently \"npm run start:python\" \"npm run start\"",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.4",
+    "wrtc": "^0.4.7",
+    "zeromq": "^6.0.0-beta.17",
+    "node-h2": "^0.2.0",
+    "better-sqlite3": "^9.4.3",
+    "fluent-ffmpeg": "^2.1.2",
+    "multer": "^1.4.5-lts.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "uuid": "^9.0.1",
+    "winston": "^3.11.0",
+    "cpu-stat": "^2.0.1",
+    "systeminformation": "^5.21.24"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "concurrently": "^8.2.2",
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
